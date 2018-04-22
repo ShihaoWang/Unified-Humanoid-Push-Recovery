@@ -14,7 +14,7 @@
  SNMEMA EXIT 100 -- finished successfully
  SNMEMA INFO 104 -- memory requirements estimated
 
- XXX  Invalid argument xstate:      4 elements modified to be in range.
+ XXX  Invalid argument xstate:     12 elements modified to be in range.
 
  
  ===>  WARNING - Column     12 of the Jacobian is empty.
@@ -160,3 +160,42 @@
       16  r      2    EQ         0.00000         0.00000          .               .             -0.44444      2
       17  r      3    EQ         0.00000         0.00000          .               .             -0.55556      3
       18  r      4 D  BS         0.00000         0.00000          .               .               .           4
+      19  r      5 A  EQ        -0.00000        -0.00000          .               .              0.00000      5
+      20  r      6 A  EQ         0.00000         0.00000          .               .             -0.00000      6
+      21  r      7 A  EQ        -0.00000        -0.00000          .               .             -0.00000      7
+      22  r      8    BS         0.35835         0.35835          .              5.00000          .           8
+      23  r      9    BS         0.21833         0.21833          .              5.00000          .           9
+      24  r     10 D  BS          .               .               .               .               .          10
+      25  r     11 D  BS          .               .               .               .               .          11
+      26  r     12 D  BS          .               .               .               .               .          12
+      27  r     13 D  BS          .               .               .               .               .          13
+      28  r     14 D  BS          .               .               .               .               .          14
+      29  r     15 D  BS          .               .               .               .               .          15
+      30  r     16 D  BS          .               .               .              5.00000          .          16
+      31  r     17 D  BS          .               .               .              5.00000          .          17
+1
+ 
+ Section 2 - Columns
+
+  Number  .Column. State  ...Activity...  .Obj Gradient.  ..Lower Limit.  ..Upper Limit.  Reduced Gradnt    m+j
+ 
+       1  x      1    BS         0.75000        -1.0               None            None          0.00000     18
+       2  x      2    BS         0.09000          .             -2.18170         0.73300        -0.00000     19
+       3  x      3 A  LL          .               .               .              2.61800        -0.00000     20
+       4  x      4   SBS         0.00000          .             -1.30000         0.73300         0.00000     21
+       5  x      5 A  FR        -1.00150          .             -2.18170         0.73300          .          22
+       6  x      6 A  FR         0.15000          .               .              2.61800          .          23
+       7  x      7 A  FR         0.26980          .             -1.30000         0.73300          .          24
+       8  x      8    BS         0.00000          .                None            None           .          25
+       9  x      9    BS        -0.13769          .             -3.00000         3.00000        -0.00000     26
+      10  x     10   SBS         1.31077          .             -3.00000         3.00000        -0.00000     27
+      11  x     11    BS        -0.96308          .             -3.00000         3.00000         0.00000     28
+      12  x     12 A  FR        -1.49990          .             -3.00000         3.00000          .          29
+      13  x     13 A  FR         2.00000          .             -3.00000         3.00000          .          30
+      14  x     14 A  FR        -1.29990          .             -3.00000         3.00000          .          31
+ 
+ Time for MPS input                             0.00 seconds
+ Time for solving problem                       0.00 seconds
+ Time for solution output                       0.00 seconds
+ Time for constraint functions                  0.01 seconds
+ Time for objective function                    0.00 seconds

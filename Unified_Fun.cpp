@@ -51,8 +51,14 @@ double tau5_max = 100;             		double tau6_max = 100;
 double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
 
+dlib::matrix<double,26,1> xlow_vec;
+dlib::matrix<double,26,1> xupp_vec;
+dlib::matrix<double,10,1> ctrl_low_vec;
+dlib::matrix<double,10,1> ctrl_upp_vec;
+
 double Step_Length_Max = 0.65 * (abs(sin(q1low)) + abs(sin(q1upp)));
-int Nodes_Tot_Number;		dlib::matrix<double> Obs_Geo_Array;
+int Nodes_Tot_Number;		dlib::matrix<double> Envi_Map;
+double mini = 0.05;
 
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
@@ -61,7 +67,7 @@ std::vector<double> Frontier_Nodes_Cost;		// The kinetic energy of each nodes
 
 void Add_Node(Tree_Node &Current_Node)
 {
-	// The nodes can only be added if 
+	// The nodes can only be added if
 	All_Nodes.push_back(&Current_Node);
 	Frontier_Nodes.push_back(&Current_Node);
 	Frontier_Nodes_Cost.push_back(Kinetic_Energy_fn(Current_Node.StateNDot_Str));
@@ -88,7 +94,7 @@ Tree_Node Pop_Node()
 	return Current_Node;
 }
 
-int Add_Child2Par(Tree_Node &Child_Node, Tree_Node &Par_Node, int &Nodes_Tot_Number, std::vector<int> &sigma_i)
+int Add_Child2Par(Tree_Node &Child_Node, Tree_Node &Par_Node, int &Nodes_Tot_Number, std::vector<double> &sigma_i)
 {
 
     Child_Node.Par_Node = &Par_Node;
@@ -101,16 +107,18 @@ int Add_Child2Par(Tree_Node &Child_Node, Tree_Node &Par_Node, int &Nodes_Tot_Num
 
     Nodes_Tot_Number = Nodes_Tot_Number + 1;
 
+	Par_Node.Children_Nodes.push_back(&Child_Node);
+
     return 0;
 }
 
-std::vector<double> Default_Init(const std::vector<int> &sigma_i, Unified_Structure_P &P, int Flag)
+std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Structure_P &P, int Flag)
 {
 
-	Obs_Geo_Array = dlib::ones_matrix<double>(2,4);
-	Obs_Geo_Array(0,0) = -100.0;		Obs_Geo_Array(0,1) = 0.0;		Obs_Geo_Array(0,2) = 100.0;		Obs_Geo_Array(0,3) = 0.0;
+	Envi_Map = dlib::ones_matrix<double>(2,4);
+	Envi_Map(0,0) = -100.0;		Envi_Map(0,1) = 0.0;		Envi_Map(0,2) = 100.0;		Envi_Map(0,3) = 0.0;
 	// Obs2: Vertical wall at some distance
-	Obs_Geo_Array(1,0) = 5.0;			Obs_Geo_Array(1,1) = 0.0;		Obs_Geo_Array(1,2) = 5.0;		Obs_Geo_Array(1,3) = 10.0;
+	Envi_Map(1,0) = 5.0;			Envi_Map(1,1) = 0.0;		Envi_Map(1,2) = 5.0;		Envi_Map(1,3) = 10.0;
 
 	// This function is used to initialize a given configuration
     Nodes_Tot_Number = 0;
@@ -141,8 +149,6 @@ std::vector<double> Default_Init(const std::vector<int> &sigma_i, Unified_Struct
 		// Robot_StateNDot Robot_StateNDot_init(Robot_State_Init);
 		// std::string input_name = "init_given";
 		// Robot_Plot_fn(Robot_StateNDot_init,input_name);
-		dlib::matrix<double,26,1> xlow_vec;
-		dlib::matrix<double,26,1> xupp_vec;
 
 		xlow_vec(0) = rIxlow; 					xupp_vec(0) = rIxupp;
 		xlow_vec(1) = rIylow; 					xupp_vec(1) = rIyupp;
@@ -170,6 +176,17 @@ std::vector<double> Default_Init(const std::vector<int> &sigma_i, Unified_Struct
 		xlow_vec(10+13) = q8dotlow; 			xupp_vec(10+13) = q8dotupp;
 		xlow_vec(11+13) = q9dotlow; 			xupp_vec(11+13) = q9dotupp;
 		xlow_vec(12+13) = q10dotlow; 			xupp_vec(12+13) = q10dotupp;
+
+		ctrl_low_vec(0) = -tau1_max;			ctrl_upp_vec(0) = -ctrl_low_vec(0);
+		ctrl_low_vec(1) = -tau2_max;			ctrl_upp_vec(1) = -ctrl_low_vec(1);
+		ctrl_low_vec(2) = -tau3_max;			ctrl_upp_vec(2) = -ctrl_low_vec(2);
+		ctrl_low_vec(3) = -tau4_max;			ctrl_upp_vec(3) = -ctrl_low_vec(3);
+		ctrl_low_vec(4) = -tau5_max;			ctrl_upp_vec(4) = -ctrl_low_vec(4);
+		ctrl_low_vec(5) = -tau6_max;			ctrl_upp_vec(5) = -ctrl_low_vec(5);
+		ctrl_low_vec(6) = -tau7_max;			ctrl_upp_vec(6) = -ctrl_low_vec(6);
+		ctrl_low_vec(7) = -tau8_max;			ctrl_upp_vec(7) = -ctrl_low_vec(7);
+		ctrl_low_vec(8) = -tau9_max;			ctrl_upp_vec(8) = -ctrl_low_vec(8);
+		ctrl_low_vec(9) = -tau10_max;			ctrl_upp_vec(9) = -ctrl_low_vec(9);
 
 		snoptProblem Default_Init_Pr;                     // This is the name of the Optimization problem
 		// Allocate and initialize
@@ -424,8 +441,7 @@ int Default_Init_Pr_(integer    *Status, integer *n,    doublereal x[],
 	std::vector<double> vE = Ang_Vel_fn(StateNDot_Init_i, "vE");
 	std::vector<double> vF = Ang_Vel_fn(StateNDot_Init_i, "vF");
 
-	double mini = 0.05;
-	std::vector<int> sigma_i = Structure_P.sigma_i;
+	std::vector<double> sigma_i = Structure_P.sigma_i;
 	double sigma0_1 = 1.0*sigma_i[0];
 	double sigma0_2 = 1.0*sigma_i[1];
 
@@ -737,9 +753,7 @@ void Robot_Plot_fn(const Robot_StateNDot &StateNDot_Init_i, std::string &name)
 	std::cout<<"Saving result to "<<filename<<std::endl;
 	plt::save(filename);
 }
-
 // Here are the position vector functions
-
 dlib::matrix<double> D_q_fn(const Robot_StateNDot &Robot_StateNDot_i)
 {
 	double rIx = Robot_StateNDot_i.rIx;
@@ -1037,7 +1051,7 @@ dlib::matrix<double> Jacdot_qdot_fn(const Robot_StateNDot &Robot_StateNDot_i)
 	return T;
 }
 
-double PointToSegDist(std::vector<double> &r_pos, const char* s)
+double Obs_Dist_fn(std::vector<double> &r_pos, const char* s)
 {
 	// To make the problem easy to solve, here we only consider the flat/vertical environmental obstacles
 	double x, y, Dist_temp;
@@ -1046,12 +1060,12 @@ double PointToSegDist(std::vector<double> &r_pos, const char* s)
 
 	std::vector<double> Dist_Vec;
 
-	for (int i = 0; i < Obs_Geo_Array.nr(); i++)
+	for (int i = 0; i < Envi_Map.nr(); i++)
 	{
-		double x1 = Obs_Geo_Array(i,0);
-		double y1 = Obs_Geo_Array(i,1);
-		double x2 = Obs_Geo_Array(i,2);
-		double y2 = Obs_Geo_Array(i,3);
+		double x1 = Envi_Map(i,0);
+		double y1 = Envi_Map(i,1);
+		double x2 = Envi_Map(i,2);
+		double y2 = Envi_Map(i,3);
 
 		Dist_temp = 100.0;
 
@@ -1320,12 +1334,17 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 	%                     removing one
 	%                     2-> Remove either foot contact*/
 
-	std::vector<int> sigma_i = Cur_Node.sigma_i;
+	std::vector<double> sigma_i = Cur_Node.sigma_i;
 
-	int foot_AB_contas = sigma_i[1-1];
-	int foot_CD_contas = sigma_i[2-1];
-	int hand_E_contas = sigma_i[3-1];
-	int hand_F_contas = sigma_i[4-1];
+	double foot_AB_contas = sigma_i[1-1];
+	double foot_CD_contas = sigma_i[2-1];
+	double hand_E_contas = sigma_i[3-1];
+	double hand_F_contas = sigma_i[4-1];
+	// cout<<"foot_AB_contas value  is  "<<foot_AB_contas<<endl;
+	// cout<<"foot_CD_contas value  is  "<<foot_CD_contas<<endl;
+	// cout<<"hand_E_contas value  is  "<<hand_E_contas<<endl;
+	// cout<<"hand_F_contas value  is  "<<hand_F_contas<<endl;
+
 
 	Robot_StateNDot StateNDot_Init_i = Cur_Node.StateNDot_Str;
 
@@ -1369,13 +1388,13 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 		double End_Vert_Min = *std::min_element(End_Vert_Array.begin(), End_Vert_Array.end());
 		std::vector<double> r_pos(2); r_pos[0] = End_Hori_Max; r_pos[1] = End_Vert_Min;
 
-		double Outreach = PointToSegDist(r_pos, "x")- Step_Length_Max;
+		double Outreach = Obs_Dist_fn(r_pos, "x")- Step_Length_Max;
 		if (Outreach<0)
 		{
 			// In this case, there could be a hand collision
 			Tree_Node Node_Child1, Node_Child2;
-			std::vector<int> Node_Child1_sigma = sigma_modi(sigma_i, 2, 1);
-			std::vector<int> Node_Child2_sigma = sigma_modi(sigma_i, 3, 1);
+			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 2, 1);
+			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 3, 1);
 			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
 			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
 		}
@@ -1386,8 +1405,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 		if ((hand_E_contas == 1)&&(hand_F_contas == 1))
 		{
 			Tree_Node Node_Child1, Node_Child2;
-			std::vector<int> Node_Child1_sigma = sigma_modi(sigma_i, 2, 0);
-			std::vector<int> Node_Child2_sigma = sigma_modi(sigma_i, 3, 0);
+			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 2, 0);
+			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 3, 0);
 			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
 			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
 		}
@@ -1395,12 +1414,12 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 		{
 			// 3. One hand contact case
 			Tree_Node Node_Child1, Node_Child2, Node_Child3, Node_Child4;
-			std::vector<int> Node_Child1_sigma = sigma_modi(sigma_i, 2, 0);
-			std::vector<int> Node_Child2_sigma = sigma_modi(sigma_i, 3, 0);
+			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 2, 1);
+			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 3, 1);
 			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
 			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
-			std::vector<int> Node_Child3_sigma = sigma_modi(sigma_i, 2, 1);
-			std::vector<int> Node_Child4_sigma = sigma_modi(sigma_i, 3, 1);
+			std::vector<double> Node_Child3_sigma = sigma_modi(sigma_i, 2, 0);
+			std::vector<double> Node_Child4_sigma = sigma_modi(sigma_i, 3, 0);
 			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child3_sigma);
 			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child4_sigma);
 
@@ -1412,8 +1431,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 	{
 		//1. No contact case
 		Tree_Node Node_Child1, Node_Child2;
-		std::vector<int> Node_Child1_sigma = sigma_modi(sigma_i, 1, 1);
-		std::vector<int> Node_Child2_sigma = sigma_modi(sigma_i, 2, 1);
+		std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 1, 1);
+		std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 2, 1);
 		Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
 		Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
 	}
@@ -1423,8 +1442,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 		if ((foot_AB_contas == 1)&&(foot_CD_contas == 1))
 		{
 			Tree_Node Node_Child1, Node_Child2;
-			std::vector<int> Node_Child1_sigma = sigma_modi(sigma_i, 1, 0);
-			std::vector<int> Node_Child2_sigma = sigma_modi(sigma_i, 2, 0);
+			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 1, 0);
+			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 2, 0);
 			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
 			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
 		}
@@ -1438,8 +1457,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 				Inactive_Ind = 1;
 			}
 			Tree_Node Node_Child1, Node_Child2;
-			std::vector<int> Node_Child1_sigma = sigma_modi(sigma_i, Active_Ind, 0);
-			std::vector<int> Node_Child2_sigma = sigma_modi(sigma_i, Inactive_Ind, 1);
+			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, Active_Ind, 0);
+			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, Inactive_Ind, 1);
 
 			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
 			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
@@ -1448,9 +1467,514 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 	return 0;
 }
 
-std::vector<int> sigma_modi(std::vector<int> sigma_ref, int contas_ind, int AddOrRet)
+std::vector<double> sigma_modi(std::vector<double> sigma_ref, int contas_ind, int AddOrRet)
 {
-	std::vector<int> sigma_child = sigma_ref;
-	sigma_child[contas_ind] = AddOrRet;
+	std::vector<double> sigma_child = sigma_ref;
+	sigma_child[contas_ind] = 1.0*AddOrRet;
 	return sigma_child;
 }
+
+int Nodes_Connectivity_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child, Unified_Structure_P &Structure_P)
+{
+	/*% This function test the connectivity between a certain node and its child  node
+
+	% The current idea is to make sure of the multiple shooting method since in
+	% this case the dynamics constraints are satisfied automatically
+
+	% The main idea to reach the sigma_child at the end step while minimizing the kinetic energy*/
+	int Ctrl_No = 20;						// This is the default no of controls within a mode
+	double Tme_Seed = 2;   					// This is the default time period for each segment
+
+
+
+}
+
+int Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child, Unified_Structure_P &Structure_P, int Ctrl_No, double Tme_Seed)
+{
+	int flag = 0;			// The default flag is set to be no-solution found
+	// This function is used to initialize the seed guess for the optimization
+	// The initialized Ctrl_Traj and StateNDot_Traj will be saved into  Node_i_child
+
+	// Three stages need to be conducted to complete this whole initialization process
+	vector<double> F_Constraint_vec;
+	vector<double> Constraint_Status_vec;
+
+	Structure_P.Node_i = Node_i;
+	Structure_P.Node_i_child = Node_i_child;
+
+	Seed_Conf_Constraint(Node_i, Node_i.StateNDot_Str, Node_i_child.sigma_i, F_Constraint_vec, Constraint_Status_vec);
+
+
+	snoptProblem Seed_Conf_Constraint_Pr;                     // This is the name of the Optimization problem
+
+	// Allocate and initialize
+	// 1. Optimization for a feasible configuration that satisfies the desired mode
+
+	integer n = 26;
+	integer neF = Constraint_Status_vec.size();     // 1 objective function
+	integer lenA  =  n * neF;                              // This is the number of nonzero elements in the linear part A    F(x) = f(x)+Ax
+
+	integer lenru = 14;             					  // This is used to pass the initial state into the usrfun
+	doublereal *ru = new doublereal[lenru];
+	integer *iAfun = new integer[lenA];              //
+	integer *jAvar = new integer[lenA];
+	doublereal *A  = new doublereal[lenA];
+
+	integer lenG   = lenA;
+	integer *iGfun = new integer[lenG];
+	integer *jGvar = new integer[lenG];
+
+	doublereal *x      = new doublereal[n];
+	doublereal *xlow   = new doublereal[n];
+	doublereal *xupp   = new doublereal[n];
+	doublereal *xmul   = new doublereal[n];
+	integer    *xstate = new    integer[n];
+
+	doublereal *F      = new doublereal[neF];
+	doublereal *Flow   = new doublereal[neF];
+	doublereal *Fupp   = new doublereal[neF];
+	doublereal *Fmul   = new doublereal[neF];
+	integer    *Fstate = new integer[neF];
+
+	integer nxnames = 1;
+	integer nFnames = 1;
+
+	char *xnames = new char[nxnames*8];
+	char *Fnames = new char[nFnames*8];
+
+	integer    ObjRow = 0;
+	doublereal ObjAdd = 0;
+
+	// Set the upper and lower bounds.
+	// First set the lower and upper bounds for state
+	xlow[0] = rIxlow;				xupp[0] = rIxlow;
+	xlow[1] = rIylow;				xupp[1] = rIylow;
+	xlow[2] = thetalow;				xupp[2] = thetalow;
+	xlow[3] = q1low;				xupp[3] = q1upp;
+	xlow[4] = q2low;				xupp[4] = q2upp;
+	xlow[5] = q3low;				xupp[5] = q3upp;
+	xlow[6] = q4low;				xupp[6] = q4upp;
+	xlow[7] = q5low;				xupp[7] = q5upp;
+	xlow[8] = q6low;				xupp[8] = q6upp;
+	xlow[9] = q7low;				xupp[9] = q7upp;
+	xlow[10] = q8low;				xupp[10] = q8upp;
+	xlow[11] = q9low;				xupp[11] = q9upp;
+	xlow[12] = q10low;				xupp[12] = q10upp;
+	xlow[13] = rIxdotlow;			xupp[13] = rIxdotupp;
+	xlow[14] = rIydotlow;			xupp[14] = rIydotupp;
+	xlow[15] = thetadotlow;			xupp[15] = thetadotupp;
+	xlow[16] = q1dotlow;			xupp[16] = q1dotupp;
+	xlow[17] = q2dotlow;			xupp[17] = q2dotupp;
+	xlow[18] = q3dotlow;			xupp[18] = q3dotupp;
+	xlow[19] = q4dotlow;			xupp[19] = q4dotupp;
+	xlow[20] = q5dotlow;			xupp[20] = q5dotupp;
+	xlow[21] = q6dotlow;			xupp[21] = q6dotupp;
+	xlow[22] = q7dotlow;			xupp[22] = q7dotupp;
+	xlow[23] = q8dotlow;			xupp[23] = q8dotupp;
+	xlow[24] = q9dotlow;			xupp[24] = q9dotupp;
+	xlow[25] = q10dotlow;			xupp[25] = q10dotupp;
+
+	// Second set the lower and upper bounds for the objective function
+	for (int i = 0; i < Constraint_Status_vec.size(); i++)
+	{
+		int Constraint_Status_vec_i = Constraint_Status_vec[i];
+		if(Constraint_Status_vec_i==0)
+		{
+			Flow[i] = 0.0;			Fupp[i] = 0.0;
+		}
+		else
+		{
+			if(Constraint_Status_vec_i==1)
+			{
+				Flow[i] = -Inf;			Fupp[i] = 0.0;
+			}
+			else
+			{
+				Flow[i] = 0.0;			Fupp[i] = Inf;
+
+			}
+		}
+	}
+
+	// Load the data for ToyProb ...
+	Seed_Conf_Constraint_Pr.setPrintFile  ( "Seed_Conf_Constraint_Pr.out" );
+	Seed_Conf_Constraint_Pr.setProblemSize( n, neF );
+	Seed_Conf_Constraint_Pr.setObjective  ( ObjRow, ObjAdd );
+	Seed_Conf_Constraint_Pr.setA          ( lenA, iAfun, jAvar, A );
+	Seed_Conf_Constraint_Pr.setG          ( lenG, iGfun, jGvar );
+	Seed_Conf_Constraint_Pr.setX          ( x, xlow, xupp, xmul, xstate );
+	Seed_Conf_Constraint_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
+	Seed_Conf_Constraint_Pr.setXNames     ( xnames, nxnames );
+	Seed_Conf_Constraint_Pr.setFNames     ( Fnames, nFnames );
+	Seed_Conf_Constraint_Pr.setProbName   ( "Seed_Conf_Constraint_Pr" );
+	Seed_Conf_Constraint_Pr.setUserFun    ( Seed_Conf_Constraint_Pr_fn_);
+	// snopta will compute the Jacobian by finite-differences.
+	// The user has the option of calling  snJac  to define the
+	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
+	Seed_Conf_Constraint_Pr.computeJac    ();
+	Seed_Conf_Constraint_Pr.setIntParameter( "Derivative option", 0 );
+	integer Cold = 0, Basis = 1, Warm = 2;
+	Seed_Conf_Constraint_Pr.solve( Cold );
+
+	delete []iAfun;  delete []jAvar;  delete []A;
+	delete []iGfun;  delete []jGvar;
+
+	delete []x;      delete []xlow;   delete []xupp;
+	delete []xmul;   delete []xstate;
+
+	delete []F;      delete []Flow;   delete []Fupp;
+	delete []Fmul;   delete []Fstate;
+
+	delete []xnames; delete []Fnames;
+
+	return 0;
+}
+
+void Seed_Conf_Constraint(Tree_Node &Node_i, Robot_StateNDot &StateNDot_i_child, vector<double> &sigma_i_child, vector<double> &F, vector<double> &Constraint_Status)
+{
+	// This function is used to generate the constraint value needed for the evaluation of the seed configuration initialization
+	vector<double> sigma_i = Node_i.sigma_i;
+
+	F.push_back(Kinetic_Energy_fn(StateNDot_i_child));		Constraint_Status.push_back(2);
+
+	std::vector<double> rA = Ang_Pos_fn(StateNDot_i_child, "rA");
+	std::vector<double> rB = Ang_Pos_fn(StateNDot_i_child, "rB");
+	std::vector<double> rC = Ang_Pos_fn(StateNDot_i_child, "rC");
+	std::vector<double> rD = Ang_Pos_fn(StateNDot_i_child, "rD");
+	std::vector<double> rE = Ang_Pos_fn(StateNDot_i_child, "rE");
+	std::vector<double> rF = Ang_Pos_fn(StateNDot_i_child, "rF");
+	std::vector<double> rG = Ang_Pos_fn(StateNDot_i_child, "rG");
+	std::vector<double> rH = Ang_Pos_fn(StateNDot_i_child, "rH");
+	std::vector<double> rI = Ang_Pos_fn(StateNDot_i_child, "rI");
+	std::vector<double> rT = Ang_Pos_fn(StateNDot_i_child, "rT");
+
+	std::vector<double> rCOM = Ang_Pos_fn(StateNDot_i_child, "rCOM");
+
+	std::vector<double> vA = Ang_Vel_fn(StateNDot_i_child, "vA");
+	std::vector<double> vB = Ang_Vel_fn(StateNDot_i_child, "vB");
+	std::vector<double> vC = Ang_Vel_fn(StateNDot_i_child, "vC");
+	std::vector<double> vD = Ang_Vel_fn(StateNDot_i_child, "vD");
+	std::vector<double> vE = Ang_Vel_fn(StateNDot_i_child, "vE");
+	std::vector<double> vF = Ang_Vel_fn(StateNDot_i_child, "vF");
+
+	double sigma_i_AB = sigma_i[1-1];
+	double sigma_i_CD = sigma_i[2-1];
+	double sigma_i_E = sigma_i[3-1];
+	double sigma_i_F = sigma_i[4-1];
+
+	double sigma_i_child_AB = sigma_i_child[1-1];
+	double sigma_i_child_CD = sigma_i_child[2-1];
+	double sigma_i_child_E = sigma_i_child[3-1];
+	double sigma_i_child_F = sigma_i_child[4-1];
+
+	vector<double> sigma_offset(4);
+	for (int i = 0; i < 4; i++)
+	{
+		sigma_offset[i] = sigma_i_child[i] - sigma_i[i];
+	}
+	/* 1. Relative distance  constraints:
+	a. all distancehave to be at least on the surface
+	b. the desired mode has to be satisfied.
+	*/
+	int sigma_i_max = *max_element(sigma_i.begin(),sigma_i.end());
+	int sigma_i_min = *min_element(sigma_i.begin(),sigma_i.end());
+
+	int sigma_i_child_max = *max_element(sigma_i_child.begin(),sigma_i_child.end());
+	int sigma_i_child_min = *min_element(sigma_i_child.begin(),sigma_i_child.end());
+	int sigma_offset_max = *max_element(sigma_offset.begin(),sigma_offset.end());
+	int sigma_offset_sum = sigma_offset[0] +  sigma_offset[1] +  sigma_offset[2] +  sigma_offset[3];
+
+	if ((sigma_i_child_max == sigma_i_child_min)&&(sigma_i_child_max==0))
+	{
+		std::vector<double> Node_i_child_StateNDot_vec = StateNDot2StateVec(StateNDot_i_child);
+		std::vector<double> Node_i_StateNDot_vec = StateNDot2StateVec(Node_i.StateNDot_Str);
+		F.push_back(sqrt(Dot_Product(Node_i_child_StateNDot_vec, Node_i_child_StateNDot_vec))-sqrt(Dot_Product(Node_i_StateNDot_vec, Node_i_StateNDot_vec)) - 10*mini);
+		Constraint_Status.push_back(1);
+		F.push_back(sigma_offset[1-1] * vA[2-1]);		Constraint_Status.push_back(1);
+		F.push_back(sigma_offset[1-1] * vB[2-1]);		Constraint_Status.push_back(1);
+		F.push_back(sigma_offset[2-1] * vC[2-1]);		Constraint_Status.push_back(1);
+		F.push_back(sigma_offset[2-1] * vD[2-1]);		Constraint_Status.push_back(1);
+		F.push_back(-sigma_offset[3-1] * vE[1-1]);		Constraint_Status.push_back(1);
+		F.push_back(-sigma_offset[4-1] * vF[1-1]);		Constraint_Status.push_back(1);
+	}
+	// The absolute relative distance between the robot end effector and the environment obstacles
+	F.push_back(-Obs_Dist_fn(rA,"z") + mini * (!sigma_i_child_AB));		Constraint_Status.push_back(1);
+	F.push_back(-Obs_Dist_fn(rB,"z") + mini * (!sigma_i_child_AB));		Constraint_Status.push_back(1);
+	F.push_back(-Obs_Dist_fn(rC,"z") + mini * (!sigma_i_child_CD));		Constraint_Status.push_back(1);
+	F.push_back(-Obs_Dist_fn(rD,"z") + mini * (!sigma_i_child_CD));		Constraint_Status.push_back(1);
+	F.push_back(-Obs_Dist_fn(rE,"z") + mini * (!sigma_i_child_E));		Constraint_Status.push_back(1);
+	F.push_back(-Obs_Dist_fn(rF,"z") + mini * (!sigma_i_child_F));		Constraint_Status.push_back(1);
+
+	// The complementarity condition
+	F.push_back(sigma_i_child_AB * rA[1]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_AB * vA[0]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_AB * vA[1]);		Constraint_Status.push_back(0);
+
+	F.push_back(sigma_i_child_AB * rB[1]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_AB * vB[0]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_AB * vB[1]);		Constraint_Status.push_back(0);
+
+	F.push_back(sigma_i_child_CD * rC[1]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_CD * vC[0]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_CD * vC[1]);		Constraint_Status.push_back(0);
+
+	F.push_back(sigma_i_child_CD * rD[1]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_CD * vD[0]);		Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_CD * vD[1]);		Constraint_Status.push_back(0);
+
+	F.push_back(sigma_i_child_E * Obs_Dist_fn(rE, "x"));	Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_E * vE[0]);	Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_E * vE[1]);	Constraint_Status.push_back(0);
+
+	F.push_back(sigma_i_child_F * Obs_Dist_fn(rF, "x"));	Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_F * vF[0]);	Constraint_Status.push_back(0);
+	F.push_back(sigma_i_child_F * vF[1]);	Constraint_Status.push_back(0);
+
+	//  2. Contact Constraint Maintenance: the previous contacts have to be satisfied
+	if(sigma_offset_max  ==0)
+	{
+		F.push_back((sigma_offset[1-1]==0) * sigma_i_AB * (rA[0] - Node_i.rA_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[1-1]==0) * sigma_i_AB * (rA[1] - Node_i.rA_ref[1]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[1-1]==0) * sigma_i_AB * (rB[0] - Node_i.rB_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[1-1]==0) * sigma_i_AB * (rB[1] - Node_i.rB_ref[1]));	Constraint_Status.push_back(0);
+
+		F.push_back((sigma_offset[2-1]==0) * sigma_i_CD * (rC[0] - Node_i.rC_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[2-1]==0) * sigma_i_CD * (rC[1] - Node_i.rC_ref[1]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[2-1]==0) * sigma_i_CD * (rD[0] - Node_i.rD_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[2-1]==0) * sigma_i_CD * (rD[1] - Node_i.rD_ref[1]));	Constraint_Status.push_back(0);
+
+		F.push_back((sigma_offset[3-1]==0) * sigma_i_E * (rE[0] - Node_i.rE_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[3-1]==0) * sigma_i_E * (rE[1] - Node_i.rE_ref[1]));	Constraint_Status.push_back(0);
+
+		F.push_back((sigma_offset[4-1]==0) * sigma_i_F * (rF[0] - Node_i.rF_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back((sigma_offset[4-1]==0) * sigma_i_F * (rF[1] - Node_i.rF_ref[1]));	Constraint_Status.push_back(0);
+	}
+	else
+	{
+		F.push_back(sigma_i_AB * (rA[0] - Node_i.rA_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_AB * (rA[1] - Node_i.rA_ref[1]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_AB * (rB[0] - Node_i.rB_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_AB * (rB[1] - Node_i.rB_ref[1]));	Constraint_Status.push_back(0);
+
+		F.push_back(sigma_i_CD * (rC[0] - Node_i.rC_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_CD * (rC[1] - Node_i.rC_ref[1]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_CD * (rD[0] - Node_i.rD_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_CD * (rD[1] - Node_i.rD_ref[1]));	Constraint_Status.push_back(0);
+
+		F.push_back(sigma_i_E * (rE[0] - Node_i.rE_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_E * (rE[1] - Node_i.rE_ref[1]));	Constraint_Status.push_back(0);
+
+		F.push_back(sigma_i_F * (rF[0] - Node_i.rF_ref[0]));	Constraint_Status.push_back(0);
+		F.push_back(sigma_i_F * (rF[1] - Node_i.rF_ref[1]));	Constraint_Status.push_back(0);
+	}
+	// 3. Heuristic Stability Constraints: rI and rCOM have to be lied within the support polygon
+	vector<double> r_Foot_Pos(4);	r_Foot_Pos.push_back(rA[0]);	r_Foot_Pos.push_back(rB[0]);	r_Foot_Pos.push_back(rC[0]);	r_Foot_Pos.push_back(rD[0]);
+	double Temp_val1, Temp_val2;
+	int Stance_Leg_Ind, Swing_Leg_Ind, Stance_Leg_Index;double Swing_Leg_Dis, Stance_Leg_Dis;
+	if((sigma_i_max == sigma_i_min)&&(sigma_i_max==0))
+	{
+		F.push_back(rCOM[0] - rT[0]);			Constraint_Status.push_back(0);
+	}
+	else
+	{
+		if((sigma_i[0]==1)||(sigma_i[1]==1))
+		{
+			//        % At least foot contact is involved
+			if(sigma_offset_max>0)
+			{
+				if((std::abs(sigma_offset[0])==1)||(std::abs(sigma_offset[1]==1)))
+				{
+					if(Node_i.vI_ref[0]>0)
+					{
+						Swing_Leg_Ind = 0;
+						if(abs(sigma_offset[1]==1))
+						{
+							Swing_Leg_Ind = 1;
+						}
+						Stance_Leg_Ind = (Swing_Leg_Ind==0) + 1;
+						Temp_val1 = r_Foot_Pos[2*Swing_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Swing_Leg_Ind+1];
+						Swing_Leg_Dis = min(Temp_val1, Temp_val2);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Ind+1];
+						Stance_Leg_Dis = max(Temp_val1, Temp_val2);
+						F.push_back(Stance_Leg_Dis - Swing_Leg_Dis);			Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Ind+1];
+						F.push_back(min(Temp_val1, Temp_val2) - rI[0]);			Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Swing_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Swing_Leg_Ind+1];
+						F.push_back(rI[0] - max(Temp_val1, Temp_val2));			Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Ind+1];
+						F.push_back(min(Temp_val1, Temp_val2) - rCOM[0]);		Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Swing_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Swing_Leg_Ind+1];
+						F.push_back(rCOM[0] - max(Temp_val1, Temp_val2));		Constraint_Status.push_back(1);
+						F.push_back(min(rI[0], rCOM[0]) -rT[0]);		Constraint_Status.push_back(1);
+						F.push_back(rT[0] - max(rI[0], rCOM[0]));		Constraint_Status.push_back(1);
+					}
+					else
+					{
+						Swing_Leg_Ind = 0;
+						if(abs(sigma_offset[1]==1))
+						{
+							Swing_Leg_Ind = 1;
+						}
+						Stance_Leg_Ind = (Swing_Leg_Ind==0) + 1;
+						Temp_val1 = r_Foot_Pos[2*Swing_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Swing_Leg_Ind+1];
+						Swing_Leg_Dis = max(Temp_val1, Temp_val2);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Ind+1];
+						Stance_Leg_Dis = min(Temp_val1, Temp_val2);
+						F.push_back(Stance_Leg_Dis - Swing_Leg_Dis);			Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Ind+1];
+						F.push_back(-max(Temp_val1, Temp_val2) + rI[0]);		Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Swing_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Swing_Leg_Ind+1];
+						F.push_back(-rI[0] + min(Temp_val1, Temp_val2));		Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Ind+1];
+						F.push_back(-max(Temp_val1, Temp_val2) + rCOM[0]);		Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Swing_Leg_Ind];
+						Temp_val2 = r_Foot_Pos[2*Swing_Leg_Ind+1];
+						F.push_back(-rCOM[0] + min(Temp_val1, Temp_val2));
+						Constraint_Status.push_back(1);
+						F.push_back(min(rI[0], rCOM[0]) -rT[0]);		Constraint_Status.push_back(1);
+						F.push_back(rT[0] - max(rI[0], rCOM[0]));		Constraint_Status.push_back(1);
+					}
+				}
+				else
+				{
+					F.push_back(rCOM[0]- rT[0]);			Constraint_Status.push_back(0);
+
+				}
+			}
+			else
+			{
+				if(sigma_offset_sum==0)
+				// In this case, we are doing the same mode optimization and we
+				// would like the center of mass and rI to be within the support polygon
+				{
+					if(sigma_i[0] + sigma_i[1]==2)
+					{
+						Temp_val1 = *min_element(r_Foot_Pos.begin(),r_Foot_Pos.end());
+						F.push_back(Temp_val1 - rI[0]);
+						Constraint_Status.push_back(1);
+						Temp_val1 =*max_element(r_Foot_Pos.begin(),r_Foot_Pos.end());
+						F.push_back(rI[0] - Temp_val1);
+						Constraint_Status.push_back(1);
+						Temp_val1 = *min_element(r_Foot_Pos.begin(),r_Foot_Pos.end());
+						F.push_back(Temp_val1 - rCOM[0]);
+						Constraint_Status.push_back(1);
+						Temp_val1 = *max_element(r_Foot_Pos.begin(),r_Foot_Pos.end());
+						F.push_back(rCOM[0] - Temp_val1);
+						Constraint_Status.push_back(1);
+					}
+					else
+					{
+						Stance_Leg_Index = 0;
+						if(sigma_i[1]==1)
+						{
+							Stance_Leg_Index = 1;
+						}
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Index];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Index+1];
+						double Temp_val = min(Temp_val1, Temp_val2) - rI[0];
+						F.push_back(Temp_val);
+						Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Index];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Index+1];
+						Temp_val = rI[0] - max(Temp_val1, Temp_val2);
+						F.push_back(Temp_val);
+						Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Index];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Index+1];
+						Temp_val = min(Temp_val1, Temp_val2) - rCOM[0];
+						F.push_back(Temp_val);
+						Constraint_Status.push_back(1);
+						Temp_val1 = r_Foot_Pos[2*Stance_Leg_Index];
+						Temp_val2 = r_Foot_Pos[2*Stance_Leg_Index+1];
+						Temp_val = rCOM[0] - max(Temp_val1, Temp_val2);
+						F.push_back(Temp_val);
+						Constraint_Status.push_back(1);
+					}
+				}
+				else
+				{
+					F.push_back(sigma_offset[0] * vA[1]);			Constraint_Status.push_back(1);
+					F.push_back(sigma_offset[0] * vB[1]);			Constraint_Status.push_back(1);
+					F.push_back(sigma_offset[1] * vC[1]);			Constraint_Status.push_back(1);
+					F.push_back(sigma_offset[1] * vD[1]);			Constraint_Status.push_back(1);
+					F.push_back(sigma_offset[3] * vE[0]);			Constraint_Status.push_back(1);
+					F.push_back(sigma_offset[4] * vF[0]);			Constraint_Status.push_back(1);
+				}
+			}
+		}
+	}
+}
+
+double Dot_Product(vector<double> &x1, vector<double> &x2)
+{
+	double result = 0.0;
+	// Thisfunction is used to compute the doc product between two vectors
+	for (int i = 0; i < x1.size(); i++)
+	{
+		result = result + x1[i] * x2[i];
+	}
+	return result;
+}
+
+void Reference_Dist_Vel_Update(Tree_Node &Node_i)
+{
+	// Thyis funciton is used to update the value of the reference in the given node
+	Robot_StateNDot Node_i_StateNDot = Node_i.StateNDot_Str;
+
+	Node_i.rA_ref = Ang_Pos_fn(Node_i_StateNDot, "rA");
+	Node_i.rB_ref = Ang_Pos_fn(Node_i_StateNDot, "rB");
+	Node_i.rC_ref = Ang_Pos_fn(Node_i_StateNDot, "rC");
+	Node_i.rD_ref = Ang_Pos_fn(Node_i_StateNDot, "rD");
+	Node_i.rE_ref = Ang_Pos_fn(Node_i_StateNDot, "rE");
+	Node_i.rF_ref = Ang_Pos_fn(Node_i_StateNDot, "rF");
+
+	Node_i.vA_ref = Ang_Pos_fn(Node_i_StateNDot, "vA");
+	Node_i.vB_ref = Ang_Pos_fn(Node_i_StateNDot, "vB");
+	Node_i.vC_ref = Ang_Pos_fn(Node_i_StateNDot, "vC");
+	Node_i.vD_ref = Ang_Pos_fn(Node_i_StateNDot, "vD");
+	Node_i.vE_ref = Ang_Pos_fn(Node_i_StateNDot, "vE");
+	Node_i.vF_ref = Ang_Pos_fn(Node_i_StateNDot, "vF");
+	Node_i.vI_ref = Ang_Pos_fn(Node_i_StateNDot, "vI");
+	return;
+}
+int Seed_Conf_Constraint_Pr_fn_(integer    *Status, integer *n,    doublereal x[],
+	     integer    *needF,  integer *neF,  doublereal F[],
+	     integer    *needG,  integer *neG,  doublereal G[],
+	     char       *cu,     integer *lencu,
+	     integer    iu[],    integer *leniu,
+		 doublereal ru[],    integer *lenru )
+		 {
+
+			 vector<double> x_i_child;
+
+			 for (int i = 0; i < 26; i++)
+			 {
+				 x_i_child.push_back(x[i]);
+			 }
+
+
+			 vector<double> F_Constraint_vec;
+			 vector<double> Constraint_Status_vec;
+
+			 Robot_StateNDot x_i_child_StateNDot = StateVec2StateNDot(x_i_child);
+
+			 Seed_Conf_Constraint(Structure_P.Node_i, x_i_child_StateNDot, Structure_P.Node_i_child.sigma_i, F_Constraint_vec, Constraint_Status_vec);
+
+			 for (int i = 0; i < F_Constraint_vec.size(); i++)
+			 {
+				 F[i] = F_Constraint_vec[i];
+			 }
+
+			 return 0;
+		 }

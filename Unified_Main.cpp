@@ -14,7 +14,7 @@ Unified_Structure_P Structure_P;
 int main( int argc, char **argv)
 {
 	// This function is used to generate the contact graph
-	std::vector<int> sigma_init(4);
+	std::vector<double> sigma_init(4);
 	cout<<sigma_init[0]<<endl;
 	// sigma_init is used initialize the robot configuration at the initial time
 	sigma_init[0] = 1; 	sigma_init[1] = 0;  	sigma_init[2] = 0;  	sigma_init[3] = 0;
@@ -32,19 +32,33 @@ int main( int argc, char **argv)
 	Root_Node.StateNDot_Str = StateVec2StateNDot(x0_init);
 	Root_Node.Par_Node = NULL;
 	Root_Node.sigma_i = sigma_init;
+	Reference_Dist_Vel_Update(Root_Node);
 	Add_Node(Root_Node);
 
-	while(1)
-	{
+	// while(1)
+	// {
 		// The first step is to do the Node_Expansion_fn
 		// The node chosen to be expanded is the node from Frontier with the
 		// minimum kinetic energy
+		Tree_Node  Node_i, Node_i_child;
+		Node_i = Pop_Node();
+		Node_Expansion_fn(Node_i,Structure_P);
 
-		Tree_Node  Current_Node;
-		Current_Node = Pop_Node();
-		cout<<"Haha"<<endl;
+		while(Node_i.Children_Nodes.size())
+		{
+			// First is to retrieve the child node from the parent node
+			// Node_i_child = *(Node_i.Children_Nodes[Node_i.Children_Nodes.size()-1]);
+			Node_i.Children_Nodes.pop_back();
+			cout<<Node_i.Children_Nodes.size()<<endl;
+		}
 
-	}
+
+		// The children nodes have been attached into the children ptr
+
+
+
+
+	// }
 
 
 
