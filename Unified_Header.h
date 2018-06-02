@@ -67,6 +67,7 @@ struct Tree_Node
     std::vector<double> rA_ref;         std::vector<double> rB_ref;
     std::vector<double> rC_ref;         std::vector<double> rD_ref;
     std::vector<double> rE_ref;         std::vector<double> rF_ref;
+
     std::vector<double> vA_ref;         std::vector<double> vB_ref;
     std::vector<double> vC_ref;         std::vector<double> vD_ref;
     std::vector<double> vE_ref;         std::vector<double> vF_ref;
@@ -81,7 +82,7 @@ public:
     double u1,u2,u3,u4,u5,u6,u7,u8,u9,u10;
     Tree_Node Node_i;
     Tree_Node Node_i_child;
-    std::vector<double> sigma_i;///        well thisis theonly for thye initialization
+    std::vector<double> sigma_i;///        well this is the only for thye initialization
     std::vector<double> Opt_Ctrl_LowBd;
     std::vector<double> Opt_Ctrl_UppBd;
     std::vector<double> Opt_Conf_LowBd;
@@ -89,8 +90,11 @@ public:
     std::vector<double> Robot_State_Init;
     int Ctrl_No;    double Tme_Seed;    double eps;
     Unified_Structure_P();
-}; 
+};
 extern Unified_Structure_P Structure_P;
+
+double Obs_Dist_Fn(std::vector<double> &r_Pos, dlib::matrix<double> &Envi_Map, int &Obs_Choice_Ind);
+
 
 void Robot_Plot_fn(const Robot_StateNDot &StateNDot_Init_i);
 void Robot_Plot_fn(const Robot_StateNDot &StateNDot_Init_i, std::string &name);
@@ -102,7 +106,7 @@ dlib::matrix<double>  C_q_qdot_fn(const Robot_StateNDot &Robot_StateNDot_i);
 dlib::matrix<double>  Jac_Full_fn(const Robot_StateNDot &Robot_StateNDot_i);
 dlib::matrix<double> Jacdot_qdot_fn(const Robot_StateNDot &Robot_StateNDot_i);
 double Obs_Dist_fn(std::vector<double> &r_pos, const char* s);
-std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Structure_P &P, int Flag);
+std::vector<double> Default_Init(const std::vector<double> &sigma_i, int Flag);
 std::vector<double> StateNDot2StateVec(Robot_StateNDot &Robot_StateNDot_i);
 Robot_StateNDot StateVec2StateNDot(std::vector<double> &StateVec);
 double Kinetic_Energy_fn(Robot_StateNDot &Robot_StateNDot_i);

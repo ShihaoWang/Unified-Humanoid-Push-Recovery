@@ -15,6 +15,8 @@ double Inf = 1.1e20;
 double PI = 3.1415926535897932384626;
 double pi = PI;
 
+// There are three types of variables in this optimization problem: robot state, control torques and contact forces
+
 double rIxlow = -Inf;                  double rIxupp = Inf;
 double rIylow = -Inf;                  double rIyupp = Inf;
 double thetalow = -pi;                 double thetaupp = pi;
@@ -45,25 +47,48 @@ double q8dotlow = AngRateLow;          double q8dotupp = AngRateHgh;
 double q9dotlow = AngRateLow;          double q9dotupp = AngRateHgh;
 double q10dotlow = AngRateLow;         double q10dotupp = AngRateHgh;
 
+// 2. Control torques
 double tau1_max = 100;             		double tau2_max = 100;
 double tau3_max = 100;					double tau4_max = 100;
 double tau5_max = 100;             		double tau6_max = 100;
 double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
 
+// Save them into the bounds
 dlib::matrix<double,26,1> xlow_vec;
 dlib::matrix<double,26,1> xupp_vec;
 dlib::matrix<double,10,1> ctrl_low_vec;
 dlib::matrix<double,10,1> ctrl_upp_vec;
+dlib::matrix<double,12,1> contact_force_low_vec;
+dlib::matrix<double,12,1> contact_force_upp_vec;
 
-double Step_Length_Max = 0.65 * (abs(sin(q1low)) + abs(sin(q1upp)));
-int Nodes_Tot_Number;		dlib::matrix<double> Envi_Map;
+int Total_Nodes_Number = 0; // The initializatin of the total nodes currently in the tree
+dlib::matrix<double> Envi_Map;
 double mini = 0.05;
 
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
-std::vector<double> Frontier_Nodes_Cost;		// The kinetic energy of each nodes
+std::vector<double> Frontier_Nodes_Cost;		    // The kinetic energy of each nodes
+
+std::vector<double> StateNDot_Seed;
+std::vector<double> Ctrl_Seed;
+
+dlib::matrix<double> Envi_Map_Defi()
+{
+	// 	This function is used to define the environment map for the simulation
+	// Whenever this function gets called, it will return the array with the
+	// environment obstacle information
+	//
+	// This is the default flat ground
+	// This map is defined in a polyline manner with the first value denoting
+	// the line length and the second value denoting the relative angle
+
+	Envi_Map = dlib::ones_matrix<double>(2,2);
+	Envi_Map(0,0) = 5.0;		Envi_Map(0,1) = 0.0;
+	Envi_Map(1,0) = 3.0;		Envi_Map(1,1) = PI/2.0;
+	return Envi_Map;
+}
 
 void Add_Node(Tree_Node &Current_Node)
 {
@@ -94,36 +119,79 @@ Tree_Node Pop_Node()
 	return Current_Node;
 }
 
-int Add_Child2Par(Tree_Node &Child_Node, Tree_Node &Par_Node, int &Nodes_Tot_Number, std::vector<double> &sigma_i)
+int Add_Child2Par(Tree_Node &Child_Node, Tree_Node &Par_Node, int &Total_Nodes_Number, std::vector<double> &sigma_i)
 {
 
     Child_Node.Par_Node = &Par_Node;
 
-    Child_Node.Node_Number = Nodes_Tot_Number + 1;
+    Child_Node.Node_Number = Total_Nodes_Number + 1;
 
 	Child_Node.sigma_i = sigma_i;
 
 	Children_Nodes.push_back(&Child_Node);
 
-    Nodes_Tot_Number = Nodes_Tot_Number + 1;
+    Total_Nodes_Number = Total_Nodes_Number + 1;
 
 	Par_Node.Children_Nodes.push_back(&Child_Node);
 
     return 0;
 }
 
-std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Structure_P &P, int Flag)
+std::vector<double> Default_Init(const std::vector<double> &sigma_i, int Flag)
 {
+	// This function is used to initialize the whole optimization process
+	// First, is to substitute the map info into the Envi_Map matrix
+	// Second, is to give the proper bounds to the variables to be optimized
+	// Thrid, is to generate a kinematically feasible initial robot state
 
-	Envi_Map = dlib::ones_matrix<double>(2,4);
-	Envi_Map(0,0) = -100.0;		Envi_Map(0,1) = 0.0;		Envi_Map(0,2) = 100.0;		Envi_Map(0,3) = 0.0;
-	// Obs2: Vertical wall at some distance
-	Envi_Map(1,0) = 5.0;			Envi_Map(1,1) = 0.0;		Envi_Map(1,2) = 5.0;		Envi_Map(1,3) = 10.0;
+	// First job finished!
+	Envi_Map = Envi_Map_Defi();
 
-	// This function is used to initialize a given configuration
-    Nodes_Tot_Number = 0;
+	// Second job finished!
+	xlow_vec(0) = rIxlow; 					xupp_vec(0) = rIxupp;
+	xlow_vec(1) = rIylow; 					xupp_vec(1) = rIyupp;
+	xlow_vec(2) = thetalow; 				xupp_vec(2) = thetaupp;
+	xlow_vec(3) = q1low; 					xupp_vec(3) = q1upp;
+	xlow_vec(4) = q2low; 					xupp_vec(4) = q2upp;
+	xlow_vec(5) = q3low; 					xupp_vec(5) = q3upp;
+	xlow_vec(6) = q4low; 					xupp_vec(6) = q4upp;
+	xlow_vec(7) = q5low; 					xupp_vec(7) = q5upp;
+	xlow_vec(8) = q6low; 					xupp_vec(8) = q6upp;
+	xlow_vec(9) = q7low; 					xupp_vec(9) = q7upp;
+	xlow_vec(10) = q8low; 					xupp_vec(10) = q8upp;
+	xlow_vec(11) = q9low; 					xupp_vec(11) = q9upp;
+	xlow_vec(12) = q10low; 					xupp_vec(12) = q10upp;
+	xlow_vec(0+13) = rIxdotlow; 			xupp_vec(0+13) = rIxdotupp;
+	xlow_vec(1+13) = rIydotlow; 			xupp_vec(1+13) = rIydotupp;
+	xlow_vec(2+13) = thetadotlow; 			xupp_vec(2+13) = thetadotupp;
+	xlow_vec(3+13) = q1dotlow; 				xupp_vec(3+13) = q1dotupp;
+	xlow_vec(4+13) = q2dotlow; 				xupp_vec(4+13) = q2dotupp;
+	xlow_vec(5+13) = q3dotlow; 				xupp_vec(5+13) = q3dotupp;
+	xlow_vec(6+13) = q4dotlow; 				xupp_vec(6+13) = q4dotupp;
+	xlow_vec(7+13) = q5dotlow; 				xupp_vec(7+13) = q5dotupp;
+	xlow_vec(8+13) = q6dotlow; 				xupp_vec(8+13) = q6dotupp;
+	xlow_vec(9+13) = q7dotlow; 				xupp_vec(9+13) = q7dotupp;
+	xlow_vec(10+13) = q8dotlow; 			xupp_vec(10+13) = q8dotupp;
+	xlow_vec(11+13) = q9dotlow; 			xupp_vec(11+13) = q9dotupp;
+	xlow_vec(12+13) = q10dotlow; 			xupp_vec(12+13) = q10dotupp;
+
+	ctrl_low_vec(0) = -tau1_max;			ctrl_upp_vec(0) = -ctrl_low_vec(0);
+	ctrl_low_vec(1) = -tau2_max;			ctrl_upp_vec(1) = -ctrl_low_vec(1);
+	ctrl_low_vec(2) = -tau3_max;			ctrl_upp_vec(2) = -ctrl_low_vec(2);
+	ctrl_low_vec(3) = -tau4_max;			ctrl_upp_vec(3) = -ctrl_low_vec(3);
+	ctrl_low_vec(4) = -tau5_max;			ctrl_upp_vec(4) = -ctrl_low_vec(4);
+	ctrl_low_vec(5) = -tau6_max;			ctrl_upp_vec(5) = -ctrl_low_vec(5);
+	ctrl_low_vec(6) = -tau7_max;			ctrl_upp_vec(6) = -ctrl_low_vec(6);
+	ctrl_low_vec(7) = -tau8_max;			ctrl_upp_vec(7) = -ctrl_low_vec(7);
+	ctrl_low_vec(8) = -tau9_max;			ctrl_upp_vec(8) = -ctrl_low_vec(8);
+	ctrl_low_vec(9) = -tau10_max;			ctrl_upp_vec(9) = -ctrl_low_vec(9);
+
+	contact_force_low_vec = -dlib::ones_matrix<double>(12,1) * Inf;
+	contact_force_upp_vec =  dlib::ones_matrix<double>(12,1) * Inf;
+
+
+	// Third job started!
 	vector<double> Robot_State_Init;
-
 	ifstream Initial_Robot_State_File;              // This is to read the initial angle and angular velocities
 	Initial_Robot_State_File.open("init_robot_state.txt");
 	if(Initial_Robot_State_File.is_open())
@@ -140,62 +208,23 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Str
 		printf("Unable to open file!\n");
 	}
 
-	if(Flag ==1)// This means that the given initial condition works for the constraint
+	if(Flag == 1)// This means that the given initial condition works for the constraint
 	{
 		return Robot_State_Init;
 	}
 	else
 	{
+		// If the default configuration would like to be viewed
+
 		// Robot_StateNDot Robot_StateNDot_init(Robot_State_Init);
 		// std::string input_name = "init_given";
 		// Robot_Plot_fn(Robot_StateNDot_init,input_name);
-
-		xlow_vec(0) = rIxlow; 					xupp_vec(0) = rIxupp;
-		xlow_vec(1) = rIylow; 					xupp_vec(1) = rIyupp;
-		xlow_vec(2) = thetalow; 				xupp_vec(2) = thetaupp;
-		xlow_vec(3) = q1low; 					xupp_vec(3) = q1upp;
-		xlow_vec(4) = q2low; 					xupp_vec(4) = q2upp;
-		xlow_vec(5) = q3low; 					xupp_vec(5) = q3upp;
-		xlow_vec(6) = q4low; 					xupp_vec(6) = q4upp;
-		xlow_vec(7) = q5low; 					xupp_vec(7) = q5upp;
-		xlow_vec(8) = q6low; 					xupp_vec(8) = q6upp;
-		xlow_vec(9) = q7low; 					xupp_vec(9) = q7upp;
-		xlow_vec(10) = q8low; 					xupp_vec(10) = q8upp;
-		xlow_vec(11) = q9low; 					xupp_vec(11) = q9upp;
-		xlow_vec(12) = q10low; 					xupp_vec(12) = q10upp;
-		xlow_vec(0+13) = rIxdotlow; 			xupp_vec(0+13) = rIxdotupp;
-		xlow_vec(1+13) = rIydotlow; 			xupp_vec(1+13) = rIydotupp;
-		xlow_vec(2+13) = thetadotlow; 			xupp_vec(2+13) = thetadotupp;
-		xlow_vec(3+13) = q1dotlow; 				xupp_vec(3+13) = q1dotupp;
-		xlow_vec(4+13) = q2dotlow; 				xupp_vec(4+13) = q2dotupp;
-		xlow_vec(5+13) = q3dotlow; 				xupp_vec(5+13) = q3dotupp;
-		xlow_vec(6+13) = q4dotlow; 				xupp_vec(6+13) = q4dotupp;
-		xlow_vec(7+13) = q5dotlow; 				xupp_vec(7+13) = q5dotupp;
-		xlow_vec(8+13) = q6dotlow; 				xupp_vec(8+13) = q6dotupp;
-		xlow_vec(9+13) = q7dotlow; 				xupp_vec(9+13) = q7dotupp;
-		xlow_vec(10+13) = q8dotlow; 			xupp_vec(10+13) = q8dotupp;
-		xlow_vec(11+13) = q9dotlow; 			xupp_vec(11+13) = q9dotupp;
-		xlow_vec(12+13) = q10dotlow; 			xupp_vec(12+13) = q10dotupp;
-
-		ctrl_low_vec(0) = -tau1_max;			ctrl_upp_vec(0) = -ctrl_low_vec(0);
-		ctrl_low_vec(1) = -tau2_max;			ctrl_upp_vec(1) = -ctrl_low_vec(1);
-		ctrl_low_vec(2) = -tau3_max;			ctrl_upp_vec(2) = -ctrl_low_vec(2);
-		ctrl_low_vec(3) = -tau4_max;			ctrl_upp_vec(3) = -ctrl_low_vec(3);
-		ctrl_low_vec(4) = -tau5_max;			ctrl_upp_vec(4) = -ctrl_low_vec(4);
-		ctrl_low_vec(5) = -tau6_max;			ctrl_upp_vec(5) = -ctrl_low_vec(5);
-		ctrl_low_vec(6) = -tau7_max;			ctrl_upp_vec(6) = -ctrl_low_vec(6);
-		ctrl_low_vec(7) = -tau8_max;			ctrl_upp_vec(7) = -ctrl_low_vec(7);
-		ctrl_low_vec(8) = -tau9_max;			ctrl_upp_vec(8) = -ctrl_low_vec(8);
-		ctrl_low_vec(9) = -tau10_max;			ctrl_upp_vec(9) = -ctrl_low_vec(9);
-
 		snoptProblem Default_Init_Pr;                     // This is the name of the Optimization problem
 		// Allocate and initialize
-		integer n = 14;
-		integer neF = 17;     // 1 objective function
-		integer lenA  =  n * neF;                              // This is the number of nonzero elements in the linear part A    F(x) = f(x)+Ax
+		integer n = 26;
+		integer neF = 25;     							  // 1 objective function
+		integer lenA  =  n * neF;                         // This is the number of nonzero elements in the linear part A    F(x) = f(x)+Ax
 
-		integer lenru = 14;             					  // This is used to pass the initial state into the usrfun
-		doublereal *ru = new doublereal[lenru];
 		integer *iAfun = new integer[lenA];              //
 		integer *jAvar = new integer[lenA];
 		doublereal *A  = new doublereal[lenA];
@@ -218,7 +247,6 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Str
 
 		integer nxnames = 1;
 		integer nFnames = 1;
-
 		char *xnames = new char[nxnames*8];
 		char *Fnames = new char[nFnames*8];
 
@@ -227,54 +255,114 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Str
 
 		// Set the upper and lower bounds.
 		// First set the lower and upper bounds for state
-		xlow[0] = rIylow;		xupp[0] = rIyupp;
-		xlow[1] = q1low;		xupp[1] = q1upp;
-		xlow[2] = q2low;		xupp[2] = q2upp;
-		xlow[3] = q3low;		xupp[3] = q3upp;
-		xlow[4] = q4low;		xupp[4] = q4upp;
-		xlow[5] = q5low;		xupp[5] = q5upp;
-		xlow[6] = q6low;		xupp[6] = q6upp;
-		xlow[7] = rIydotlow;	xupp[7] = rIydotupp;
-		xlow[8] = q1dotlow;		xupp[8] = q1dotupp;
-		xlow[9] = q2dotlow;		xupp[9] = q2dotupp;
-		xlow[10] = q3dotlow;	xupp[10] = q3dotupp;
-		xlow[11] = q4dotlow;	xupp[11] = q4dotupp;
-		xlow[12] = q5dotlow;	xupp[12] = q5dotupp;
-		xlow[13] = q6dotlow;	xupp[13] = q6dotupp;
+		xlow[0] = rIxlow;		xupp[0] = rIxupp;
+		xlow[1] = rIylow;		xupp[1] = rIyupp;
+		xlow[2] = thetalow;		xupp[2] = thetaupp;
+		xlow[3] = q1low;		xupp[3] = q1upp;
+		xlow[4] = q2low;		xupp[4] = q2upp;
+		xlow[5] = q3low;		xupp[5] = q3upp;
+		xlow[6] = q4low;		xupp[6] = q4upp;
+		xlow[7] = q5low;		xupp[7] = q5upp;
+		xlow[8] = q6low;		xupp[8] = q6upp;
+		xlow[9] = q7low;		xupp[9] = q7upp;
+		xlow[10] = q8low;		xupp[10] = q8upp;
+		xlow[11] = q9low;		xupp[11] = q9upp;
+		xlow[12] = q10low;		xupp[12] = q10upp;
+
+		// Second set the lower and upper bounds for state
+		xlow[0+13] = rIxdotlow;			xupp[0+13] = rIxdotupp;
+		xlow[1+13] = rIydotlow;			xupp[1+13] = rIydotupp;
+		xlow[2+13] = thetadotlow;		xupp[2+13] = thetadotupp;
+		xlow[3+13] = q1dotlow;			xupp[3+13] = q1dotupp;
+		xlow[4+13] = q2dotlow;			xupp[4+13] = q2dotupp;
+		xlow[5+13] = q3dotlow;			xupp[5+13] = q3dotupp;
+		xlow[6+13] = q4dotlow;			xupp[6+13] = q4dotupp;
+		xlow[7+13] = q5dotlow;			xupp[7+13] = q5dotupp;
+		xlow[8+13] = q6dotlow;			xupp[8+13] = q6dotupp;
+		xlow[9+13] = q7dotlow;			xupp[9+13] = q7dotupp;
+		xlow[10+13] = q8dotlow;			xupp[10+13] = q8dotupp;
+		xlow[11+13] = q9dotlow;			xupp[11+13] = q9dotupp;
+		xlow[12+13] = q10dotlow;		xupp[12+13] = q10dotupp;
+
+		for (int i = 0; i < 26; i++)
+		{
+			xstate[i] = 0.0;
+		}
+
+		for(int i = 0; i<neF; i++)
+		{
+			// The lower bound is the same
+			Flow[i] = 0.0;
+		}
 
 		// Second set the lower and upper bounds for the objective function
-		Flow[0] = 0;			Fupp[0] = Inf;		// This is the vertical position of the robot COM
-		Flow[1] = 0;			Fupp[1] = 0;
-		Flow[2] = 0;			Fupp[2] = 0;
-		Flow[3] = 0;			Fupp[3] = 0;
-		Flow[4] = 0;			Fupp[4] = 0;
-		Flow[5] = 0;			Fupp[5] = 0;
-		Flow[6] = 0;			Fupp[6] = 0;
-		Flow[7] = 0;			Fupp[7] = 5.0;
-		Flow[8] = 0;			Fupp[8] = 5.0;
-		Flow[1+8] = 0;			Fupp[1+8] = 0;
-		Flow[2+8] = 0;			Fupp[2+8] = 0;
-		Flow[3+8] = 0;			Fupp[3+8] = 0;
-		Flow[4+8] = 0;			Fupp[4+8] = 0;
-		Flow[5+8] = 0;			Fupp[5+8] = 0;
-		Flow[6+8] = 0;			Fupp[6+8] = 0;
-		Flow[7+8] = 0;			Fupp[7+8] = 5.0;
-		Flow[8+8] = 0;			Fupp[8+8] = 5.0;
+		Fupp[0] = Inf;		// This is the difference between the optimized configuration and the given configuration
 
-		x[0] = Structure_P.rIy;				//rIy
-		x[1] = Structure_P.q1;				//q1
-		x[2] = Structure_P.q2;				//q2
-		x[3] = Structure_P.q3;				//q3
-		x[4] = Structure_P.q4;				//q4
-		x[5] = Structure_P.q5;				//q5
-		x[6] = Structure_P.q6;				//q6
-		x[7] = Structure_P.rIydot;			//rIy
-		x[8] = Structure_P.q1dot;			//q1
-		x[9] = Structure_P.q2dot;			//q2
-		x[10] = Structure_P.q3dot;			//q3
-		x[11] = Structure_P.q4dot;			//q4
-		x[12] = Structure_P.q5dot;			//q5
-		x[13] = Structure_P.q6dot;			//q6
+		// The constraint bounds should be carefully defined:
+		// They are actually 3 * 6 constraints.
+
+		double sigma_i_j, Fupp_val, Flow_index, Fupp_index;
+
+		for (int j = 0; j < 4; j++)
+		{
+			if(j < 2)
+			{
+				// The first two indicate the foot contact point
+				sigma_i_j = sigma_i[j];
+				if(sigma_i_j>0)	// In this case, the contact constraint should be active
+				{
+					Fupp_val = 0.0;
+					Flow_index = 1 + j * 8;
+					Fupp_index = Flow_index + 8;
+
+					for (int i = Flow_index; i < Fupp_index; i++)
+					{
+						Fupp[i] = Fupp_val;
+					}
+				}
+				else			// In this case, the contact constraints should be inactive
+				{
+					Fupp_val = Inf;
+					Flow_index = 1 + j * 8;
+					Fupp_index = Flow_index + 8;
+					for (int i = Flow_index; i < Fupp_index; i++)
+					{
+						Fupp[i] = Fupp_val;
+					}
+				}
+			}
+			else
+			{
+				// The first two indicate the foot contact point
+				sigma_i_j = sigma_i[j];
+				if(sigma_i_j>0)	// In this case, the contact constraint should be active
+				{
+					Fupp_val = 0.0;
+					Flow_index = 17 + (j-2) * 4;
+					Fupp_index = Flow_index + 4;
+
+					for (int i = Flow_index; i < Fupp_index; i++)
+					{
+						Fupp[i] = Fupp_val;
+					}
+				}
+				else			// In this case, the contact constraints should be inactive
+				{
+					Fupp_val = Inf;
+					Flow_index = 17 + (j-2) * 4;
+					Fupp_index = Flow_index + 4;
+					for (int i = Flow_index; i < Fupp_index; i++)
+					{
+						Fupp[i] = Fupp_val;
+					}
+				}
+			}
+		}
+		// Initial guess
+		for (int i = 0; i < 26; i++)
+		{
+			x[i] = Robot_State_Init[i];
+		}
 
 		// Load the data for ToyProb ...
 		Default_Init_Pr.setPrintFile  ( "Default_Init_Pr.out" );
@@ -296,31 +384,24 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i, Unified_Str
 		integer Cold = 0, Basis = 1, Warm = 2;
 		Default_Init_Pr.solve( Cold );
 
-		Robot_State_Init[2-1] = x[0];				//rIy
-		Robot_State_Init[4-1] = x[1];				//q1
-		Robot_State_Init[5-1] = x[2];				//q2
-		Robot_State_Init[6-1] = x[3];				//q3
-		Robot_State_Init[7-1] = x[4];				//q4
-		Robot_State_Init[8-1] = x[5];				//q5
-		Robot_State_Init[9-1] = x[6];				//q6
-		Robot_State_Init[2+13-1] = x[7];			//rIy
-		Robot_State_Init[4+13-1] = x[8];			//q1
-		Robot_State_Init[5+13-1] = x[9];			//q2
-		Robot_State_Init[6+13-1] = x[10];			//q3
-		Robot_State_Init[7+13-1] = x[11];			//q4
-		Robot_State_Init[8+13-1] = x[12];			//q5
-		Robot_State_Init[9+13-1] = x[13];			//q6
+		// Take the value out from x
+		for (int i = 0; i < 26; i++)
+		{
+			Robot_State_Init[i] = x[i];
+		}
+		// Robot_StateNDot Init_Opt_vec(Robot_State_Init);
+		// Robot_Plot_fn(Init_Opt_vec);
 
 		delete []iAfun;  delete []jAvar;  delete []A;
-		delete []iGfun;  delete []jGvar;
+	    delete []iGfun;  delete []jGvar;
 
-		delete []x;      delete []xlow;   delete []xupp;
-		delete []xmul;   delete []xstate;
+	    delete []x;      delete []xlow;   delete []xupp;
+	    delete []xmul;   delete []xstate;
 
-		delete []F;      delete []Flow;   delete []Fupp;
-		delete []Fmul;   delete []Fstate;
+	    delete []F;		 delete []Flow;	  delete []Fupp;
+	    delete []Fmul;	 delete []Fstate;
 
-		delete []xnames; delete []Fnames;
+	    delete []xnames; delete []Fnames;
 
 		return Robot_State_Init;
 	}
@@ -401,36 +482,29 @@ int Default_Init_Pr_(integer    *Status, integer *n,    doublereal x[],
 	     integer    iu[],    integer *leniu,
 	     doublereal ru[],    integer *lenru )
 {
+	// Initial guess of the robot configurations
+	std::vector<double> Robot_State_Init = Structure_P.Robot_State_Init;
+	std::vector<double> Robot_State_Opt;
+	for (int i = 0; i < 26; i++)
+	{
+		Robot_State_Opt.push_back(x[i]);
+	}
 
-	std::vector<double> Robot_State_Init_vec = Structure_P.Robot_State_Init;
+	Robot_StateNDot StateNDot_Init_i(Robot_State_Opt);
 
-	Robot_StateNDot StateNDot_Init_i(Robot_State_Init_vec);
-
-	StateNDot_Init_i.rIy = x[0];			//rIy
-	StateNDot_Init_i.q1 = x[1];				//q1
-	StateNDot_Init_i.q2 = x[2];				//q2
-	StateNDot_Init_i.q3 = x[3];				//q3
-	StateNDot_Init_i.q4 = x[4];				//q4
-	StateNDot_Init_i.q5 = x[5];				//q5
-	StateNDot_Init_i.q6 = x[6];				//q6
-	StateNDot_Init_i.rIydot = x[7];			//rIydot
-	StateNDot_Init_i.q1dot = x[8];			//q1dot
-	StateNDot_Init_i.q2dot = x[9];			//q2dot
-	StateNDot_Init_i.q3dot = x[10];			//q3dot
-	StateNDot_Init_i.q4dot = x[11];			//q4dot
-	StateNDot_Init_i.q5dot = x[12];			//q5dot
-	StateNDot_Init_i.q6dot = x[13];			//q6dot
-
+	// These are the positions of the robot end effectors
 	std::vector<double> rA = Ang_Pos_fn(StateNDot_Init_i, "rA");
 	std::vector<double> rB = Ang_Pos_fn(StateNDot_Init_i, "rB");
 	std::vector<double> rC = Ang_Pos_fn(StateNDot_Init_i, "rC");
 	std::vector<double> rD = Ang_Pos_fn(StateNDot_Init_i, "rD");
 	std::vector<double> rE = Ang_Pos_fn(StateNDot_Init_i, "rE");
 	std::vector<double> rF = Ang_Pos_fn(StateNDot_Init_i, "rF");
-	std::vector<double> rG = Ang_Pos_fn(StateNDot_Init_i, "rG");
+
+	// These are the positions of the intermediate joints and the head joint
 	std::vector<double> rH = Ang_Pos_fn(StateNDot_Init_i, "rH");
-	std::vector<double> rI = Ang_Pos_fn(StateNDot_Init_i, "rI");
-	std::vector<double> rT = Ang_Pos_fn(StateNDot_Init_i, "rT");
+	std::vector<double> rK = Ang_Pos_fn(StateNDot_Init_i, "rK");
+	std::vector<double> rM = Ang_Pos_fn(StateNDot_Init_i, "rM");
+	std::vector<double> rN = Ang_Pos_fn(StateNDot_Init_i, "rN");
 
 	std::vector<double> rCOM = Ang_Pos_fn(StateNDot_Init_i, "rCOM");
 
@@ -442,43 +516,74 @@ int Default_Init_Pr_(integer    *Status, integer *n,    doublereal x[],
 	std::vector<double> vF = Ang_Vel_fn(StateNDot_Init_i, "vF");
 
 	std::vector<double> sigma_i = Structure_P.sigma_i;
-	double sigma0_1 = 1.0*sigma_i[0];
-	double sigma0_2 = 1.0*sigma_i[1];
 
-	// for (int i = 0; i < 17; i++)
-	// {
-	// 	F[i] = 0.0;
-	// }
-	F[0] = -rT[1];
-	// std::cout<<sigma0_1<<endl;
-	// if(sigma0_1==1)
-	// {
-	// double val1 = -sigma0_1*(mini - rC[1]);
-	// double val2 = -sigma0_1*(mini - rD[1]);
+	double xG_offset = (Robot_State_Init[0]- Robot_State_Opt[0]) * (Robot_State_Init[0]- Robot_State_Opt[0]);
+	double yG_offset = (Robot_State_Init[1]- Robot_State_Opt[1]) * (Robot_State_Init[1]- Robot_State_Opt[1]);
 
-		F[1] = sigma0_1*rA[1];
-		F[2] = sigma0_1*rB[1];
-		F[3] = sigma0_1*vA[0];
-		F[4] = sigma0_1*vA[1];
-		F[5] = sigma0_1*vB[0];
-		F[6] = sigma0_1*vB[1];
-		F[7] = -sigma0_1*(sigma0_2==0)*(mini - rC[1]);
-		F[8] = -sigma0_1*(sigma0_2==0)*(mini - rD[1]);
-	// }
-	// if(sigma0_2==1)
-	// {
-		F[9] =  sigma0_2*rC[1];
-		F[10] = sigma0_2*rD[1];
-		F[11] = sigma0_2*vC[0];
-		F[12] = sigma0_2*vC[1];
-		F[13] = sigma0_2*vD[0];
-		F[14] = sigma0_2*vD[1];
-		F[15] = -sigma0_2*(sigma0_1==0)*(mini - rA[1]);
-		F[16] = -sigma0_2*(sigma0_1==0)*(mini - rB[1]);
-	// }
+	// The optimized configuration should obey the initial xG and yG position
+	F[0] = xG_offset + yG_offset;
 
+	// 2 foot contacts
+	F[1] = sigma_i[0]*rA[1];
+	F[2] = sigma_i[0]*vA[0];
+	F[3] = sigma_i[0]*vA[1];
+	F[4] = (sigma_i[0]==0) * (rA[1] - mini);
+
+	F[5] = sigma_i[0]*rB[1];
+	F[6] = sigma_i[0]*vB[0];
+	F[7] = sigma_i[0]*vB[1];
+	F[8] = (sigma_i[0]==0) * (rB[1] - mini);
+
+	F[9] = sigma_i[1]*rC[1];
+	F[10] = sigma_i[1]*vC[0];
+	F[11] = sigma_i[1]*vC[1];
+	F[12] = (sigma_i[1]==0) * (rC[1] - mini);
+
+	F[13] = sigma_i[1]*rD[1];
+	F[14] = sigma_i[1]*vD[0];
+	F[15] = sigma_i[1]*vD[1];
+	F[16] = (sigma_i[1]==0) * (rD[1] - mini);
+
+	// Two hand contacts
+	int Obs_Choice_Ind;
+	F[17] = sigma_i[2]*Obs_Dist_Fn(rE, Envi_Map, Obs_Choice_Ind);
+	F[18] = sigma_i[2]*Obs_Dist_Fn(rE, Envi_Map, Obs_Choice_Ind);
+	F[19] = sigma_i[2]*Obs_Dist_Fn(rE, Envi_Map, Obs_Choice_Ind);
+	F[20] = (sigma_i[2]==0) * (Obs_Dist_Fn(rE, Envi_Map, Obs_Choice_Ind) - mini);
+
+	F[21] = sigma_i[3]*Obs_Dist_Fn(rF, Envi_Map, Obs_Choice_Ind);
+	F[22] = sigma_i[3]*Obs_Dist_Fn(rF, Envi_Map, Obs_Choice_Ind);
+	F[23] = sigma_i[3]*Obs_Dist_Fn(rF, Envi_Map, Obs_Choice_Ind);
+	F[24] = (sigma_i[3]==0) * (Obs_Dist_Fn(rF, Envi_Map, Obs_Choice_Ind) - mini);
 	return 0;
 }
+
+double Obs_Dist_Fn(std::vector<double> &r_Pos, dlib::matrix<double> &Envi_Map, int &Obs_Choice_Ind)
+{
+	// 	This function is used to calculate the relative distance between the robot end effector and the nearby environment
+	// To make it easier for the research purpose, here we only consider two environmental obstacles:  flat ground and a vertical wall
+	double Flat_Grnd_Vert = 0.0;
+	double Vert_Wall_Hori = Envi_Map(0,0);
+
+	double r_Pos_x_offset = Vert_Wall_Hori - r_Pos[0];
+	double r_Pos_y_offset = r_Pos[1] - Flat_Grnd_Vert;
+
+	double Obs_Dist;
+
+	if ((r_Pos_x_offset * r_Pos_x_offset)>(r_Pos_y_offset * r_Pos_y_offset))
+	{
+		Obs_Choice_Ind = 0;
+		Obs_Dist = r_Pos_y_offset;
+	}
+	else
+	{
+		Obs_Choice_Ind = 1;
+		Obs_Dist = r_Pos_x_offset;
+	}
+
+	return Obs_Dist;
+}
+
 
 Unified_Structure_P::Unified_Structure_P()
 {
@@ -1388,15 +1493,15 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 		double End_Vert_Min = *std::min_element(End_Vert_Array.begin(), End_Vert_Array.end());
 		std::vector<double> r_pos(2); r_pos[0] = End_Hori_Max; r_pos[1] = End_Vert_Min;
 
-		double Outreach = Obs_Dist_fn(r_pos, "x")- Step_Length_Max;
+		double Outreach = Obs_Dist_fn(r_pos, "x");
 		if (Outreach<0)
 		{
 			// In this case, there could be a hand collision
 			Tree_Node Node_Child1, Node_Child2;
 			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 2, 1);
 			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 3, 1);
-			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
-			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
+			Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child1_sigma);
+			Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child2_sigma);
 		}
 	}
 	else
@@ -1407,8 +1512,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 			Tree_Node Node_Child1, Node_Child2;
 			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 2, 0);
 			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 3, 0);
-			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
-			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
+			Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child1_sigma);
+			Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child2_sigma);
 		}
 		else
 		{
@@ -1416,12 +1521,12 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 			Tree_Node Node_Child1, Node_Child2, Node_Child3, Node_Child4;
 			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 2, 1);
 			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 3, 1);
-			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
-			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
+			Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child1_sigma);
+			Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child2_sigma);
 			std::vector<double> Node_Child3_sigma = sigma_modi(sigma_i, 2, 0);
 			std::vector<double> Node_Child4_sigma = sigma_modi(sigma_i, 3, 0);
-			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child3_sigma);
-			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child4_sigma);
+			Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child3_sigma);
+			Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child4_sigma);
 
 		}
 	}
@@ -1433,8 +1538,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 		Tree_Node Node_Child1, Node_Child2;
 		std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 1, 1);
 		std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 2, 1);
-		Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
-		Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
+		Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child1_sigma);
+		Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child2_sigma);
 	}
 	else
 	{
@@ -1444,8 +1549,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 			Tree_Node Node_Child1, Node_Child2;
 			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, 1, 0);
 			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, 2, 0);
-			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
-			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
+			Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child1_sigma);
+			Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child2_sigma);
 		}
 		else
 		{
@@ -1460,8 +1565,8 @@ int Node_Expansion_fn(Tree_Node &Cur_Node, Unified_Structure_P Structure_P)
 			std::vector<double> Node_Child1_sigma = sigma_modi(sigma_i, Active_Ind, 0);
 			std::vector<double> Node_Child2_sigma = sigma_modi(sigma_i, Inactive_Ind, 1);
 
-			Add_Child2Par(Node_Child1,Cur_Node,Nodes_Tot_Number,Node_Child1_sigma);
-			Add_Child2Par(Node_Child2,Cur_Node,Nodes_Tot_Number,Node_Child2_sigma);
+			Add_Child2Par(Node_Child1,Cur_Node,Total_Nodes_Number,Node_Child1_sigma);
+			Add_Child2Par(Node_Child2,Cur_Node,Total_Nodes_Number,Node_Child2_sigma);
 		}
 	}
 	return 0;
