@@ -69,7 +69,7 @@ struct Tree_Node
     std::vector<double> self_StateNDot_Traj;
     std::vector<double> self_Ctrl_Traj;
     std::vector<double> self_Contact_Force_Traj;
-    dlib::matrix<double> End_Effector_Pos, End_Effector_Vel;
+    dlib::matrix<double,16,1> End_Effector_Pos, End_Effector_Vel;
 };
 
 
@@ -80,7 +80,7 @@ public:
     double u1,u2,u3,u4,u5,u6,u7,u8,u9,u10;
     Tree_Node Node_i;
     Tree_Node Node_i_child;
-    std::vector<double> sigma_i;///        well this is the only for thye initialization
+    std::vector<double> sigma_i;                ///        well this is the only for thye initialization
     std::vector<double> Opt_Ctrl_LowBd;
     std::vector<double> Opt_Ctrl_UppBd;
     std::vector<double> Opt_Conf_LowBd;
@@ -119,8 +119,8 @@ void Add_Node(Tree_Node &Cur_Node);
 Tree_Node Pop_Node();
 void Reference_Dist_Vel_Update(Tree_Node &Node_i);
 double Dot_Product(std::vector<double> &x1, std::vector<double> &x2);
-void End_Effector_PosNVel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double> &End_Effector_Pos, dlib::matrix<double> &End_Effector_Vel);
-dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double> &End_Effector_Pos);
+void End_Effector_PosNVel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double,16,1> &End_Effector_Pos, dlib::matrix<double,16,1> &End_Effector_Vel);
+dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos);
 
 
 int Node_Self_Opt(Tree_Node &Node_i);

@@ -1342,7 +1342,7 @@ std::vector<double> Ang_Vel_fn(const Robot_StateNDot &Robot_StateNDot_i, const c
 		T[0] = rIxdot-q7dot*(sin(q7+theta+PI*(1.0/2.0))*(1.0/4.0)+sin(q7+q8+theta+PI*(1.0/2.0))*(9.0/2.0E1))-thetadot*(sin(q7+theta+PI*(1.0/2.0))*(1.0/4.0)+sin(q7+q8+theta+PI*(1.0/2.0))*(9.0/2.0E1)+sin(theta-PI*(1.0/2.0))*(1.1E1/2.0E1))-q8dot*sin(q7+q8+theta+PI*(1.0/2.0))*(9.0/2.0E1);
 		T[1] = rIydot-q7dot*(cos(q7+theta+PI*(1.0/2.0))*(1.0/4.0)+cos(q7+q8+theta+PI*(1.0/2.0))*(9.0/2.0E1))-thetadot*(cos(q7+theta+PI*(1.0/2.0))*(1.0/4.0)+cos(q7+q8+theta+PI*(1.0/2.0))*(9.0/2.0E1)+cos(theta-PI*(1.0/2.0))*(1.1E1/2.0E1))-q8dot*cos(q7+q8+theta+PI*(1.0/2.0))*(9.0/2.0E1);
 	}
-	if(strcmp(s,"vE")==0)
+	if(strcmp(s,"vF")==0)
 	{
 		T[0] = rIxdot-q9dot*(sin(q9+theta+PI*(1.0/2.0))*(1.0/4.0)+sin(q9+q10+theta+PI*(1.0/2.0))*(9.0/2.0E1))-thetadot*(sin(q9+theta+PI*(1.0/2.0))*(1.0/4.0)+sin(q9+q10+theta+PI*(1.0/2.0))*(9.0/2.0E1)+sin(theta-PI*(1.0/2.0))*(1.1E1/2.0E1))-q10dot*sin(q9+q10+theta+PI*(1.0/2.0))*(9.0/2.0E1);
 		T[1] = rIydot-q9dot*(cos(q9+theta+PI*(1.0/2.0))*(1.0/4.0)+cos(q9+q10+theta+PI*(1.0/2.0))*(9.0/2.0E1))-thetadot*(cos(q9+theta+PI*(1.0/2.0))*(1.0/4.0)+cos(q9+q10+theta+PI*(1.0/2.0))*(9.0/2.0E1)+cos(theta-PI*(1.0/2.0))*(1.1E1/2.0E1))-q10dot*cos(q9+q10+theta+PI*(1.0/2.0))*(9.0/2.0E1);
@@ -1615,9 +1615,7 @@ int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal 
 	}
 
 	Robot_StateNDot StateNDot_Init_i(Robot_State_Opt);
-	dlib::matrix<double> End_Effector_Pos, End_Effector_Vel;
-	End_Effector_Pos = dlib::randm(16,1);
-	End_Effector_Vel = dlib::randm(16,1);
+	dlib::matrix<double,16,1> End_Effector_Pos, End_Effector_Vel;
 	End_Effector_PosNVel(StateNDot_Init_i, End_Effector_Pos, End_Effector_Vel);
 	// These are the positions of the robot end effectors
 	dlib::matrix<double> End_Effector_Obs_Dist = End_Effector_Obs_Dist_Fn(End_Effector_Pos);
@@ -1626,12 +1624,26 @@ int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal 
 
 	// The optimized configuration should consider the kinetic energy
 	F[0] = Kinetic_Energy_fn(StateNDot_Init_i);
+//	1.Relative distance constraints: a.all distance have to be at least on the surface b.the desired motion hasto be satisfied
 
-/*
-**	1.Relative distance constraints: a.all distance have to be at least on the surface b.the desired motion hasto be satisfied
-*/
 	dlib::matrix<double,8,8> Eqn_Pos_Matrix, Inq_Pos_Matrix;
+	Eqn_Pos_Matrix = dlib::zeros_matrix<double>(8,8);
+	Inq_Pos_Matrix = dlib::zeros_matrix<double>(8,8);
 	dlib::matrix<double,16,16> Eqn_Vel_Matrix, Eqn_Maint_Matrix;
+	Eqn_Vel_Matrix = dlib::zeros_matrix<double>(16,16);
+	Eqn_Maint_Matrix = dlib::zeros_matrix<double>(16,16);
+
+	// printf("Eqn_Pos_Matrix Number of rows: %ld\n",Eqn_Pos_Matrix.nr());
+	// printf("Eqn_Pos_Matrix Number of columns: %ld\n",Eqn_Pos_Matrix.nc());
+	//
+	// printf("Inq_Pos_Matrix Number of rows: %ld\n",Inq_Pos_Matrix.nr());
+	// printf("Inq_Pos_Matrix Number of columns: %ld\n",Inq_Pos_Matrix.nc());
+	//
+	// printf("Eqn_Vel_Matrix Number of rows: %ld\n",Eqn_Vel_Matrix.nr());
+	// printf("Eqn_Vel_Matrix Number of columns: %ld\n",Eqn_Vel_Matrix.nc());
+	//
+	// printf("Eqn_Maint_Matrix Number of rows: %ld\n",Eqn_Maint_Matrix.nr());
+	// printf("Eqn_Maint_Matrix Number of columns: %ld\n",Eqn_Maint_Matrix.nc());
 
 	Eqn_Pos_Matrix(0,0) = sigma_i_child[0];
 	Eqn_Pos_Matrix(1,1) = sigma_i_child[0];
@@ -1664,10 +1676,12 @@ int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal 
 	for (int i = 1; i < 9; i++)
 	{
 		F[i] = End_Effector_Pos_Constraint(i);
+		// printf("End_Effector_Pos_Constraint(%d): %f\n", i, F[i]);
 	}
 	for (int i = 9; i < 25; i++)
 	{
-		F[i] = End_Effector_Vel_Constraint(i);
+		F[i] = End_Effector_Vel_Constraint(i-9);
+		// printf("End_Effector_Vel_Constraint(%d): %f\n", i - 9, F[i]);
 	}
 
 	Inq_Pos_Matrix(0,0) = !sigma_i_child[0];
@@ -1681,7 +1695,8 @@ int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal 
 	Inq_Pos_Constraint = Inq_Pos_Matrix * (End_Effector_Obs_Dist - End_Effector_Obs_vec * mini);
 	for (int i = 25; i < 33; i++)
 	{
-		F[i] = Inq_Pos_Constraint(i-27);
+		F[i] = Inq_Pos_Constraint(i-25);
+		// printf("Inq_Pos_Constraint(%d): %f\n", i-25, F[i]);
 	}
 
 	/*
@@ -1702,25 +1717,38 @@ int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal 
 	Eqn_Maint_Matrix(10,10) = sigma_i[3] * sigma_i_child[3];
 	Eqn_Maint_Matrix(11,11) = sigma_i[3] * sigma_i_child[3];
 
-	dlib::matrix<double> offset_End_Effector_Pos, offset_End_Effector_Vel;
-	offset_End_Effector_Pos = ref_End_Effector_Pos - End_Effector_Pos;
-	offset_End_Effector_Vel = ref_End_Effector_Vel - End_Effector_Vel;
+	dlib::matrix<double,16,1> offset_End_Effector_Pos, offset_End_Effector_Vel;
+	for (int i = 0; i < 16; i++)
+	{
+		offset_End_Effector_Pos(i) = ref_End_Effector_Pos(i) - End_Effector_Pos(i);
+		offset_End_Effector_Vel(i) = ref_End_Effector_Vel(i) - End_Effector_Vel(i);
+	}
+	//
+	// std::cout<<offset_End_Effector_Pos<<endl;
+	// std::cout<<offset_End_Effector_Vel<<endl;
+	// std::cout << "Eqn_Maint_Matrix"<< endl;
+	// std::cout << Eqn_Maint_Matrix << endl;
 
 	offset_End_Effector_Pos = Eqn_Maint_Matrix * offset_End_Effector_Pos;
 	offset_End_Effector_Vel = Eqn_Maint_Matrix * offset_End_Effector_Vel;
+	// std::cout<<offset_End_Effector_Pos<<endl;
+	// std::cout<<offset_End_Effector_Vel<<endl;
 	for (int i = 33; i < 49; i++)
 	{
-		F[i] = offset_End_Effector_Pos(i-35);
+		F[i] = offset_End_Effector_Pos(i-33);
+		// printf("offset_End_Effector_Pos(%d): %f\n", i - 33, F[i]);
+
 	}
 	for (int i = 49; i < 65; i++)
 	{
-		F[i] = offset_End_Effector_Vel(i-51);
+		F[i] = offset_End_Effector_Vel(i-49);
+		// printf("offset_End_Effector_Vel(%d): %f\n", i - 49, F[i]);
 	}
 
 	return 0;
 }
 
-dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double> &End_Effector_Pos)
+dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos)
 {
 	dlib::matrix<double,8,1> End_Effector_Dist;
 	int Obs_Choice_Ind; char char_sym;
@@ -1744,7 +1772,7 @@ dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double> &End_Effector
 	return End_Effector_Dist;
 }
 
-void End_Effector_PosNVel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double> &End_Effector_Pos, dlib::matrix<double> &End_Effector_Vel)
+void End_Effector_PosNVel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double,16,1> &End_Effector_Pos, dlib::matrix<double,16,1> &End_Effector_Vel)
 {
 	std::vector<double> rA = Ang_Pos_fn(StateNDot_Init_i, "rA");
 	std::vector<double> rB = Ang_Pos_fn(StateNDot_Init_i, "rB");

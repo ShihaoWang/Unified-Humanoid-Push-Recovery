@@ -21,7 +21,7 @@ int main( int argc, char **argv)
 	Structure_P.sigma_i = sigma_init;
 	std::vector<double> Robot_Init_vec = Default_Init(sigma_init, 0);
 	Robot_StateNDot StateNDot_Init_Opt(Robot_Init_vec);
-	// Robot_Plot_fn(StateNDot_Init_Opt);
+	Robot_Plot_fn(StateNDot_Init_Opt);
 
 	// After the robot state initialization, the next job is to conduct the multi-contact staiblization strategy
 
@@ -57,7 +57,7 @@ int main( int argc, char **argv)
 			// At least one contact is active in this case
 			Node_Self_Opt(Current_Node);
 
-
+ 
 
 
 
