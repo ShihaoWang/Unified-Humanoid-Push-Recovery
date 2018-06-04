@@ -81,6 +81,7 @@ public:
     Tree_Node Node_i;
     Tree_Node Node_i_child;
     std::vector<double> sigma_i;                ///        well this is the only for thye initialization
+    std::vector<double> sigma_tran, sigma_goal;
     std::vector<double> Opt_Ctrl_LowBd;
     std::vector<double> Opt_Ctrl_UppBd;
     std::vector<double> Opt_Conf_LowBd;
@@ -124,6 +125,10 @@ dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Eff
 
 
 int Node_Self_Opt(Tree_Node &Node_i);
+std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child);
+std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Node_i_child);
+std::vector<double> Vec_Minus(std::vector<double> &vec1, std::vector<double> &vec2);
+dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos, std::vector<double> &Contact_Ind);
 
 
 std::vector<double> sigma_modi(std::vector<double> sigma_ref, int contas_ind, int AddOrRet);

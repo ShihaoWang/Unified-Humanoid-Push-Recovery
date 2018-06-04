@@ -897,7 +897,8 @@ dlib::matrix<double> D_q_fn(const Robot_StateNDot &Robot_StateNDot_i)
 	double q9 = Robot_StateNDot_i.q9;
 	double q10 = Robot_StateNDot_i.q10;
 
-	dlib::matrix<double>  T(13,13);
+	dlib::matrix<double>  T;
+	T = dlib::zeros_matrix<double>(13,13);
 	T(0,0) = 2.71E2/5.0;
 	T(0,2) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q4+q5+theta)*(9.1E1/1.0E2)-cos(q7+q8+theta)*(6.3E1/8.0E1)-cos(q9+q10+theta)*(6.3E1/8.0E1)-cos(q1+theta)*(3.9E1/2.0E1)-cos(q4+theta)*(3.9E1/2.0E1)-cos(q7+theta)*(9.1E1/8.0E1)-cos(q9+theta)*(9.1E1/8.0E1)+cos(theta)*1.3585E1-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(2.0)*cos(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*(2.0/2.5E1)-sqrt(2.0)*cos(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*(2.0/2.5E1);
 	T(0,3) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(2.0)*cos(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*(2.0/2.5E1);
@@ -995,7 +996,8 @@ dlib::matrix<double> D_q_fn(const Robot_StateNDot &Robot_StateNDot_i)
 }
 dlib::matrix<double> B_q_fn()
 {
-	dlib::matrix<double> B_q(13,10);
+	dlib::matrix<double> B_q;
+	B_q = dlib::zeros_matrix<double>(13,1);
 	B_q(3,0) = 1.0;
 	B_q(4,1) = 1.0;
 	B_q(5,2) = 1.0;
@@ -1039,7 +1041,9 @@ dlib::matrix<double> C_q_qdot_fn(const Robot_StateNDot &Robot_StateNDot_i)
 	double q9dot = Robot_StateNDot_i.q9dot;
 	double q10dot = Robot_StateNDot_i.q10dot;
 
-	dlib::matrix<double> T(13,1);
+	dlib::matrix<double> T;
+	T = dlib::zeros_matrix<double>(13,1);
+
 	T(0,0) = (thetadot*thetadot)*sin(theta)*(-1.3585E1)+(q10dot*q10dot)*sin(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(q2dot*q2dot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(q4dot*q4dot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(q5dot*q5dot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(q7dot*q7dot)*sin(q7+q8+theta)*(6.3E1/8.0E1)+(q8dot*q8dot)*sin(q7+q8+theta)*(6.3E1/8.0E1)+(q9dot*q9dot)*sin(q9+q10+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*sin(q7+q8+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*sin(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*sin(q1+theta)*(3.9E1/2.0E1)+(q4dot*q4dot)*sin(q4+theta)*(3.9E1/2.0E1)+(q7dot*q7dot)*sin(q7+theta)*(9.1E1/8.0E1)+(q9dot*q9dot)*sin(q9+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*sin(q1+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*sin(q4+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*sin(q7+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*sin(q9+theta)*(9.1E1/8.0E1)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q4dot*q4dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q5dot*q5dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q6dot*q6dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+q10dot*q9dot*sin(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*q5dot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*q8dot*sin(q7+q8+theta)*(6.3E1/4.0E1)+q10dot*thetadot*sin(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*thetadot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q2dot*thetadot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*thetadot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q5dot*thetadot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*thetadot*sin(q7+q8+theta)*(6.3E1/4.0E1)+q8dot*thetadot*sin(q7+q8+theta)*(6.3E1/4.0E1)+q9dot*thetadot*sin(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*q2dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*sin(q1+theta)*(3.9E1/1.0E1)+q4dot*thetadot*sin(q4+theta)*(3.9E1/1.0E1)+q7dot*thetadot*sin(q7+theta)*(9.1E1/4.0E1)+q9dot*thetadot*sin(q9+theta)*(9.1E1/4.0E1)+sqrt(4.1E1)*q1dot*q2dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q5dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q3dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q6dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1);
 	T(1,0) = (thetadot*thetadot)*cos(theta)*(-1.3585E1)+(q10dot*q10dot)*cos(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(q2dot*q2dot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(q4dot*q4dot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(q5dot*q5dot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(q7dot*q7dot)*cos(q7+q8+theta)*(6.3E1/8.0E1)+(q8dot*q8dot)*cos(q7+q8+theta)*(6.3E1/8.0E1)+(q9dot*q9dot)*cos(q9+q10+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*cos(q7+q8+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*cos(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)-(q1dot*q1dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q2dot*q2dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q3dot*q3dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q4dot*q4dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(q5dot*q5dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(q6dot*q6dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(thetadot*thetadot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(thetadot*thetadot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*cos(q1+theta)*(3.9E1/2.0E1)+(q4dot*q4dot)*cos(q4+theta)*(3.9E1/2.0E1)+(q7dot*q7dot)*cos(q7+theta)*(9.1E1/8.0E1)+(q9dot*q9dot)*cos(q9+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*cos(q1+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*cos(q4+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*cos(q7+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*cos(q9+theta)*(9.1E1/8.0E1)+sqrt(4.1E1)*(q1dot*q1dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q4dot*q4dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q5dot*q5dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q6dot*q6dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+q10dot*q9dot*cos(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*q5dot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*q8dot*cos(q7+q8+theta)*(6.3E1/4.0E1)+q10dot*thetadot*cos(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*thetadot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q2dot*thetadot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*thetadot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q5dot*thetadot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*thetadot*cos(q7+q8+theta)*(6.3E1/4.0E1)+q8dot*thetadot*cos(q7+q8+theta)*(6.3E1/4.0E1)+q9dot*thetadot*cos(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)-q1dot*q2dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q1dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q2dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q4dot*q5dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q4dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q5dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q1dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q2dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q3dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q4dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q5dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q6dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+theta)*(3.9E1/1.0E1)+q4dot*thetadot*cos(q4+theta)*(3.9E1/1.0E1)+q7dot*thetadot*cos(q7+theta)*(9.1E1/4.0E1)+q9dot*thetadot*cos(q9+theta)*(9.1E1/4.0E1)+sqrt(4.1E1)*q1dot*q2dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q5dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q3dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q6dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+5.31702E2;
 	T(2,0) = sin(q1+q2+theta)*8.9271+sin(q4+q5+theta)*8.9271+sin(q7+q8+theta)*7.725375+sin(q9+q10+theta)*7.725375+sin(q1+theta)*1.91295E1+sin(q4+theta)*1.91295E1+sin(q7+theta)*1.1158875E1+sin(q9+theta)*1.1158875E1-sin(theta)*1.3326885E2-(q3dot*q3dot)*cos(q3)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q6)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*7.848E-1+sqrt(2.0)*sin(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*7.848E-1-(q10dot*q10dot)*sin(q10)*(6.3E1/3.2E2)-(q2dot*q2dot)*sin(q2)*2.9575E-1-(q3dot*q3dot)*sin(q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5)*2.9575E-1-(q6dot*q6dot)*sin(q6)*(1.3E1/5.0E2)+(q7dot*q7dot)*sin(q7)*6.25625E-1-(q8dot*q8dot)*sin(q8)*(6.3E1/3.2E2)+(q9dot*q9dot)*sin(q9)*6.25625E-1+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*1.962E-1+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*1.962E-1-(q2dot*q2dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*cos(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q5+q6)*(1.3E1/5.0E2)+(q10dot*q10dot)*sin(q9+q10)*4.33125E-1-(q2dot*q2dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*sin(q5+q6)*(1.3E1/5.0E2)+(q7dot*q7dot)*sin(q7+q8)*4.33125E-1+(q8dot*q8dot)*sin(q7+q8)*4.33125E-1+(q9dot*q9dot)*sin(q9+q10)*4.33125E-1-q1dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q3)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q6)*(1.3E1/2.5E2)-q10dot*q9dot*sin(q10)*(6.3E1/1.6E2)-q1dot*q2dot*sin(q2)*5.915E-1-q1dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5)*5.915E-1-q4dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q7dot*q8dot*sin(q8)*(6.3E1/1.6E2)-q10dot*thetadot*sin(q10)*(6.3E1/1.6E2)-q2dot*thetadot*sin(q2)*5.915E-1-q3dot*thetadot*sin(q3)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5)*5.915E-1-q6dot*thetadot*sin(q6)*(1.3E1/2.5E2)+q7dot*thetadot*sin(q7)*1.25125-q8dot*thetadot*sin(q8)*(6.3E1/1.6E2)+q9dot*thetadot*sin(q9)*1.25125-sqrt(4.1E1)*(q2dot*q2dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q3dot*q3dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q5dot*q5dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-q1dot*q2dot*cos(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q4dot*q5dot*cos(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q2dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q5dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)+q10dot*q9dot*sin(q9+q10)*(6.93E2/8.0E2)-q1dot*q2dot*sin(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)+q7dot*q8dot*sin(q7+q8)*(6.93E2/8.0E2)+q10dot*thetadot*sin(q9+q10)*(6.93E2/8.0E2)-q2dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)+q7dot*thetadot*sin(q7+q8)*(6.93E2/8.0E2)+q8dot*thetadot*sin(q7+q8)*(6.93E2/8.0E2)+q9dot*thetadot*sin(q9+q10)*(6.93E2/8.0E2)-sqrt(4.1E1)*(q3dot*q3dot)*sin(q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q1dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q2dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q5dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3);
@@ -1072,7 +1076,8 @@ dlib::matrix<double> Jac_Full_fn(const Robot_StateNDot &Robot_StateNDot_i)
 	double q9 = Robot_StateNDot_i.q9;
 	double q10 = Robot_StateNDot_i.q10;
 
-	dlib::matrix<double> T(12,13);
+	dlib::matrix<double> T;
+	T = dlib::zeros_matrix<double>(12,13);
 	T(0,0) = 1.0;
     T(0,2) = sin(q1+theta+3.141592653589793*(1.0/2.0))*(-1.3E1/4.0E1)-sin(q1+q2+theta+3.141592653589793*(1.0/2.0))*(1.3E1/4.0E1)-sqrt(4.1E1)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/2.0)-8.960553845713439E-1)*(1.0/4.0E1);
     T(0,3) = sin(q1+theta+3.141592653589793*(1.0/2.0))*(-1.3E1/4.0E1)-sin(q1+q2+theta+3.141592653589793*(1.0/2.0))*(1.3E1/4.0E1)-sqrt(4.1E1)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/2.0)-8.960553845713439E-1)*(1.0/4.0E1);
@@ -1162,7 +1167,9 @@ dlib::matrix<double> Jacdot_qdot_fn(const Robot_StateNDot &Robot_StateNDot_i)
 	double q9dot = Robot_StateNDot_i.q9dot;
 	double q10dot = Robot_StateNDot_i.q10dot;
 
-	dlib::matrix<double> T(12,1);
+	dlib::matrix<double> T;
+	T = dlib::zeros_matrix<double>(12,1);
+
 	T(0,0) = (q1dot*q1dot)*sin(q1+q2+theta)*(1.3E1/4.0E1)+(q2dot*q2dot)*sin(q1+q2+theta)*(1.3E1/4.0E1)+(thetadot*thetadot)*sin(q1+q2+theta)*(1.3E1/4.0E1)+(q1dot*q1dot)*sin(q1+theta)*(1.3E1/4.0E1)+(thetadot*thetadot)*sin(q1+theta)*(1.3E1/4.0E1)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+q1dot*q2dot*sin(q1+q2+theta)*(1.3E1/2.0E1)+q1dot*thetadot*sin(q1+q2+theta)*(1.3E1/2.0E1)+q2dot*thetadot*sin(q1+q2+theta)*(1.3E1/2.0E1)+q1dot*thetadot*sin(q1+theta)*(1.3E1/2.0E1)+sqrt(4.1E1)*q1dot*q2dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q1dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q2dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q1dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q2dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q3dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1);
 	T(1,0) = (q1dot*q1dot)*cos(q1+q2+theta)*(1.3E1/4.0E1)+(q2dot*q2dot)*cos(q1+q2+theta)*(1.3E1/4.0E1)+(thetadot*thetadot)*cos(q1+q2+theta)*(1.3E1/4.0E1)+(q1dot*q1dot)*cos(q1+theta)*(1.3E1/4.0E1)+(thetadot*thetadot)*cos(q1+theta)*(1.3E1/4.0E1)+sqrt(4.1E1)*(q1dot*q1dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/4.0E1)+q1dot*q2dot*cos(q1+q2+theta)*(1.3E1/2.0E1)+q1dot*thetadot*cos(q1+q2+theta)*(1.3E1/2.0E1)+q2dot*thetadot*cos(q1+q2+theta)*(1.3E1/2.0E1)+q1dot*thetadot*cos(q1+theta)*(1.3E1/2.0E1)+sqrt(4.1E1)*q1dot*q2dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q1dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q2dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q1dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q2dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1)+sqrt(4.1E1)*q3dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.0E1);
 	T(2,0) = (q1dot*q1dot)*sin(q1+q2+theta)*(1.3E1/4.0E1)+(q2dot*q2dot)*sin(q1+q2+theta)*(1.3E1/4.0E1)+(thetadot*thetadot)*sin(q1+q2+theta)*(1.3E1/4.0E1)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(1.0/1.0E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(1.0/1.0E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(1.0/1.0E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(1.0/1.0E1)+(q1dot*q1dot)*sin(q1+q2+q3+theta)*(1.0/1.0E1)+(q2dot*q2dot)*sin(q1+q2+q3+theta)*(1.0/1.0E1)+(q3dot*q3dot)*sin(q1+q2+q3+theta)*(1.0/1.0E1)+(thetadot*thetadot)*sin(q1+q2+q3+theta)*(1.0/1.0E1)+(q1dot*q1dot)*sin(q1+theta)*(1.3E1/4.0E1)+(thetadot*thetadot)*sin(q1+theta)*(1.3E1/4.0E1)+q1dot*q2dot*sin(q1+q2+theta)*(1.3E1/2.0E1)+q1dot*thetadot*sin(q1+q2+theta)*(1.3E1/2.0E1)+q2dot*thetadot*sin(q1+q2+theta)*(1.3E1/2.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(1.0/5.0)+q1dot*q3dot*cos(q1+q2+q3+theta)*(1.0/5.0)+q2dot*q3dot*cos(q1+q2+q3+theta)*(1.0/5.0)+q1dot*thetadot*cos(q1+q2+q3+theta)*(1.0/5.0)+q2dot*thetadot*cos(q1+q2+q3+theta)*(1.0/5.0)+q3dot*thetadot*cos(q1+q2+q3+theta)*(1.0/5.0)+q1dot*q2dot*sin(q1+q2+q3+theta)*(1.0/5.0)+q1dot*q3dot*sin(q1+q2+q3+theta)*(1.0/5.0)+q2dot*q3dot*sin(q1+q2+q3+theta)*(1.0/5.0)+q1dot*thetadot*sin(q1+q2+q3+theta)*(1.0/5.0)+q2dot*thetadot*sin(q1+q2+q3+theta)*(1.0/5.0)+q3dot*thetadot*sin(q1+q2+q3+theta)*(1.0/5.0)+q1dot*thetadot*sin(q1+theta)*(1.3E1/2.0E1);
@@ -1407,13 +1414,14 @@ int Nodes_Connectivity_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child, Unified_S
 
 }
 
-int Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
+std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {
 	int flag = 0;			// The default flag is set to be no-solution found
+	std::vector<double> Robot_State_i, Robot_State_i_child, sigma_tran, sigma_goal;
+	Robot_State_i = StateNDot2StateVec(Node_i.Node_StateNDot);
+
 	Structure_P.Node_i = Node_i;
 	Structure_P.Node_i_child = Node_i_child;
-
-	std::vector<double> Robot_State_2BOpt = StateNDot2StateVec(Node_i.Node_StateNDot);
 
 	// This function is used to initialize the seed guess for the optimization
 	// The initialized Ctrl_Traj and StateNDot_Traj will be saved into  Node_i_child
@@ -1426,6 +1434,58 @@ int Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// Allocate and initialize
 	// 1. Optimization for a feasible configuration that satisfies the desired mode
 */
+	Robot_State_i_child = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
+	// Here the desired configuration has already been generated, then the state, control and control force need to be optimized
+	dlib::matrix<double> Robot_State_Tot(26,Ctrl_No), Robot_State_Interpol_Array;
+	dlib::matrix<double> Ctrl_Tot(10,Ctrl_No-1), Contact_Force_Tot(12,Ctrl_No-1);
+
+	// Here the robot state has already been interpolated into Robot_State_Tot into the row fashion
+
+	for (int i = 0; i < 26; i++)
+	{
+		Robot_State_Interpol_Array = dlib::linspace(Robot_State_i[i], Robot_State_i_child[i], Ctrl_No);
+
+		for (int j = 0; j < Ctrl_No; j++)
+		{
+			Robot_State_Tot(i,j) = Robot_State_Interpol_Array(j);
+		}
+	}
+
+	// Two more varaibles to be optimized: control and contact force and they will be initialied randomly
+
+	Ctrl_Tot = dlib::randm(10,Ctrl_No-1);	Contact_Force_Tot = dlib::randm(12,Ctrl_No-1);
+
+	// Finally is to concatenate them into a single column vector
+	std::vector<double> Opt_Seed;
+	Opt_Seed.push_back(Tme_Seed); // The first element is the time duration on each segment
+
+	// Then it is the robot state
+	for (int i = 0; i < Ctrl_No-1; i++)
+	{
+		for (int j = 0; j < 26; j++)
+		{
+			Opt_Seed.push_back(Robot_State_Tot(j,i+1));
+		}
+		for (int j = 0; j< 10; j++)
+		{
+			Opt_Seed.push_back(Ctrl_Tot(j,i));
+		}
+		for (int j = 0; j < 12; j++)
+		{
+			Opt_Seed.push_back(Contact_Force_Tot(j,i));
+			/* code */
+		}
+	}
+
+	return Opt_Seed;
+}
+
+std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Node_i_child)
+{
+	// This function is used to generate a configuration to initialize the optimization
+
+	std::vector<double> Robot_State_2BOpt = StateNDot2StateVec(Node_i.Node_StateNDot);
+
 	snoptProblem Seed_Conf_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
 
 	integer n = 26;
@@ -1546,7 +1606,7 @@ int Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	}
 
 	Robot_StateNDot Init_Opt_vec(Robot_State_2BOpt);
-	Robot_Plot_fn(Init_Opt_vec);
+	// Robot_Plot_fn(Init_Opt_vec);
 
 	delete []iAfun;  delete []jAvar;  delete []A;
 	delete []iGfun;  delete []jGvar;
@@ -1559,7 +1619,7 @@ int Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 
 	delete []xnames; delete []Fnames;
 
-	return 0;
+	return Robot_State_2BOpt;
 }
 
 double Dot_Product(vector<double> &x1, vector<double> &x2)
@@ -1588,10 +1648,332 @@ int Node_Self_Opt(Tree_Node &Node_i)
 
 	// Here there are two different methods to initialize the optimization seeds: 1. pure randomized 2. best guess interpolation
 
-	int yes = Seed_Guess_Gene(Node_i, Node_i);
+	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i);
+
+	std::vector<double> sigma_i_change = Vec_Minus(Node_i.sigma_i, Node_i_child.sigma_i);
+	double sigma_i_change_val = sigma_i_change[0] + sigma_i_change[1] + sigma_i_change[2] + sigma_i_change[3];
+	if(sigma_i_change_val ==1)
+	{
+		// % In this case, it is making contact
+		sigma_tran = Node_i.sigma_i;
+		sigma_goal = Node_i_child.sigma_i;
+	}
+	else
+	{
+		// % In this case, it is retracting contact or maintaining the same	contact condition
+		sigma_tran = Node_i_child.sigma_i;
+		sigma_goal = Node_i_child.sigma_i;
+	}
+	Structure_P.sigma_tran = sigma_tran;
+	Structure_P.sigma_goal = sigma_goal;
+
+	// Now it is the pure
+
+
 
 	return yes;
 
+}
+
+std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector<double> &sigma_tran, std::vector<double> &sigma_goal, int &Opt_Flag)
+{
+	// This function undertakes all the optimization computation burden
+
+	snoptProblem Real_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
+
+	integer n = Opt_Seed.size();
+	integer neF = 65;     							  // 1 objective function
+	integer lenA  =  n * neF;
+
+	integer *iAfun = new integer[lenA];              //
+	integer *jAvar = new integer[lenA];
+	doublereal *A  = new doublereal[lenA];
+
+	integer lenG   = lenA;
+	integer *iGfun = new integer[lenG];
+	integer *jGvar = new integer[lenG];
+
+	doublereal *x      = new doublereal[n];
+	doublereal *xlow   = new doublereal[n];
+	doublereal *xupp   = new doublereal[n];
+	doublereal *xmul   = new doublereal[n];
+	integer    *xstate = new    integer[n];
+
+	doublereal *F      = new doublereal[neF];
+	doublereal *Flow   = new doublereal[neF];
+	doublereal *Fupp   = new doublereal[neF];
+	doublereal *Fmul   = new doublereal[neF];
+	integer    *Fstate = new integer[neF];
+
+	integer nxnames = 1;
+	integer nFnames = 1;
+	char *xnames = new char[nxnames*8];
+	char *Fnames = new char[nFnames*8];
+
+	integer    ObjRow = 0;
+	doublereal ObjAdd = 0;
+
+	// Set the upper and lower bounds.
+	// First set the lower and upper bounds for state
+	xlow[0] = rIxlow;		xupp[0] = rIxupp;
+	xlow[1] = rIylow;		xupp[1] = rIyupp;
+	xlow[2] = thetalow;		xupp[2] = thetaupp;
+	xlow[3] = q1low;		xupp[3] = q1upp;
+	xlow[4] = q2low;		xupp[4] = q2upp;
+	xlow[5] = q3low;		xupp[5] = q3upp;
+	xlow[6] = q4low;		xupp[6] = q4upp;
+	xlow[7] = q5low;		xupp[7] = q5upp;
+	xlow[8] = q6low;		xupp[8] = q6upp;
+	xlow[9] = q7low;		xupp[9] = q7upp;
+	xlow[10] = q8low;		xupp[10] = q8upp;
+	xlow[11] = q9low;		xupp[11] = q9upp;
+	xlow[12] = q10low;		xupp[12] = q10upp;
+
+	// Second set the lower and upper bounds for state
+	xlow[0+13] = rIxdotlow;			xupp[0+13] = rIxdotupp;
+	xlow[1+13] = rIydotlow;			xupp[1+13] = rIydotupp;
+	xlow[2+13] = thetadotlow;		xupp[2+13] = thetadotupp;
+	xlow[3+13] = q1dotlow;			xupp[3+13] = q1dotupp;
+	xlow[4+13] = q2dotlow;			xupp[4+13] = q2dotupp;
+	xlow[5+13] = q3dotlow;			xupp[5+13] = q3dotupp;
+	xlow[6+13] = q4dotlow;			xupp[6+13] = q4dotupp;
+	xlow[7+13] = q5dotlow;			xupp[7+13] = q5dotupp;
+	xlow[8+13] = q6dotlow;			xupp[8+13] = q6dotupp;
+	xlow[9+13] = q7dotlow;			xupp[9+13] = q7dotupp;
+	xlow[10+13] = q8dotlow;			xupp[10+13] = q8dotupp;
+	xlow[11+13] = q9dotlow;			xupp[11+13] = q9dotupp;
+	xlow[12+13] = q10dotlow;		xupp[12+13] = q10dotupp;
+
+	for (int i = 0; i < 26; i++)
+	{
+		xstate[i] = 0.0;
+	}
+
+	for(int i = 0; i<neF; i++)
+	{
+		// The lower bound is the same
+		Flow[i] = 0.0;
+		Fupp[i] = 0.0;
+	}
+
+	// Second set the lower and upper bounds for the objective function
+	Fupp[0] = Inf;		// This is the difference between the optimized configuration and the given configuration
+
+	// The constraint bounds should be carefully defined:
+	// They are actually 3 * 6 constraints.
+
+	for (int i = 25; i < 33; i++)
+	{
+		Fupp[i] = Inf;
+	}
+
+	// Initial guess
+	for (int i = 0; i < 26; i++)
+	{
+		x[i] = Robot_State_2BOpt[i];
+	}
+
+	// Load the data for ToyProb ...
+	Real_Optimization_Pr.setPrintFile  ( "Real_Optimization_Pr.out" );
+	Real_Optimization_Pr.setProblemSize( n, neF );
+	Real_Optimization_Pr.setObjective  ( ObjRow, ObjAdd );
+	Real_Optimization_Pr.setA          ( lenA, iAfun, jAvar, A );
+	Real_Optimization_Pr.setG          ( lenG, iGfun, jGvar );
+	Real_Optimization_Pr.setX          ( x, xlow, xupp, xmul, xstate );
+	Real_Optimization_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
+	Real_Optimization_Pr.setXNames     ( xnames, nxnames );
+	Real_Optimization_Pr.setFNames     ( Fnames, nFnames );
+	Real_Optimization_Pr.setProbName   ( "Real_Optimization_Pr_" );
+	Real_Optimization_Pr.setUserFun    ( Seed_Conf_Optimization_Pr_fn_);
+	// snopta will compute the Jacobian by finite-differences.
+	// The user has the option of calling  snJac  to define the
+	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
+	Real_Optimization_Pr.computeJac    ();
+	Real_Optimization_Pr.setIntParameter( "Derivative option", 0 );
+	integer Cold = 0, Basis = 1, Warm = 2;
+	Real_Optimization_Pr.solve( Cold );
+
+	for (int i = 0; i < 26; i++)
+	{
+		Robot_State_2BOpt[i] = x[i];
+	}
+
+	Robot_StateNDot Init_Opt_vec(Robot_State_2BOpt);
+	// Robot_Plot_fn(Init_Opt_vec);
+
+	delete []iAfun;  delete []jAvar;  delete []A;
+	delete []iGfun;  delete []jGvar;
+
+	delete []x;      delete []xlow;   delete []xupp;
+	delete []xmul;   delete []xstate;
+
+	delete []F;      delete []Flow;   delete []Fupp;
+	delete []Fmul;   delete []Fstate;
+
+	delete []xnames; delete []Fnames;
+
+	return Robot_State_2BOpt;
+}
+
+std::vector<double> Opt_Constraint(double Tme_Seed, dlib:matrix<double> &Robot_State_Tot, dlib:matrix<double> &Ctrl_Tot, dlib:matrix<double> &Contact_Force_Tot, int Flag_Choice, std::vector<double> &Constraint_Type)
+{
+	// This function works to provide the constraint used for the optimization also help initalization the optimization problem
+
+	// Here the Flag_Choice has three possibilities: 0------------------------> Node_Self_Opt
+	//												 1------------------------> Nodes_Connectivity_Opt
+	//												 2------------------------> Pure Constraint formulation
+
+	double Obj_val = 0;		// Initialize this value to be 0 and  will be updated later
+	double Not_Sigma_t_1, Not_Sigma_t_2, Not_Sigma_t_3, Not_Sigma_t_4;
+	std::vector<double> Contact_Ind(8), sigma_tran, sigma_goal, sigma_temp;
+
+	sigma_tran = Structure_P.sigma_tran;
+	sigma_goal = Structure_P.sigma_goal;
+
+	Robot_StateNDot Robot_StateNDot_i;
+
+	double delta_t = Tme_Seed/(Ctrl_No * 1.0);
+
+	Robot_State_init = Structure_P.Node_i.Node_StateNDot;
+
+	std::vector<double> Opt_Constraint_vals, StateNDot_vec_i;
+	Opt_Constraint_vals.push_back(Obj_val);
+	Constraint_Type.push_back(1);			// The fist Constraint is an inequallity constraint
+
+	dlib::matrix<double> D_q_i, B_q_i, C_q_qdot_i, Jac_Full_i, x0, x0p1, x0_state, x0_statedot, x0p1_state, x0p1_statedot, temp_result, qddot_i, Ctrl_i, Contact_Force_i, End_Effector_Obs_Dist;
+	dlib::matrix<double> End_Eq_Pos_Matrix, Inq_Pos_Matrix, Eqn_Maint_Matrix, temp_matrix;
+	dlib::matrix<double,16,1> End_Effector_Pos, End_Effector_Vel;
+
+	for (int i = 0; i < Ctrl_No-1; i++)
+	{
+		// Take out the robot from the state vector
+		if(i ==0)
+		{
+			x0 = Robot_StateNDot2DlibMat(Robot_State_init);
+			x0p1 = dlib::colm(Robot_State_Tot,0);
+		}
+		else
+		{
+			x0 = dlib::colm(Robot_State_Tot,i-1);
+			x0p1 = dlib::colm(Robot_State_Tot,i);
+		}
+
+		StateNDot_vec_i = DlibMatCol2StdVec(x0p1, 26);
+		Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
+
+		D_q_i = D_q_fn(Robot_StateNDot_i)
+		B_q_i  = B_q_fn();
+		C_q_qdot_i = C_q_qdot_fn(Robot_StateNDot_i);
+		Jac_Full_i = Jac_Full_fn(Robot_StateNDot_i);
+
+		//
+		//				1. First equality constraint is the dynamics update: qp1 	  = q    + qp1dot  * delta * t
+		//																	   qdotp1 = qdot + qddotp1 * delta * t
+
+		StateNStatedot_Distill(x0, x0_state, x0_statedot);
+		StateNStatedot_Distill(x0p1, x0p1_state, x0p1_statedot);
+
+		temp_result = x0_state + delta_t *x0p1_statedot - x0p1_state;
+		Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 0);
+
+		//
+		//				2. Second equality constraint is the dynamics constraint
+		//
+		qddot_i = (x0p1_statedot - x0_statedot)/delta_t;
+		Ctrl_i = dlib::colm(Ctrl_Tot, i);
+		Contact_Force_i = dlib::colm(Contact_Force_Tot, i);
+		temp_result = D_q_i * qddot_i + C_q_qdot_i - dlib::trans(Jac_Full_i) * Contact_Force_i - B_q_i * Ctrl_i;
+		Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 0);
+
+		//
+		//				3. Distance constraints: certain end effectors have to be active/inactive: Two implications: active has to be zero and inactive has to be nonzero
+		//
+
+		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
+		End_Effector_Obs_Dist = End_Effector_Obs_Dist_Fn(End_Effector_Pos, Contact_Ind);
+
+		Inq_Pos_Matrix = dlib::zeros_matrix<double>(8,8);
+		temp_matrix = dlib::ones_matrix<double>(8,1);
+
+		if(i == Ctrl_No-2){
+			sigma_temp = sigma_goal;}
+		else{
+			sigma_temp = sigma_tran;}
+
+		Inq_Pos_Matrix(0,0) = !sigma_temp[0];        Inq_Pos_Matrix(1,1) = !sigma_temp[0];
+		Inq_Pos_Matrix(2,2) = !sigma_temp[1];        Inq_Pos_Matrix(3,3) = !sigma_temp[1];
+		Inq_Pos_Matrix(4,4) = !sigma_temp[2];        Inq_Pos_Matrix(5,5) = !sigma_temp[3];
+
+		temp_result = Inq_Pos_Matrix * (End_Effector_Obs_Dist - temp_matrix * mini);
+		Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 1);
+
+		if(i == Ctrl_No-2){
+			End_Eq_Pos_Matrix = dlib::zeros_matrix<double>(8,8);
+			End_Eq_Pos_Matrix(0,0) = sigma_temp[0];        End_Eq_Pos_Matrix(1,1) = sigma_temp[0];
+	        End_Eq_Pos_Matrix(2,2) = sigma_temp[1];        End_Eq_Pos_Matrix(3,3) = sigma_temp[1];
+	        End_Eq_Pos_Matrix(4,4) = sigma_temp[2];       End_Eq_Pos_Matrix(5,5) = sigma_temp[3];
+			temp_result = End_Eq_Pos_Matrix * End_Effector_Obs_Dist;
+			Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 0);}
+		//
+		//				4. Complementarity constraints: Contact Force!
+		//
+
+	}
+}
+
+void Contact_Force_Proj(dlib::matrix<double> &Ctrl_i, std::vector<double> & Contact_Ind, dlib::matrix<double> &Normal_Forces, dlib::matrix<double> &Tang_Force){
+	// This function is used to project the contact force into the normal force and the tangential force
+	Normal_Forces = dlib::zeromatrix<>
+
+
+}
+
+void Constraints2ValsNType(dlib::matrix<double> &temp_result, std::vector<double> &Opt_Constraint_vals, std::vector<double> &Constraint_Type, int Flag_Choice, int Constraint_Type_val)
+{
+	// This function is used to retrieve the computational result back to Vals and Constraint type
+	for (int i = 0; i < temp_result.nr(); i++)
+	{
+		Opt_Constraint_vals.push_back(temp_result(i));
+		if(Flag_Choice==2)
+		{
+			Constraint_Type.push_back(Constraint_Type_val);
+		}
+	}
+}
+
+void StateNStatedot_Distill(dlib::matrix<double> & MatCol, dilb::matrix<double> &MatState, dilb::matrix<double> &MatStatedot)
+{
+	// This function isused to distill the state and statedot from the vector
+	for (int i = 0; i < 13; i++)
+	{
+		MatState(i) = MatCol(i);
+		MatStatedot(i) = MatCol(i+13);
+	}
+}
+
+dlib::matrix<double> Robot_StateNDot2DlibMat(Robot_StateNDot &Robot_StateNDot_i)
+{
+	dlib::matrix<double> Dlib_StateNDot_i(26,1);
+
+	std::vector<double> StateVec = StateNDot2StateVec(Robot_StateNDot_i);
+
+	for (int i = 0; i < 26; i++)
+	{
+		Dlib_StateNDot_i(i) = StateVec[i]
+	}
+	return Dlib_StateNDot_i;
+}
+
+std::vector<double> DlibMatCol2StdVec(dlib::matrix<double> &One_Col, int Col_Length)
+{
+	// This function is used to transform the dlib matrix column to a double type vector
+
+	std::vector<double> StdVec(Col_Length);
+	for (int i = 0; i < Col_Length; i++)
+	{
+		StdVec[i] = One_Col(i);
+	}
+	return StdVec;
 }
 
 int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal x[],
@@ -1746,6 +2128,44 @@ int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal 
 	}
 
 	return 0;
+}
+
+std::vector<double> Vec_Minus(std::vector<double> &vec1, std::vector<double> &vec2)
+{
+	int Vec_Length = vec1.size();
+
+	std::vector<double> vec_minus;
+
+	for (int i = 0; i < Vec_Length; i++)
+	{
+		vec_minus.push_back(vec1[i] - vec2[i]);
+	}
+	return vec_minus;
+}
+
+dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos, std::vector<double> &Contact_Ind)
+{
+	dlib::matrix<double,8,1> End_Effector_Dist;
+	int Obs_Choice_Ind; char char_sym;
+	for (int i = 0; i < 8; i++)
+	{
+		std::vector<double> r_Pos;
+		r_Pos.push_back(End_Effector_Pos(2*i));
+		r_Pos.push_back(End_Effector_Pos(2*i+1));
+
+		if (i<4)
+		{
+			char_sym = 'y';
+		}
+		else
+		{
+			char_sym= 'z';
+		}
+
+		End_Effector_Dist(i) = Obs_Dist_Fn(r_Pos, Envi_Map, Obs_Choice_Ind, char_sym);
+		Contact_Ind[i] = Obs_Choice_Ind;
+	}
+	return End_Effector_Dist;
 }
 
 dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos)
