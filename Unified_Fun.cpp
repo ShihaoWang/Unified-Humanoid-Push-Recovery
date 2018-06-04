@@ -71,7 +71,7 @@ dlib::matrix<double> Envi_Map;
  */
 
 double mini = 0.05;			int Opt_Var_Per_Frame = 48;		int Constraints_Per_Frame = 59;
-int Ctrl_No = 20;			double Tme_Seed = 0.5;			double mu = 0.5;
+int Ctrl_No = 20;			double mu = 0.5;
 
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
@@ -1430,10 +1430,10 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 
 	// Three stages need to be conducted to complete this whole initialization process
 
-/*
+	/*
 	// Allocate and initialize
 	// 1. Optimization for a feasible configuration that satisfies the desired mode
-*/
+	*/
 	Robot_State_i_child = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
 	// Here the desired configuration has already been generated, then the state, control and control force need to be optimized
 	dlib::matrix<double> Robot_State_Tot(26,Ctrl_No), Robot_State_Interpol_Array;
@@ -1473,7 +1473,6 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 		for (int j = 0; j < 12; j++)
 		{
 			Opt_Seed.push_back(Contact_Force_Tot(j,i));
-			/* code */
 		}
 	}
 
@@ -1680,9 +1679,18 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 	// This function undertakes all the optimization computation burden
 
 	snoptProblem Real_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
+	double Tme_Seed
+	dlib:matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
+	Robot_State_Tot = dlib::zeros_matrix<double>(26, Ctrl_No-1);
+	Ctrl_Tot = dlib::zeros_matrix<double>(10, Ctrl_No-1);
+	Contact_Force_Tot = dlib::zeros_matrix<double>(12, Ctrl_No-1);
+	std::vector<double> Constraint_Type;
+
+	OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
+	Opt_Constraint(Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot, 2, Constraint_Type);
 
 	integer n = Opt_Seed.size();
-	integer neF = 65;     							  // 1 objective function
+	integer neF = Constraint_Type.size();     							  // 1 objective function
 	integer lenA  =  n * neF;
 
 	integer *iAfun = new integer[lenA];              //
@@ -1714,6 +1722,8 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 	doublereal ObjAdd = 0;
 
 	// Set the upper and lower bounds.
+	// Now the Opt_Seed is a vector that has a periodic pattern (except for the first element )
+
 	// First set the lower and upper bounds for state
 	xlow[0] = rIxlow;		xupp[0] = rIxupp;
 	xlow[1] = rIylow;		xupp[1] = rIyupp;
@@ -1784,7 +1794,7 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 	Real_Optimization_Pr.setXNames     ( xnames, nxnames );
 	Real_Optimization_Pr.setFNames     ( Fnames, nFnames );
 	Real_Optimization_Pr.setProbName   ( "Real_Optimization_Pr_" );
-	Real_Optimization_Pr.setUserFun    ( Seed_Conf_Optimization_Pr_fn_);
+	Real_Optimization_Pr.setUserFun    ( Real_Optimization_Pr_fn);
 	// snopta will compute the Jacobian by finite-differences.
 	// The user has the option of calling  snJac  to define the
 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
@@ -1813,6 +1823,32 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 	delete []xnames; delete []Fnames;
 
 	return Robot_State_2BOpt;
+}
+
+void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib:matrix<double> &Robot_State_Tot, dlib:matrix<double> &Ctrl_Tot, dlib:matrix<double> &Contact_Force_Tot)
+{	// This function is used to distill the Tme_Seed, Robot_State_Tot, Ctrl_Tot and Contact_Force_Tot from the Opt_Seed
+	Tme_Seed = Opt_Seed[0];
+	// Here one thing to remember is that all these matrices are defined rowwise so each row is one trajectory
+	// For the Opt_Seed, it is defined column-wise so there is a change to be made
+	int Element_Index = 1;
+	for (int i = 0; i < Ctrl_No-1; i++)
+	{
+		for (int j = 0; j < 26; j++)
+		{
+			Robot_State_Tot(j,i) = Opt_Seed(Element_Index);
+			Element_Index = Element_Index + 1;
+		}
+		for (int j = 0; j< 10; j++)
+		{
+			Ctrl_Tot(j,i) = Opt_Seed(Element_Index);
+			Element_Index = Element_Index + 1;
+		}
+		for (int j = 0; j < 12; j++)
+		{
+			Contact_Force_Tot(j,i) = Opt_Seed(Element_Index);
+			Element_Index = Element_Index + 1;
+		}
+	}
 }
 
 std::vector<double> Opt_Constraint(double Tme_Seed, dlib:matrix<double> &Robot_State_Tot, dlib:matrix<double> &Ctrl_Tot, dlib:matrix<double> &Contact_Force_Tot, int Flag_Choice, std::vector<double> &Constraint_Type)

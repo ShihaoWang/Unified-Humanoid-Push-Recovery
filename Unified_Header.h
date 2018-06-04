@@ -21,6 +21,12 @@ using namespace std;
 #ifdef __cplusplus
 extern "C" {
 #endif
+    int Default_Init_Pr_( integer    *Status, integer *n,    doublereal x[],
+        integer    *needF,  integer *neF,  doublereal F[],
+        integer    *needG,  integer *neG,  doublereal G[],
+        char       *cu,     integer *lencu,
+        integer    iu[],    integer *leniu,
+        doublereal ru[],    integer *lenru );
 
     int Seed_Conf_Optimization_Pr_fn_(integer    *Status, integer *n,    doublereal x[],
         integer    *needF,  integer *neF,  doublereal F[],
@@ -29,7 +35,7 @@ extern "C" {
         integer    iu[],    integer *leniu,
         doublereal ru[],    integer *lenru );
 
-    int Default_Init_Pr_( integer    *Status, integer *n,    doublereal x[],
+    int Real_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
         integer    *needF,  integer *neF,  doublereal F[],
         integer    *needG,  integer *neG,  doublereal G[],
         char       *cu,     integer *lencu,
