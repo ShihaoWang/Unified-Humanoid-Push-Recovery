@@ -60,21 +60,21 @@ struct Tree_Node
 {
     //  The running time to this node from parents
     //  The kinetic energy and the unique index number in the All_Nodes vector
-    double time;    double Kinetic_Energy;    int Node_Index_Number;    // This means the index of the current nodes in the whole node array
+    double time, self_time;    double Kinetic_Energy;    int Node_Index_Number;    // This means the index of the current nodes in the whole node array
 
     Robot_StateNDot Node_StateNDot;
     Tree_Node_Ptr Par_Node;
     std::vector<Tree_Node_Ptr> Children_Nodes;
 
     std::vector<double> sigma_i;
-    std::vector<double> StateNDot_Traj;
-    std::vector<double> Ctrl_Traj;
-    std::vector<double> Contact_Force_Traj;
+    dlib::matrix<double> StateNDot_Traj;
+    dlib::matrix<double> Ctrl_Traj;
+    dlib::matrix<double>Contact_Force_Traj;
 
     // The following three are reserved for inertia shaping method
-    std::vector<double> self_StateNDot_Traj;
-    std::vector<double> self_Ctrl_Traj;
-    std::vector<double> self_Contact_Force_Traj;
+    dlib::matrix<double> self_StateNDot_Traj;
+    dlib::matrix<double> self_Ctrl_Traj;
+    dlib::matrix<double> self_Contact_Force_Traj;
     dlib::matrix<double,16,1> End_Effector_Pos, End_Effector_Vel;
 };
 
@@ -94,6 +94,7 @@ public:
     std::vector<double> Opt_Conf_UppBd;
     std::vector<double> Robot_State_Init;
     int Ctrl_No;    double Tme_Seed;    double eps;
+    int Opt_Prob_Flag, n_variables, n_constraints;
     Unified_Structure_P();
 };
 extern Unified_Structure_P Structure_P;
@@ -130,13 +131,18 @@ void End_Effector_PosNVel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double
 dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos);
 
 
-int Node_Self_Opt(Tree_Node &Node_i);
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int Opt_Flag);
 std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child);
 std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Node_i_child);
 std::vector<double> Vec_Minus(std::vector<double> &vec1, std::vector<double> &vec2);
 dlib::matrix<double> End_Effector_Obs_Dist_Fn(dlib::matrix<double,16,1> &End_Effector_Pos, std::vector<double> &Contact_Ind);
+int Real_Optimization(std::vector<double> &Opt_Seed, std::vector<double> &sigma_tran, std::vector<double> &sigma_goal, int Opt_Flag);
+void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot);
 
-
-std::vector<double> sigma_modi(std::vector<double> sigma_ref, int contas_ind, int AddOrRet);
-
-void Seed_Conf_Constraint(Tree_Node &Node_i, Robot_StateNDot &x_i_child, vector<double> &sigma_i_child, vector<double> &F, vector<double> &Constraint_Status);
+std::vector<double> DlibMatCol2StdVec(dlib::matrix<double> &One_Col, int Col_Length);
+std::vector<double> Opt_Constraint(double Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot, int Flag_Choice, std::vector<double> &Constraint_Type);
+dlib::matrix<double> Robot_StateNDot2DlibMat(Robot_StateNDot &Robot_StateNDot_i);
+dlib::matrix<double> Friction_Cone_Constraint(dlib::matrix<double> &Normal_Force, dlib::matrix<double> &Tang_Force);
+void Contact_Force_Proj(dlib::matrix<double> &Contact_Force_i, std::vector<double> & Contact_Ind, dlib::matrix<double> &Normal_Forces, dlib::matrix<double> &Tang_Force);
+void Constraints2ValsNType(dlib::matrix<double> &temp_result, std::vector<double> &Opt_Constraint_vals, std::vector<double> &Constraint_Type, int Flag_Choice, int Constraint_Type_val);
+void StateNStatedot_Distill(dlib::matrix<double> & MatCol, dlib::matrix<double> &MatState, dlib::matrix<double> &MatStatedot);

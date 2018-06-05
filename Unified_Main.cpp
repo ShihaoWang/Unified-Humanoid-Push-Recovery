@@ -48,14 +48,13 @@ int main( int argc, char **argv)
 		* Description
 		*/
 		int Soln_Flag = 0;
-
 		Current_Node = Pop_Node();
 		Current_Node_sigma_i = Current_Node.sigma_i;
 		Current_Node_sigma_sum = Current_Node_sigma_i[0] + Current_Node_sigma_i[1] + Current_Node_sigma_i[2] + Current_Node_sigma_i[3];
 		if (Current_Node_sigma_sum>0)
 		{
 			// At least one contact is active in this case
-			Node_Self_Opt(Current_Node);
+			Soln_Flag = Nodes_Optimization_fn(Current_Node, Current_Node, 0);
 
 
 

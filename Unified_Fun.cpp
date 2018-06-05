@@ -1457,6 +1457,7 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 
 	// Finally is to concatenate them into a single column vector
 	std::vector<double> Opt_Seed;
+	double Tme_Seed = 0.5;		  // The duration is set to be 0.5s
 	Opt_Seed.push_back(Tme_Seed); // The first element is the time duration on each segment
 
 	// Then it is the robot state
@@ -1640,7 +1641,7 @@ void Reference_Dist_Vel_Update(Tree_Node &Node_i)
 	return;
 }
 
-int Node_Self_Opt(Tree_Node &Node_i)
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int Opt_Flag)
 {
 	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	int Optimization_Result = 0;	// 1 means it is possible to find a path that satisfies the constraints while minimizing the objective function value
@@ -1650,6 +1651,7 @@ int Node_Self_Opt(Tree_Node &Node_i)
 	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i);
 
 	std::vector<double> sigma_i_change = Vec_Minus(Node_i.sigma_i, Node_i_child.sigma_i);
+	std::vector<double> sigma_tran, sigma_goal;
 	double sigma_i_change_val = sigma_i_change[0] + sigma_i_change[1] + sigma_i_change[2] + sigma_i_change[3];
 	if(sigma_i_change_val ==1)
 	{
@@ -1667,20 +1669,27 @@ int Node_Self_Opt(Tree_Node &Node_i)
 	Structure_P.sigma_goal = sigma_goal;
 
 	// Now it is the pure
-
-
-
-	return yes;
-
+	Optimization_Result = Real_Optimization(Opt_Seed, sigma_tran, sigma_goal, Opt_Flag);
+	if(Optimization_Result == 1)
+	{	double Tme_Seed; dlib::matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
+		OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
+		Node_i.self_time = Tme_Seed;
+		Node_i.self_StateNDot_Traj = Robot_State_Tot;
+		Node_i.self_Ctrl_Traj = Ctrl_Tot;
+		Node_i.self_Contact_Force_Traj = Contact_Force_Tot;
+	}
+	return Optimization_Result;
 }
 
-std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector<double> &sigma_tran, std::vector<double> &sigma_goal, int &Opt_Flag)
+int Real_Optimization(std::vector<double> &Opt_Seed, std::vector<double> &sigma_tran, std::vector<double> &sigma_goal, int Opt_Flag)
 {
 	// This function undertakes all the optimization computation burden
+	std::vector<double> Orig_Opt_Seed;
+	Orig_Opt_Seed = Opt_Seed;
 
 	snoptProblem Real_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
-	double Tme_Seed
-	dlib:matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
+	double Tme_Seed;
+	dlib::matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
 	Robot_State_Tot = dlib::zeros_matrix<double>(26, Ctrl_No-1);
 	Ctrl_Tot = dlib::zeros_matrix<double>(10, Ctrl_No-1);
 	Contact_Force_Tot = dlib::zeros_matrix<double>(12, Ctrl_No-1);
@@ -1688,6 +1697,9 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 
 	OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
 	Opt_Constraint(Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot, 2, Constraint_Type);
+
+	Structure_P.n_variables = Opt_Seed.size();
+	Structure_P.n_constraints = Constraint_Type.size();
 
 	integer n = Opt_Seed.size();
 	integer neF = Constraint_Type.size();     							  // 1 objective function
@@ -1723,66 +1735,92 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 
 	// Set the upper and lower bounds.
 	// Now the Opt_Seed is a vector that has a periodic pattern (except for the first element )
+	xlow[0] = mini;			xupp[0] = Inf; // This is the time
+	int Element_Index = 1;
+	for (int i = 0; i < Ctrl_No-1; i++)
+	{
+		for (int j = 0; j < 26; j++)
+		{
+			xlow[Element_Index+0] = rIxlow;			xupp[Element_Index+0] = rIxupp;
+			xlow[Element_Index+1] = rIylow;			xupp[Element_Index+1] = rIyupp;
+			xlow[Element_Index+2] = thetalow;		xupp[Element_Index+2] = thetaupp;
+			xlow[Element_Index+3] = q1low;			xupp[Element_Index+3] = q1upp;
+			xlow[Element_Index+4] = q2low;			xupp[Element_Index+4] = q2upp;
+			xlow[Element_Index+5] = q3low;			xupp[Element_Index+5] = q3upp;
+			xlow[Element_Index+6] = q4low;			xupp[Element_Index+6] = q4upp;
+			xlow[Element_Index+7] = q5low;			xupp[Element_Index+7] = q5upp;
+			xlow[Element_Index+8] = q6low;			xupp[Element_Index+8] = q6upp;
+			xlow[Element_Index+9] = q7low;			xupp[Element_Index+9] = q7upp;
+			xlow[Element_Index+10] = q8low;			xupp[Element_Index+10] = q8upp;
+			xlow[Element_Index+11] = q9low;			xupp[Element_Index+11] = q9upp;
+			xlow[Element_Index+12] = q10low;		xupp[Element_Index+12] = q10upp;
+			xlow[Element_Index+0+13] = rIxdotlow;			xupp[Element_Index+0+13] = rIxdotupp;
+			xlow[Element_Index+1+13] = rIydotlow;			xupp[Element_Index+1+13] = rIydotupp;
+			xlow[Element_Index+2+13] = thetadotlow;			xupp[Element_Index+2+13] = thetadotupp;
+			xlow[Element_Index+3+13] = q1dotlow;			xupp[Element_Index+3+13] = q1dotupp;
+			xlow[Element_Index+4+13] = q2dotlow;			xupp[Element_Index+4+13] = q2dotupp;
+			xlow[Element_Index+5+13] = q3dotlow;			xupp[Element_Index+5+13] = q3dotupp;
+			xlow[Element_Index+6+13] = q4dotlow;			xupp[Element_Index+6+13] = q4dotupp;
+			xlow[Element_Index+7+13] = q5dotlow;			xupp[Element_Index+7+13] = q5dotupp;
+			xlow[Element_Index+8+13] = q6dotlow;			xupp[Element_Index+8+13] = q6dotupp;
+			xlow[Element_Index+9+13] = q7dotlow;			xupp[Element_Index+9+13] = q7dotupp;
+			xlow[Element_Index+10+13] = q8dotlow;			xupp[Element_Index+10+13] = q8dotupp;
+			xlow[Element_Index+11+13] = q9dotlow;			xupp[Element_Index+11+13] = q9dotupp;
+			xlow[Element_Index+12+13] = q10dotlow;			xupp[Element_Index+12+13] = q10dotupp;
+			Element_Index = Element_Index + 26;
+		}
+		for (int j = 0; j< 10; j++)
+		{
+			// Now it is the control
+			xlow[Element_Index+0] = -tau1_max;			xupp[Element_Index+0] = tau1_max;
+			xlow[Element_Index+1] = -tau2_max;			xupp[Element_Index+1] = tau2_max;
+			xlow[Element_Index+2] = -tau3_max;			xupp[Element_Index+2] = tau3_max;
+			xlow[Element_Index+3] = -tau4_max;			xupp[Element_Index+3] = tau4_max;
+			xlow[Element_Index+4] = -tau5_max;			xupp[Element_Index+4] = tau5_max;
+			xlow[Element_Index+5] = -tau6_max;			xupp[Element_Index+5] = tau6_max;
+			xlow[Element_Index+6] = -tau7_max;			xupp[Element_Index+6] = tau7_max;
+			xlow[Element_Index+7] = -tau8_max;			xupp[Element_Index+7] = tau8_max;
+			xlow[Element_Index+8] = -tau9_max;			xupp[Element_Index+8] = tau9_max;
+			xlow[Element_Index+9] = -tau10_max;			xupp[Element_Index+9] = tau10_max;
 
-	// First set the lower and upper bounds for state
-	xlow[0] = rIxlow;		xupp[0] = rIxupp;
-	xlow[1] = rIylow;		xupp[1] = rIyupp;
-	xlow[2] = thetalow;		xupp[2] = thetaupp;
-	xlow[3] = q1low;		xupp[3] = q1upp;
-	xlow[4] = q2low;		xupp[4] = q2upp;
-	xlow[5] = q3low;		xupp[5] = q3upp;
-	xlow[6] = q4low;		xupp[6] = q4upp;
-	xlow[7] = q5low;		xupp[7] = q5upp;
-	xlow[8] = q6low;		xupp[8] = q6upp;
-	xlow[9] = q7low;		xupp[9] = q7upp;
-	xlow[10] = q8low;		xupp[10] = q8upp;
-	xlow[11] = q9low;		xupp[11] = q9upp;
-	xlow[12] = q10low;		xupp[12] = q10upp;
-
-	// Second set the lower and upper bounds for state
-	xlow[0+13] = rIxdotlow;			xupp[0+13] = rIxdotupp;
-	xlow[1+13] = rIydotlow;			xupp[1+13] = rIydotupp;
-	xlow[2+13] = thetadotlow;		xupp[2+13] = thetadotupp;
-	xlow[3+13] = q1dotlow;			xupp[3+13] = q1dotupp;
-	xlow[4+13] = q2dotlow;			xupp[4+13] = q2dotupp;
-	xlow[5+13] = q3dotlow;			xupp[5+13] = q3dotupp;
-	xlow[6+13] = q4dotlow;			xupp[6+13] = q4dotupp;
-	xlow[7+13] = q5dotlow;			xupp[7+13] = q5dotupp;
-	xlow[8+13] = q6dotlow;			xupp[8+13] = q6dotupp;
-	xlow[9+13] = q7dotlow;			xupp[9+13] = q7dotupp;
-	xlow[10+13] = q8dotlow;			xupp[10+13] = q8dotupp;
-	xlow[11+13] = q9dotlow;			xupp[11+13] = q9dotupp;
-	xlow[12+13] = q10dotlow;		xupp[12+13] = q10dotupp;
-
-	for (int i = 0; i < 26; i++)
+			Element_Index = Element_Index + 10;
+		}
+		for (int j = 0; j < 12; j++)
+		{
+			// The last part is the contact force which is not limited
+			xlow[Element_Index+0] = -Inf;			xupp[Element_Index+0] = Inf;
+			xlow[Element_Index+1] = -Inf;			xupp[Element_Index+1] = Inf;
+			xlow[Element_Index+2] = -Inf;			xupp[Element_Index+2] = Inf;
+			xlow[Element_Index+3] = -Inf;			xupp[Element_Index+3] = Inf;
+			xlow[Element_Index+4] = -Inf;			xupp[Element_Index+4] = Inf;
+			xlow[Element_Index+5] = -Inf;			xupp[Element_Index+5] = Inf;
+			xlow[Element_Index+6] = -Inf;			xupp[Element_Index+6] = Inf;
+			xlow[Element_Index+7] = -Inf;			xupp[Element_Index+7] = Inf;
+			xlow[Element_Index+8] = -Inf;			xupp[Element_Index+8] = Inf;
+			xlow[Element_Index+9] = -Inf;			xupp[Element_Index+9] = Inf;
+			xlow[Element_Index+10] = -Inf;			xupp[Element_Index+10] = Inf;
+			xlow[Element_Index+11] = -Inf;			xupp[Element_Index+11] = Inf;
+			Element_Index = Element_Index + 12;
+		}
+	}
+	for (int i = 0; i < n; i++)
 	{
 		xstate[i] = 0.0;
 	}
-
 	for(int i = 0; i<neF; i++)
 	{
 		// The lower bound is the same
 		Flow[i] = 0.0;
-		Fupp[i] = 0.0;
+		if(Constraint_Type[i]>0)// Inequality constraint
+		{	Fupp[i] = Inf;}
+		else
+		{	Fupp[i] = 0.0;}
 	}
-
-	// Second set the lower and upper bounds for the objective function
-	Fupp[0] = Inf;		// This is the difference between the optimized configuration and the given configuration
-
-	// The constraint bounds should be carefully defined:
-	// They are actually 3 * 6 constraints.
-
-	for (int i = 25; i < 33; i++)
-	{
-		Fupp[i] = Inf;
-	}
-
 	// Initial guess
-	for (int i = 0; i < 26; i++)
+	for (int i = 0; i < n; i++)
 	{
-		x[i] = Robot_State_2BOpt[i];
+		x[i] = Opt_Seed[i];
 	}
-
 	// Load the data for ToyProb ...
 	Real_Optimization_Pr.setPrintFile  ( "Real_Optimization_Pr.out" );
 	Real_Optimization_Pr.setProblemSize( n, neF );
@@ -1803,29 +1841,34 @@ std::vector<double> Real_Optimization(std::vector<double> &Opt_Seed, std::vector
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Real_Optimization_Pr.solve( Cold );
 
-	for (int i = 0; i < 26; i++)
-	{
-		Robot_State_2BOpt[i] = x[i];
-	}
-
-	Robot_StateNDot Init_Opt_vec(Robot_State_2BOpt);
-	// Robot_Plot_fn(Init_Opt_vec);
-
+	for (int i = 0; i < n; i++){
+		Opt_Seed[i] = x[i];}
+	// If the optimization has failed the optimization result will be the same as the input one
+	double Opt_Original_Comp = 0.0;
+	int Optimzation_Success_Flag; dlib::matrix<double> dlib_colm_vec; std::vector<double> dlib_colm_2_std_vec;
+	for (int i = 0; i < n; i++){
+		Opt_Original_Comp = Opt_Original_Comp + (Opt_Seed[i] -Orig_Opt_Seed[i])*(Opt_Seed[i] -Orig_Opt_Seed[i]);}
+	if (Opt_Original_Comp<1){
+		// Optimization successful!
+		OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
+		for (int i = 0; i < Ctrl_No; i++) {
+			Robot_StateNDot Init_Opt_vec;
+			dlib_colm_vec = dlib::colm(Robot_State_Tot,i);
+			dlib_colm_2_std_vec = DlibMatCol2StdVec(dlib_colm_vec, 26);
+			Init_Opt_vec = StateVec2StateNDot(dlib_colm_2_std_vec);
+			Robot_Plot_fn(Init_Opt_vec);} Optimzation_Success_Flag = 1;}
+		else{ Optimzation_Success_Flag = 0;}
 	delete []iAfun;  delete []jAvar;  delete []A;
 	delete []iGfun;  delete []jGvar;
-
 	delete []x;      delete []xlow;   delete []xupp;
 	delete []xmul;   delete []xstate;
-
 	delete []F;      delete []Flow;   delete []Fupp;
 	delete []Fmul;   delete []Fstate;
-
 	delete []xnames; delete []Fnames;
-
-	return Robot_State_2BOpt;
+	return Optimzation_Success_Flag;
 }
 
-void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib:matrix<double> &Robot_State_Tot, dlib:matrix<double> &Ctrl_Tot, dlib:matrix<double> &Contact_Force_Tot)
+void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot)
 {	// This function is used to distill the Tme_Seed, Robot_State_Tot, Ctrl_Tot and Contact_Force_Tot from the Opt_Seed
 	Tme_Seed = Opt_Seed[0];
 	// Here one thing to remember is that all these matrices are defined rowwise so each row is one trajectory
@@ -1835,23 +1878,23 @@ void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib:matri
 	{
 		for (int j = 0; j < 26; j++)
 		{
-			Robot_State_Tot(j,i) = Opt_Seed(Element_Index);
+			Robot_State_Tot(j,i) = Opt_Seed[Element_Index];
 			Element_Index = Element_Index + 1;
 		}
 		for (int j = 0; j< 10; j++)
 		{
-			Ctrl_Tot(j,i) = Opt_Seed(Element_Index);
+			Ctrl_Tot(j,i) = Opt_Seed[Element_Index];
 			Element_Index = Element_Index + 1;
 		}
 		for (int j = 0; j < 12; j++)
 		{
-			Contact_Force_Tot(j,i) = Opt_Seed(Element_Index);
+			Contact_Force_Tot(j,i) = Opt_Seed[Element_Index];
 			Element_Index = Element_Index + 1;
 		}
 	}
 }
 
-std::vector<double> Opt_Constraint(double Tme_Seed, dlib:matrix<double> &Robot_State_Tot, dlib:matrix<double> &Ctrl_Tot, dlib:matrix<double> &Contact_Force_Tot, int Flag_Choice, std::vector<double> &Constraint_Type)
+std::vector<double> Opt_Constraint(double Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot, int Flag_Choice, std::vector<double> &Constraint_Type)
 {
 	// This function works to provide the constraint used for the optimization also help initalization the optimization problem
 
@@ -1867,7 +1910,7 @@ std::vector<double> Opt_Constraint(double Tme_Seed, dlib:matrix<double> &Robot_S
 
 	Robot_StateNDot Robot_StateNDot_i;			double delta_t = Tme_Seed/(Ctrl_No * 1.0);
 
-	Robot_State_init = Structure_P.Node_i.Node_StateNDot;
+	Robot_StateNDot	Robot_State_init = Structure_P.Node_i.Node_StateNDot;
 
 	std::vector<double> Opt_Constraint_vals, StateNDot_vec_i;
 	Opt_Constraint_vals.push_back(Obj_val);
@@ -1888,7 +1931,7 @@ std::vector<double> Opt_Constraint(double Tme_Seed, dlib:matrix<double> &Robot_S
 		StateNDot_vec_i = DlibMatCol2StdVec(x0p1, 26);
 		Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
 
-		D_q_i = D_q_fn(Robot_StateNDot_i)
+		D_q_i = D_q_fn(Robot_StateNDot_i);
 		B_q_i  = B_q_fn();
 		C_q_qdot_i = C_q_qdot_fn(Robot_StateNDot_i);
 		Jac_Full_i = Jac_Full_fn(Robot_StateNDot_i);
@@ -1984,33 +2027,46 @@ std::vector<double> Opt_Constraint(double Tme_Seed, dlib:matrix<double> &Robot_S
 		//
 		//				7. Kinetic energy rate constraint
 		//
+		dlib::matrix<double> dlib_colm;std::vector<double> Dlib_Mat_Vec; Robot_StateNDot Dlib_Mat_StateNDot;
 		if(i == 0){
 			Kinetic_Energy_t = Structure_P.Node_i.Kinetic_Energy;
-			Kinetic_Energy_tp1 = Kinetic_Energy_fn(StateVec2StateNDot(DlibMatCol2StdVec(dlib::colm(Robot_State_Tot,0))));}
+			dlib_colm = dlib::colm(Robot_State_Tot,0);
+			Dlib_Mat_Vec = DlibMatCol2StdVec(dlib_colm,26);
+			Dlib_Mat_StateNDot = StateVec2StateNDot(Dlib_Mat_Vec);
+			Kinetic_Energy_tp1 = Kinetic_Energy_fn(Dlib_Mat_StateNDot);}
 		else{
-			Kinetic_Energy_t = Kinetic_Energy_fn(StateVec2StateNDot(DlibMatCol2StdVec(dlib::colm(Robot_State_Tot,i))));
-			Kinetic_Energy_tp1 = Kinetic_Energy_fn(StateVec2StateNDot(DlibMatCol2StdVec(dlib::colm(Robot_State_Tot,i+1))));}
+			dlib_colm = dlib::colm(Robot_State_Tot,i);
+			Dlib_Mat_Vec = DlibMatCol2StdVec(dlib_colm,26);
+			Dlib_Mat_StateNDot = StateVec2StateNDot(Dlib_Mat_Vec);
+			Kinetic_Energy_t = Kinetic_Energy_fn(Dlib_Mat_StateNDot);
+			dlib_colm = dlib::colm(Robot_State_Tot,i+1);
+			Dlib_Mat_Vec = DlibMatCol2StdVec(dlib_colm,26);
+			Dlib_Mat_StateNDot = StateVec2StateNDot(Dlib_Mat_Vec);
+			Kinetic_Energy_tp1 = Kinetic_Energy_fn(Dlib_Mat_StateNDot);
+
+		}
 		Obj_val_i = (Kinetic_Energy_tp1 - Kinetic_Energy_t)*(Kinetic_Energy_tp1 - Kinetic_Energy_t)/(delta_t * delta_t);
 		Obj_val = Obj_val + Obj_val_i;
 	}
 	// The last two constraints are objective function and the final kinetic energy constraint
 	Opt_Constraint_vals[0] = Obj_val;
-	dlib::matrix<double> Kinetic_Energy_constraint(1);
+	double Kinetic_Energy_constraint;
 	if(Flag_Choice == 0){
 		// In this case, it is the Node_Self_Opt
 		Kinetic_Energy_constraint = 0.1 - Kinetic_Energy_tp1;}
 	else{
 		// In this case, it is the connectivity constraint
 		Kinetic_Energy_constraint = 0.1*Structure_P.Node_i.Kinetic_Energy - Kinetic_Energy_tp1;}
-	temp_result = Kinetic_Energy_constraint;
-	Constraints2ValsNType(temp_result, Opt_Constraint_vals, Constraint_Type, Flag_Choice, 1);
+
+	Opt_Constraint_vals.push_back(Kinetic_Energy_constraint);
+	Constraint_Type.push_back(1);
 	return Opt_Constraint_vals;
 }
 
-dlib::matrix<double> Friction_Cone_Constraint(dlib::matrix<double> &Normal_Forces, dlib::matrix<double> &Tang_Forces)
+dlib::matrix<double> Friction_Cone_Constraint(dlib::matrix<double> &Normal_Force, dlib::matrix<double> &Tang_Force)
 {
 	// This function is used to compute the holonomic constraint
-	dlib::matrix<double> Friction_Cone_Constraint_val(4);
+	dlib::matrix<double> Friction_Cone_Constraint_val(4,1);
 	double Tang_Force_1, Tang_Force_2, Tang_Force_3, Tang_Force_4;
 	double Norm_Force_1, Norm_Force_2, Norm_Force_3, Norm_Force_4;
 	Tang_Force_1 = Tang_Force(0) + Tang_Force(1);
@@ -2031,11 +2087,11 @@ void Contact_Force_Proj(dlib::matrix<double> &Contact_Force_i, std::vector<doubl
 	// This function is used to project the contact force into the normal force and the tangential force
 	for (int i = 0; i < 6; i++) {
 		if(Contact_Ind[i]==0){
-			Tang_Force[i] = Contact_Force_i[2*i];
-			Normal_Forces[i] = Contact_Force_i[2*i+1];}
+			Tang_Force(i) = Contact_Force_i(2*i);
+			Normal_Forces(i) = Contact_Force_i(2*i+1);}
 		else{
-			Tang_Force[i] = Contact_Force_i[2*i+1];
-			Normal_Forces[i] = Contact_Force_i[2*i];}
+			Tang_Force(i) = Contact_Force_i(2*i+1);
+			Normal_Forces(i) = Contact_Force_i(2*i);}
 	}
 }
 
@@ -2052,7 +2108,7 @@ void Constraints2ValsNType(dlib::matrix<double> &temp_result, std::vector<double
 	}
 }
 
-void StateNStatedot_Distill(dlib::matrix<double> & MatCol, dilb::matrix<double> &MatState, dilb::matrix<double> &MatStatedot)
+void StateNStatedot_Distill(dlib::matrix<double> & MatCol, dlib::matrix<double> &MatState, dlib::matrix<double> &MatStatedot)
 {
 	// This function isused to distill the state and statedot from the vector
 	for (int i = 0; i < 13; i++)
@@ -2070,7 +2126,7 @@ dlib::matrix<double> Robot_StateNDot2DlibMat(Robot_StateNDot &Robot_StateNDot_i)
 
 	for (int i = 0; i < 26; i++)
 	{
-		Dlib_StateNDot_i(i) = StateVec[i]
+		Dlib_StateNDot_i(i) = StateVec[i];
 	}
 	return Dlib_StateNDot_i;
 }
@@ -2364,4 +2420,35 @@ void End_Effector_PosNVel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double
 	End_Effector_Vel(13) = vT[1];
 	End_Effector_Vel(14) = vCOM[0];
 	End_Effector_Vel(15) = vCOM[1];
+}
+
+int Real_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
+	     integer    *needF,  integer *neF,  doublereal F[],
+	     integer    *needG,  integer *neG,  doublereal G[],
+	     char       *cu,     integer *lencu,
+		 integer    iu[],    integer *leniu,
+		 doublereal ru[],    integer *lenru )
+{
+	// Initial guess of the robot configurations
+
+	int Opt_Prob_Flag = Structure_P.Opt_Prob_Flag;
+
+	double Tme_Seed; dlib::matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
+	Robot_State_Tot = dlib::zeros_matrix<double>(26, Ctrl_No-1);
+	Ctrl_Tot = dlib::zeros_matrix<double>(10, Ctrl_No-1);
+	Contact_Force_Tot = dlib::zeros_matrix<double>(12, Ctrl_No-1);
+	std::vector<double> Constraint_Type;
+
+	int n_variables = Structure_P.n_variables;
+	int n_constraints = Structure_P.n_constraints;
+
+	std::vector<double> Opt_Seed;
+	for (int i = 0; i < n_variables; i++) {
+		Opt_Seed.push_back(x[i]);}
+	OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
+	std::vector<double> Opt_vals = Opt_Constraint(Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot, Opt_Prob_Flag, Constraint_Type);
+
+	for (int i = 0; i < n_constraints; i++) {
+		F[i] = Opt_vals[i];}
+	return 0;
 }
