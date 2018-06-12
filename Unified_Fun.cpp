@@ -39,7 +39,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.05;			int Grids = 10;			double mu = 0.5;
+double mini = 0.05;			int Grids = 20;			double mu = 0.5;
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -1216,7 +1216,9 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	Opt_Seed_Unzip(Opt_Seed, T, StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff);
 	std::vector<double> Robot_Config_init(13), Robot_Vel_init(13), Robot_VelfromPos_init(13);
 	std::vector<double> Robot_Config_end(13),  Robot_Vel_end(13),  Robot_VelfromPos_end(13);
-	dlib::matrix<double> Robot_Acc_init, Robot_Acc_end, Ctrl_init, Contact_Force_init, Ctrl_end, Contact_Force_end, Ctrl_ref, Contact_Force_ref;
+	dlib::matrix<double> Robot_Acc_init, Robot_Acc_end, Ctrl_init, Contact_Force_init, Ctrl_end, Contact_Force_end;
+	dlib::matrix<double> Ctrl_ref, Contact_Force_ref;
+
 	Robot_Acc_init = dlib::zeros_matrix<double>(13,1);			Robot_Acc_end = dlib::zeros_matrix<double>(13,1);
 	Ctrl_init = dlib::zeros_matrix<double>(10,1);				Ctrl_end = dlib::zeros_matrix<double>(10,1);
 	Contact_Force_init = dlib::zeros_matrix<double>(12,1);		Contact_Force_end = dlib::zeros_matrix<double>(12,1);
@@ -1312,7 +1314,8 @@ double KE_Variation_fn(std::vector<double> &KE_tot)
 {	double KE_Variation = 0.0;
 	for (int i = 0; i < KE_tot.size()-1; i++)
 	{
-		KE_Variation = KE_Variation + KE_tot[i] * KE_tot[i];
+		KE_Variation = KE_Variation + 0.0*KE_tot[i];
+		// KE_Variation = KE_Variation + KE_tot[KE_tot.size()-1];
 		// KE_Variation = KE_Variation + (KE_tot[i+1] - KE_tot[i]) * (KE_tot[i+1] - KE_tot[i]);
 	}
 	return KE_Variation;
