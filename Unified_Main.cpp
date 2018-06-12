@@ -26,7 +26,7 @@ int main( int argc, char **argv)
 
 		while(Sigma_Init_File>>data_each_line)
 		{
-			sigma_init.push_back(data_each_line);
+			sigma_init.push_back(data_each_line); 
 		}
 		Sigma_Init_File.close();
 	}

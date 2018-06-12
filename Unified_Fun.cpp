@@ -1212,7 +1212,7 @@ void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::
 void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
 {
 	// This function is the main optimization constraint function
-	double T;		dlib::matrix<double> StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff;
+	double T, KE_i;		dlib::matrix<double> StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff; int Self_Opt_Flag;
 	Opt_Seed_Unzip(Opt_Seed, T, StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff);
 	std::vector<double> Robot_Config_init(13), Robot_Vel_init(13), Robot_VelfromPos_init(13);
 	std::vector<double> Robot_Config_end(13),  Robot_Vel_end(13),  Robot_VelfromPos_end(13);
@@ -1220,13 +1220,24 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	Robot_Acc_init = dlib::zeros_matrix<double>(13,1);			Robot_Acc_end = dlib::zeros_matrix<double>(13,1);
 	Ctrl_init = dlib::zeros_matrix<double>(10,1);				Ctrl_end = dlib::zeros_matrix<double>(10,1);
 	Contact_Force_init = dlib::zeros_matrix<double>(12,1);		Contact_Force_end = dlib::zeros_matrix<double>(12,1);
+	Ctrl_ref = dlib::zeros_matrix<double>(10,1);;				Contact_Force_ref = dlib::zeros_matrix<double>(12,1);
 
 	std::vector<double> Robot_Config_ref, Robot_Velocity_ref;
 	Tree_Node Node_i, Node_i_child;
 	Node_i = Structure_P.Node_i;		Node_i_child = Structure_P.Node_i_child;
 	std::vector<double> Robot_State_init_vec = StateNDot2StateVec(Node_i.Node_StateNDot);
 	std::vector<double> sigma_trans, sigma_goal;
-	Sigma_TransNGoal(Node_i.sigma, Node_i_child.sigma, sigma_trans, sigma_goal);
+	Sigma_TransNGoal(Node_i.sigma, Node_i_child.sigma, sigma_trans, sigma_goal, Self_Opt_Flag);
+
+	std::vector<double> KE_tot; double KE_ref;
+
+	if(Self_Opt_Flag ==1)
+	{// In this way, it is the self_optimization`
+		KE_ref = 0.1;
+	}
+	else{
+		KE_ref = 0.2 * Node_i.KE;
+	}
 
 	// Define the continuity at grids
 	for (int i = 0; i < Robot_State_init_vec.size()/2; i++) {
@@ -1234,8 +1245,12 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Robot_Velocity_ref.push_back(Robot_State_init_vec[i+Robot_State_init_vec.size()/2]);
 	}
 	CtrlNContact_ForcefromCtrlNContact_Force_Coeff(Ctrl_Coeff,Contact_Force_Coeff, 0, 0, Ctrl_ref,  Contact_Force_ref);
-	std::vector<double> StateNDot_vec_i;
+	std::vector<double> StateNDot_vec_i;Robot_StateNDot Robot_StateNDot_i;
 	dlib::matrix<double> StateNDot_Matrix, Matrix_result, Robot_Vel_Matrix, Robot_VelfromPos_Matrix, Robot_Vel_DlibMatrix, Robot_VelfromPos_DlibMatrix;
+
+	// ObjNConst initialization
+	ObjNConstraint_Val.push_back(0);
+	ObjNConstraint_Type.push_back(1);
 
 	for (int i = 0; i < Grids-1; i++) {
 		Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, i, 0, Robot_Config_init, Robot_Vel_init, Robot_Acc_init, Robot_VelfromPos_init);
@@ -1246,6 +1261,10 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 		// 1. Robotstate, control feasiblity constraint
 		StateNDot_vec_i = PosNVel2StateVec(Robot_Config_init, Robot_Vel_init);
+		Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
+		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
+		KE_tot.push_back(KE_i);
+
 		StateNDot_Matrix = StateVec2DlibMatrix_fn(StateNDot_vec_i);
 		Matrix_result = StateNDot_Matrix - xlow_vec;
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
@@ -1277,12 +1296,30 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Real_ObjNConstraint_Stage(Node_i, Node_i_child, sigma_trans, T, Robot_Config_init, Robot_Vel_init, Robot_Acc_init, Ctrl_init, Contact_Force_init, ObjNConstraint_Val, ObjNConstraint_Type);
 		if (i == Grids - 2)
 		{
-			Real_ObjNConstraint_Stage(Node_i, Node_i_child,sigma_goal,  T, Robot_Config_end, Robot_Vel_end, Robot_Acc_end, Ctrl_end, Contact_Force_end, ObjNConstraint_Val, ObjNConstraint_Type);
+			StateNDot_vec_i = PosNVel2StateVec(Robot_Config_end, Robot_Vel_end);
+			Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
+			KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
+			KE_tot.push_back(KE_i);
+
+			Real_ObjNConstraint_Stage(Node_i, Node_i_child,sigma_goal, T, Robot_Config_end, Robot_Vel_end, Robot_Acc_end, Ctrl_end, Contact_Force_end, ObjNConstraint_Val, ObjNConstraint_Type);
 		}
 	}
+	ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot);
+	ObjNConstraint_Val.push_back(KE_ref - KE_i);
+	ObjNConstraint_Type.push_back(1);
 }
-void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child,std::vector<double> &sigma_trans, std::vector<double> & sigma_goal)
+double KE_Variation_fn(std::vector<double> &KE_tot)
+{	double KE_Variation = 0.0;
+	for (int i = 0; i < KE_tot.size()-1; i++)
+	{
+		KE_Variation = KE_Variation + KE_tot[i] * KE_tot[i];
+		// KE_Variation = KE_Variation + (KE_tot[i+1] - KE_tot[i]) * (KE_tot[i+1] - KE_tot[i]);
+	}
+	return KE_Variation;
+}
+void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child,std::vector<double> &sigma_trans, std::vector<double> & sigma_goal, int &Self_Opt_Flag)
 {	double sigma_result = 0.0;
+	Self_Opt_Flag = 0;
 	for (int i = 0; i < sigma_i.size(); i++) {
 		sigma_result = sigma_result + sigma_i_child[i] - sigma_i[i];
 	}
@@ -1295,6 +1332,10 @@ void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma
 	{
 		sigma_trans = sigma_i_child;
 		sigma_goal = sigma_i_child;
+	}
+	if(sigma_result==0)
+	{
+		Self_Opt_Flag = 1;
 	}
 }
 void Real_ObjNConstraint_Stage(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double>& sigma, double T, std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
@@ -1352,7 +1393,7 @@ void Contact_Force_Feasibility_Constraint(std::vector<double> &Pos, std::vector<
 	StateVec_i = PosNVel2StateVec(Pos, Vel);
 	Robot_StateNDot StateNDot_Init_i(StateVec_i);
 	End_Effector_PosNVel(StateNDot_Init_i, End_Effector_Pos, End_Effector_Vel);
-	dlib::matrix<double,6,1> End_Effector_Dist; std::vector<int> End_Effector_Obs;
+	dlib::matrix<double,6,1> End_Effector_Dist; std::vector<int> End_Effector_Obs(6);
 	End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
 	double Contact_Force_i_x, Contact_Force_i_y; dlib::matrix<double> Matrix_result;
 	std:vector<double> Normal_Force, Tange_Force;
@@ -1378,12 +1419,6 @@ void Contact_Force_Feasibility_Constraint(std::vector<double> &Pos, std::vector<
 	ObjNConstraint_Type.push_back(1);
 	ObjNConstraint_Val.push_back(Normal_Force_4 * Normal_Force_4 * mu * mu - Tange_Force_4 * Tange_Force_4);
 	ObjNConstraint_Type.push_back(1);
-
-	dlib::matrix<double> ones_vector, temp_matrix;
-	ones_vector = ONES_VECTOR_fn(6);
-	temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
-	Matrix_result = temp_matrix - ones_vector * mini;
-	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 	return;
 }
 void Contact_Force_Complem_Constraint(dlib::matrix<double> &Contact_Force, std::vector<double> &sigma, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
@@ -1442,6 +1477,7 @@ void Distance_Velocity_Constraint(std::vector<double>& sigma, std::vector<double
 	temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
 	Matrix_result = temp_matrix - ones_vector * mini;
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+
 }
 void Dynamics_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
 {
@@ -1515,8 +1551,8 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 	doublereal ObjAdd = 0;
 
 	for (int i = 0; i < n; i++) {
-		xlow[i] = xlow_vec(i);
-		xupp[i] = xupp_vec(i);
+		xlow[i] =-Inf;
+		xupp[i] = Inf;
 		xstate[i] = 0.0;
 		x[i] = Opt_Seed[i];  	// Initial guess
 	}
@@ -1575,7 +1611,7 @@ int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
 		 integer    iu[],    integer *leniu,
 		 doublereal ru[],    integer *lenru )
 {	 std::vector<double> Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type;
-	for (int i = 0; i < 26; i++){
+	for (int i = 0; i < *n; i++){
 		Opt_Seed.push_back(x[i]);}
 		Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
 	for (int i = 0; i < ObjNConstraint_Val.size(); i++){
@@ -1697,7 +1733,7 @@ void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T, dlib::matrix<doubl
 	StateNDot_Coeff = dlib::zeros_matrix<double>(NumOfStateNDot_Coeff, Grids-1);
 	Ctrl_Coeff = dlib::zeros_matrix<double>(NumOfCtrl_Coeff, Grids-1);
 	Contact_Force_Coeff = dlib::zeros_matrix<double>(NumOfContactForce_Coeff, Grids-1);
-	cout<<"To be compared!"<<endl;
+	// cout<<"To be compared!"<<endl;
 	// 1. Retrieve the StateNDot_Coeff matrix
 	for (int i = 0; i < Grids-1; i++) {
 		for (int j = 0; j < NumOfStateNDot_Coeff; j++) {
