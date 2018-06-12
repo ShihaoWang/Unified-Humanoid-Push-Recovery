@@ -12,7 +12,7 @@
 using namespace std;
 Unified_Structure_P Structure_P;
 
-int main( int argc, char **argv) 
+int main( int argc, char **argv)
 {
 	// This function is used to generate the contact graph
 	std::vector<double> sigma_init;
@@ -50,7 +50,9 @@ int main( int argc, char **argv)
 		* if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
 		*/
 		Node_i = Pop_Node();
-		Self_Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i);
+		int Flag;
+		std::vector<double> test;
+		test = Nodes_Optimization_fn(Node_i, Node_i, Flag);
 
 
 

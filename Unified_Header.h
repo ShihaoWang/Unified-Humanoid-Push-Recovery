@@ -114,7 +114,7 @@ dlib::matrix<double> Eqn_Maint_Matrix_fn(std::vector<double> &sigma_i, std::vect
 Tree_Node Pop_Node();
 void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::vector<double> &sigma);
 
-int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child);
+std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int &Nodes_Opt_Flag);
 
 void Dynamics_Matrices(Robot_StateNDot &Node_StateNDot, dlib::matrix<double> &D_q, dlib::matrix<double> &B_q, dlib::matrix<double> &C_q_qdot, dlib::matrix<double> &Jac_Full);
 std::vector<double> CubicSpline_Coeff_fn(double T, double x_init, double x_end, double xdot_init, double xdot_end);
@@ -124,3 +124,7 @@ dlib::matrix<double> Dynamics_RHS_Matrix_fn(dlib::matrix<double> &Jac_Full, dlib
 
 std::vector<double> PosNVel2StateVec(std::vector<double> & Pos, std::vector<double> & Vel);
 std::vector<double> CubicSpline_PosVelAcc8(double T, double x_a, double x_b, double x_c, double x_d, double xdot_a, double xdot_b, double xdot_c, double xdot_d, double s);
+void Ctrl_Contact_Force_Coeff_fn(dlib::matrix<double> &Ctrl_Traj, dlib::matrix<double> &Contact_Force_Traj, dlib::matrix<double> &Ctrl_Coeff, dlib::matrix<double> &Contact_Force_Coeff);
+
+void Opt_Seed_Zip(std::vector<double> &Opt_Seed, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff);
+void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff);

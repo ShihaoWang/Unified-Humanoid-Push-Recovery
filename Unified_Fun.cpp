@@ -1209,13 +1209,107 @@ void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::
 	Frontier_Nodes.push_back(&Node_i);
 	Frontier_Nodes_Cost.push_back(Node_i.KE);
 }
-int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child)
+// void Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type)
+// {
+// 	// This function is the main optimization constraint function
+//
+//
+// }
+std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int &Nodes_Opt_Flag)
 {	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	// However, the constraint will be set to use the direct collocation method
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
 	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i_child);
 
+	// std::vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
+	// Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
+	// snoptProblem Nodes_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
+	//
+	// integer n = Opt_Seed.size();
+	// integer neF = ObjNConstraint_Val.size();
+	// integer lenA  =  n * neF;
+	//
+	// integer *iAfun = new integer[lenA];              //
+	// integer *jAvar = new integer[lenA];
+	// doublereal *A  = new doublereal[lenA];
+	//
+	// integer lenG   = lenA;
+	// integer *iGfun = new integer[lenG];
+	// integer *jGvar = new integer[lenG];
+	//
+	// doublereal *x      = new doublereal[n];
+	// doublereal *xlow   = new doublereal[n];
+	// doublereal *xupp   = new doublereal[n];
+	// doublereal *xmul   = new doublereal[n];
+	// integer    *xstate = new    integer[n];
+	//
+	// doublereal *F      = new doublereal[neF];
+	// doublereal *Flow   = new doublereal[neF];
+	// doublereal *Fupp   = new doublereal[neF];
+	// doublereal *Fmul   = new doublereal[neF];
+	// integer    *Fstate = new integer[neF];
+	//
+	// integer nxnames = 1;
+	// integer nFnames = 1;
+	// char *xnames = new char[nxnames*8];
+	// char *Fnames = new char[nFnames*8];
+	//
+	// integer    ObjRow = 0;
+	// doublereal ObjAdd = 0;
+	//
+	// for (int i = 0; i < n; i++) {
+	// 	xlow[i] = xlow_vec(i);
+	// 	xupp[i] = xupp_vec(i);
+	// 	xstate[i] = 0.0;
+	// 	x[i] = Opt_Seed[i];  	// Initial guess
+	// }
+	//
+	// for(int i = 0; i<neF; i++){
+	// 	// The lower bound is the same
+	// 	Flow[i] = 0.0;
+	// 	if(ObjNConstraint_Type[i]>0)	// Inequality constraint
+	// 	{	Fupp[i] = Inf;}
+	// 	else{
+	// 		Fupp[i] = 0.0;}
+	// }
+	//
+	// // Load the data for ToyProb ...
+	// Nodes_Optimization_Pr.setPrintFile  ( "Nodes_Optimization_Pr.out" );
+	// Nodes_Optimization_Pr.setProblemSize( n, neF );
+	// Nodes_Optimization_Pr.setObjective  ( ObjRow, ObjAdd );
+	// Nodes_Optimization_Pr.setA          ( lenA, iAfun, jAvar, A );
+	// Nodes_Optimization_Pr.setG          ( lenG, iGfun, jGvar );
+	// Nodes_Optimization_Pr.setX          ( x, xlow, xupp, xmul, xstate );
+	// Nodes_Optimization_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
+	// Nodes_Optimization_Pr.setXNames     ( xnames, nxnames );
+	// Nodes_Optimization_Pr.setFNames     ( Fnames, nFnames );
+	// Nodes_Optimization_Pr.setProbName   ( "Nodes_Optimization_Pr" );
+	// Nodes_Optimization_Pr.setUserFun    ( Nodes_Optimization_Pr_fn);
+	// // snopta will compute the Jacobian by finite-differences.
+	// // The user has the option of calling  snJac  to define the
+	// // coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
+	// Nodes_Optimization_Pr.computeJac    ();
+	// Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
+	// integer Cold = 0, Basis = 1, Warm = 2;
+	// Nodes_Optimization_Pr.solve( Cold );
+	//
+	// for (int i = 0; i < n; i++)
+	// {
+	// 	Opt_Seed[i] = x[i];
+	// }
+	//
+	// delete []iAfun;  delete []jAvar;  delete []A;
+	// delete []iGfun;  delete []jGvar;
+	//
+	// delete []x;      delete []xlow;   delete []xupp;
+	// delete []xmul;   delete []xstate;
+	//
+	// delete []F;      delete []Flow;   delete []Fupp;
+	// delete []Fmul;   delete []Fstate;
+	//
+	// delete []xnames; delete []Fnames;
 
+	return Opt_Seed;
 }
 
 std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
@@ -1311,19 +1405,91 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// The calculation of the coefficients of the control and contact force is easier compared to the robot state due to the assumption of the linear equation
 	Ctrl_Contact_Force_Coeff_fn(Ctrl_Traj, Contact_Force_Traj, Ctrl_Coeff, Contact_Force_Coeff);
 
+	// The final task is to pile them into a single vector
+	std::vector<double> Opt_Seed;
+	Opt_Seed.push_back(T);
+	Opt_Seed_Zip(Opt_Seed, StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff);
+
+	// cout<<StateNDot_Coeff<<endl;  
+	// cout<<Ctrl_Coeff<<endl;
+	// cout<<Contact_Force_Coeff<<endl;
+	//
+	// dlib::matrix<double> StateNDot_Coeff_test, Ctrl_Coeff_test, Contact_Force_Coeff_test;
+	// double T_test;
+	// Opt_Seed_Unzip(Opt_Seed, T_test, StateNDot_Coeff_test, Ctrl_Coeff_test, Contact_Force_Coeff_test);
+	return Opt_Seed;
+}
+void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff)
+{
+	T = Opt_Seed[0];
+	const int NumOfStateNDot_Coeff= 4 * 26;
+	const int NumOfCtrl_Coeff= 2 * 10;
+	const int NumOfContactForce_Coeff= 2 * 12;
+	int Opt_Seed_Index = 1;
+	StateNDot_Coeff = dlib::zeros_matrix<double>(NumOfStateNDot_Coeff, Grids-1);
+	Ctrl_Coeff = dlib::zeros_matrix<double>(NumOfCtrl_Coeff, Grids-1);
+	Contact_Force_Coeff = dlib::zeros_matrix<double>(NumOfContactForce_Coeff, Grids-1);
+	cout<<"To be compared!"<<endl;
+	// 1. Retrieve the StateNDot_Coeff matrix
+	for (int i = 0; i < Grids-1; i++) {
+		for (int j = 0; j < NumOfStateNDot_Coeff; j++) {
+			StateNDot_Coeff(j,i) = Opt_Seed[Opt_Seed_Index];
+			Opt_Seed_Index = Opt_Seed_Index + 1;}}
+	// cout<<StateNDot_Coeff<<endl;
+	// 2. Retrieve the control matrix
+	for (int i = 0; i < Grids-1; i++) {
+		for (int j = 0; j < NumOfCtrl_Coeff; j++) {
+			Ctrl_Coeff(j,i) = Opt_Seed[Opt_Seed_Index];
+			Opt_Seed_Index = Opt_Seed_Index + 1;}}
+	// cout<<Ctrl_Coeff<<endl;
+	// 3. Retrieve the contact force matrix
+	for (int i = 0; i < Grids-1; i++) {
+		for (int j = 0; j < NumOfContactForce_Coeff; j++) {
+			Contact_Force_Coeff(j,i) = Opt_Seed[Opt_Seed_Index];
+			Opt_Seed_Index = Opt_Seed_Index + 1;}}
+	// cout<<Contact_Force_Coeff<<endl;
+}
+
+void Opt_Seed_Zip(std::vector<double> &Opt_Seed, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff)
+{	// This function is used to stack the coefficient matrices into a column vector
+	for (int i = 0; i < StateNDot_Coeff.nc(); i++) {
+		for (int j = 0; j < StateNDot_Coeff.nr(); j++) {
+			Opt_Seed.push_back(StateNDot_Coeff(j,i));
+		}
+	}
+	for (int i = 0; i < Ctrl_Coeff.nc(); i++) {
+		for (int j = 0; j < Ctrl_Coeff.nr(); j++) {
+			Opt_Seed.push_back(Ctrl_Coeff(j,i));
+		}
+	}
+	for (int i = 0; i < Contact_Force_Coeff.nc(); i++) {
+		for (int j = 0; j < Contact_Force_Coeff.nr(); j++) {
+			Opt_Seed.push_back(Contact_Force_Coeff(j,i));
+		}
+	}
 }
 void Ctrl_Contact_Force_Coeff_fn(dlib::matrix<double> &Ctrl_Traj, dlib::matrix<double> &Contact_Force_Traj, dlib::matrix<double> &Ctrl_Coeff, dlib::matrix<double> &Contact_Force_Coeff)
 {
+	// y = a * s + b
 	double Ctrl_init, Ctrl_end, Contact_Force_init, Contact_Force_end;
 	for (int i = 0; i < Grids-1; i++){
 		// Computation of the control coeff
 
 		for (int j = 0; j < 10; j++) {
+			Ctrl_init = Ctrl_Traj(j,i);
+			Ctrl_end = Ctrl_Traj(j,i+1);
+			Ctrl_Coeff(2*j,i) = Ctrl_end - Ctrl_init;
+			Ctrl_Coeff(2*j+1,i) = Ctrl_init;
 		}
 		// Computation of the contact force coeff
 		for (int j = 0; j < 12; j++) {
+			Contact_Force_init = Contact_Force_Traj(j,i);
+			Contact_Force_end = Contact_Force_Traj(j,i+1);
+			Contact_Force_Coeff(2*j,i) = Contact_Force_end - Contact_Force_init;
+			Contact_Force_Coeff(2*j+1,i) = Contact_Force_init;
 		}
 	}
+	return;
 }
 
 dlib::matrix<double> Dynamics_RHS_Matrix_fn(dlib::matrix<double> &Jac_Full, dlib::matrix<double> &B_q)
@@ -1793,188 +1959,6 @@ dlib::matrix<double> Diag_Matrix_fn(std::vector<double> &diag_vec)
 // 	}
 // 	return Optimization_Result;
 // }
-
-// int Real_Optimization(std::vector<double> &Opt_Seed, std::vector<double> &sigma_tran, std::vector<double> &sigma_goal, int Opt_Flag)
-// {
-// 	// This function undertakes all the optimization computation burden
-// 	std::vector<double> Orig_Opt_Seed;
-// 	Orig_Opt_Seed = Opt_Seed;
-//
-// 	snoptProblem Real_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
-// 	double Tme_Seed;
-// 	dlib::matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
-// 	Robot_State_Tot = dlib::zeros_matrix<double>(26, Grids-1);
-// 	Ctrl_Tot = dlib::zeros_matrix<double>(10, Grids-1);
-// 	Contact_Force_Tot = dlib::zeros_matrix<double>(12, Grids-1);
-// 	std::vector<double> Constraint_Type;
-//
-// 	OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
-// 	// cout<<"Robot state matrix: "<<Robot_State_Tot<<endl;
-// 	// cout<<"Ctrl matrix: "<<Ctrl_Tot<<endl;
-// 	// cout<<"Contact Force matrix: "<<Contact_Force_Tot<<endl;
-//
-// 	Opt_Constraint(Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot, 2, Constraint_Type);
-//
-// 	integer n = Opt_Seed.size();
-// 	integer neF = Constraint_Type.size();     							  // 1 objective function
-// 	integer lenA  =  n * neF;
-//
-// 	integer *iAfun = new integer[lenA];              //
-// 	integer *jAvar = new integer[lenA];
-// 	doublereal *A  = new doublereal[lenA];
-//
-// 	integer lenG   = lenA;
-// 	integer *iGfun = new integer[lenG];
-// 	integer *jGvar = new integer[lenG];
-//
-// 	doublereal *x      = new doublereal[n];
-// 	doublereal *xlow   = new doublereal[n];
-// 	doublereal *xupp   = new doublereal[n];
-// 	doublereal *xmul   = new doublereal[n];
-// 	integer    *xstate = new    integer[n];
-//
-// 	doublereal *F      = new doublereal[neF];
-// 	doublereal *Flow   = new doublereal[neF];
-// 	doublereal *Fupp   = new doublereal[neF];
-// 	doublereal *Fmul   = new doublereal[neF];
-// 	integer    *Fstate = new integer[neF];
-//
-// 	integer nxnames = 1;
-// 	integer nFnames = 1;
-// 	char *xnames = new char[nxnames*8];
-// 	char *Fnames = new char[nFnames*8];
-//
-// 	integer    ObjRow = 0;
-// 	doublereal ObjAdd = 0;
-//
-// 	// Set the upper and lower bounds.
-// 	// Now the Opt_Seed is a vector that has a periodic pattern (except for the first element )
-// 	xlow[0] = mini;			xupp[0] = Inf; // This is the time
-// 	int Element_Index = 1;
-// 	for (int i = 0; i < Grids-1; i++)
-// 	{
-// 		xlow[Element_Index+0] = rIxlow;			xupp[Element_Index+0] = rIxupp;
-// 		xlow[Element_Index+1] = rIylow;			xupp[Element_Index+1] = rIyupp;
-// 		xlow[Element_Index+2] = thetalow;		xupp[Element_Index+2] = thetaupp;
-// 		xlow[Element_Index+3] = q1low;			xupp[Element_Index+3] = q1upp;
-// 		xlow[Element_Index+4] = q2low;			xupp[Element_Index+4] = q2upp;
-// 		xlow[Element_Index+5] = q3low;			xupp[Element_Index+5] = q3upp;
-// 		xlow[Element_Index+6] = q4low;			xupp[Element_Index+6] = q4upp;
-// 		xlow[Element_Index+7] = q5low;			xupp[Element_Index+7] = q5upp;
-// 		xlow[Element_Index+8] = q6low;			xupp[Element_Index+8] = q6upp;
-// 		xlow[Element_Index+9] = q7low;			xupp[Element_Index+9] = q7upp;
-// 		xlow[Element_Index+10] = q8low;			xupp[Element_Index+10] = q8upp;
-// 		xlow[Element_Index+11] = q9low;			xupp[Element_Index+11] = q9upp;
-// 		xlow[Element_Index+12] = q10low;		xupp[Element_Index+12] = q10upp;
-// 		xlow[Element_Index+0+13] = rIxdotlow;			xupp[Element_Index+0+13] = rIxdotupp;
-// 		xlow[Element_Index+1+13] = rIydotlow;			xupp[Element_Index+1+13] = rIydotupp;
-// 		xlow[Element_Index+2+13] = thetadotlow;			xupp[Element_Index+2+13] = thetadotupp;
-// 		xlow[Element_Index+3+13] = q1dotlow;			xupp[Element_Index+3+13] = q1dotupp;
-// 		xlow[Element_Index+4+13] = q2dotlow;			xupp[Element_Index+4+13] = q2dotupp;
-// 		xlow[Element_Index+5+13] = q3dotlow;			xupp[Element_Index+5+13] = q3dotupp;
-// 		xlow[Element_Index+6+13] = q4dotlow;			xupp[Element_Index+6+13] = q4dotupp;
-// 		xlow[Element_Index+7+13] = q5dotlow;			xupp[Element_Index+7+13] = q5dotupp;
-// 		xlow[Element_Index+8+13] = q6dotlow;			xupp[Element_Index+8+13] = q6dotupp;
-// 		xlow[Element_Index+9+13] = q7dotlow;			xupp[Element_Index+9+13] = q7dotupp;
-// 		xlow[Element_Index+10+13] = q8dotlow;			xupp[Element_Index+10+13] = q8dotupp;
-// 		xlow[Element_Index+11+13] = q9dotlow;			xupp[Element_Index+11+13] = q9dotupp;
-// 		xlow[Element_Index+12+13] = q10dotlow;			xupp[Element_Index+12+13] = q10dotupp;
-// 		Element_Index = Element_Index + 26;
-//
-// 		// Now it is the control
-// 		xlow[Element_Index+0] = -tau1_max;			xupp[Element_Index+0] = tau1_max;
-// 		xlow[Element_Index+1] = -tau2_max;			xupp[Element_Index+1] = tau2_max;
-// 		xlow[Element_Index+2] = -tau3_max;			xupp[Element_Index+2] = tau3_max;
-// 		xlow[Element_Index+3] = -tau4_max;			xupp[Element_Index+3] = tau4_max;
-// 		xlow[Element_Index+4] = -tau5_max;			xupp[Element_Index+4] = tau5_max;
-// 		xlow[Element_Index+5] = -tau6_max;			xupp[Element_Index+5] = tau6_max;
-// 		xlow[Element_Index+6] = -tau7_max;			xupp[Element_Index+6] = tau7_max;
-// 		xlow[Element_Index+7] = -tau8_max;			xupp[Element_Index+7] = tau8_max;
-// 		xlow[Element_Index+8] = -tau9_max;			xupp[Element_Index+8] = tau9_max;
-// 		xlow[Element_Index+9] = -tau10_max;			xupp[Element_Index+9] = tau10_max;
-//
-// 		Element_Index = Element_Index + 10;
-//
-// 		// The last part is the contact force which is not limited
-// 		xlow[Element_Index+0] = -Inf;			xupp[Element_Index+0] = Inf;
-// 		xlow[Element_Index+1] = -Inf;			xupp[Element_Index+1] = Inf;
-// 		xlow[Element_Index+2] = -Inf;			xupp[Element_Index+2] = Inf;
-// 		xlow[Element_Index+3] = -Inf;			xupp[Element_Index+3] = Inf;
-// 		xlow[Element_Index+4] = -Inf;			xupp[Element_Index+4] = Inf;
-// 		xlow[Element_Index+5] = -Inf;			xupp[Element_Index+5] = Inf;
-// 		xlow[Element_Index+6] = -Inf;			xupp[Element_Index+6] = Inf;
-// 		xlow[Element_Index+7] = -Inf;			xupp[Element_Index+7] = Inf;
-// 		xlow[Element_Index+8] = -Inf;			xupp[Element_Index+8] = Inf;
-// 		xlow[Element_Index+9] = -Inf;			xupp[Element_Index+9] = Inf;
-// 		xlow[Element_Index+10] = -Inf;			xupp[Element_Index+10] = Inf;
-// 		xlow[Element_Index+11] = -Inf;			xupp[Element_Index+11] = Inf;
-// 		Element_Index = Element_Index + 12;
-// 	}
-// 	for (int i = 0; i < n; i++)
-// 	{
-// 		xstate[i] = 0.0;
-// 	}
-// 	for(int i = 0; i<neF; i++)
-// 	{
-// 		// The lower bound is the same
-// 		Flow[i] = 0.0;
-// 		if(Constraint_Type[i]>0)// Inequality constraint
-// 		{	Fupp[i] = Inf;}
-// 		else
-// 		{	Fupp[i] = 0.0;}
-// 	}
-// 	// Initial guess
-// 	for (int i = 0; i < n; i++)
-// 	{
-// 		x[i] = Opt_Seed[i];
-// 	}
-// 	// Load the data for ToyProb ...
-// 	Real_Optimization_Pr.setPrintFile  ( "Real_Optimization_Pr.out" );
-// 	Real_Optimization_Pr.setProblemSize( n, neF );
-// 	Real_Optimization_Pr.setObjective  ( ObjRow, ObjAdd );
-// 	Real_Optimization_Pr.setA          ( lenA, iAfun, jAvar, A );
-// 	Real_Optimization_Pr.setG          ( lenG, iGfun, jGvar );
-// 	Real_Optimization_Pr.setX          ( x, xlow, xupp, xmul, xstate );
-// 	Real_Optimization_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
-// 	Real_Optimization_Pr.setXNames     ( xnames, nxnames );
-// 	Real_Optimization_Pr.setFNames     ( Fnames, nFnames );
-// 	Real_Optimization_Pr.setProbName   ( "Real_Optimization_Pr_" );
-// 	Real_Optimization_Pr.setUserFun    ( Real_Optimization_Pr_fn);
-// 	// snopta will compute the Jacobian by finite-differences.
-// 	// The user has the option of calling  snJac  to define the
-// 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
-// 	Real_Optimization_Pr.computeJac    ();
-// 	Real_Optimization_Pr.setIntParameter( "Derivative option", 0 );
-// 	integer Cold = 0, Basis = 1, Warm = 2;
-// 	Real_Optimization_Pr.solve( Cold );
-//
-// 	for (int i = 0; i < n; i++){
-// 		Opt_Seed[i] = x[i];}
-// 	// If the optimization has failed the optimization result will be the same as the input one
-// 	double Opt_Original_Comp = 0.0;
-// 	int Optimzation_Success_Flag; dlib::matrix<double> dlib_colm_vec; std::vector<double> dlib_colm_2_std_vec;
-// 	for (int i = 0; i < n; i++){
-// 		Opt_Original_Comp = Opt_Original_Comp + (Opt_Seed[i] -Orig_Opt_Seed[i])*(Opt_Seed[i] -Orig_Opt_Seed[i]);}
-// 	if (Opt_Original_Comp<1){
-// 		// Optimization successful!
-// 		OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
-// 		for (int i = 0; i < Grids; i++) {
-// 			Robot_StateNDot Init_Opt_vec;
-// 			dlib_colm_vec = dlib::colm(Robot_State_Tot,i);
-// 			dlib_colm_2_std_vec = DlibMatCol2StdVec(dlib_colm_vec, 26);
-// 			Init_Opt_vec = StateVec2StateNDot(dlib_colm_2_std_vec);
-// 			Robot_Plot_fn(Init_Opt_vec);} Optimzation_Success_Flag = 1;}
-// 		else{ Optimzation_Success_Flag = 0;}
-// 	delete []iAfun;  delete []jAvar;  delete []A;
-// 	delete []iGfun;  delete []jGvar;
-// 	delete []x;      delete []xlow;   delete []xupp;
-// 	delete []xmul;   delete []xstate;
-// 	delete []F;      delete []Flow;   delete []Fupp;
-// 	delete []Fmul;   delete []Fstate;
-// 	delete []xnames; delete []Fnames;
-// 	return Optimzation_Success_Flag;
-// }
-
 // void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot)
 // {	// This function is used to distill the Tme_Seed, Robot_State_Tot, Ctrl_Tot and Contact_Force_Tot from the Opt_Seed
 // 	Tme_Seed = Opt_Seed[0];

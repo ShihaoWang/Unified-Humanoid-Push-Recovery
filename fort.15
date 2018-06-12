@@ -220,9 +220,9 @@
       26  x     26   SBS        -1.50000         0.00000        -3.00000         3.00000         0.00000     57
  
  Time for MPS input                             0.00 seconds
- Time for solving problem                       0.01 seconds
+ Time for solving problem                       0.00 seconds
  Time for solution output                       0.00 seconds
- Time for constraint functions                  0.01 seconds
+ Time for constraint functions                  0.00 seconds
  Time for objective function                    0.00 seconds
 1
  
@@ -531,3 +531,28 @@
        5  x      5   SBS         0.59798        -0.00000          .              2.61800        -0.00000     48
        6  x      6    BS        -0.05083         0.00000        -1.30000         0.73300        -0.00000     49
        7  x      7   SBS        -0.68497         0.00000        -2.18170         0.73300         0.00000     50
+       8  x      8   SBS         0.08026         0.00000          .              2.61800         0.00000     51
+       9  x      9   SBS         0.20367         0.00000        -1.30000         0.73300         0.00000     52
+      10  x     10   SBS        -0.44555         0.00000        -3.14000         1.04700         0.00000     53
+      11  x     11 A  UL          .             -0.00000        -2.39100          .             -0.00000     54
+      12  x     12   SBS         0.11429         0.00000        -3.14000         1.04700         0.00000     55
+      13  x     13   SBS        -0.51952        -0.00000        -2.39100          .             -0.00000     56
+      14  x     14    BS        -0.00000        -0.00000           None            None         -0.00000     57
+      15  x     15    BS        -0.00000        -0.00000           None            None         -0.00000     58
+      16  x     16   SBS         0.00000         0.00000           None            None          0.00000     59
+      17  x     17    BS        -0.00000        -0.00000        -3.00000         3.00000        -0.00000     60
+      18  x     18   SBS         0.00000        -0.00000        -3.00000         3.00000        -0.00000     61
+      19  x     19   SBS        -0.00000        -0.00000        -3.00000         3.00000         0.00000     62
+      20  x     20   SBS         0.00000         0.00000        -3.00000         3.00000         0.00000     63
+      21  x     21   SBS         0.00000         0.00000        -3.00000         3.00000         0.00000     64
+      22  x     22   SBS        -0.00000        -0.00000        -3.00000         3.00000        -0.00000     65
+      23  x     23   SBS        -0.00000        -0.00000        -3.00000         3.00000        -0.00000     66
+      24  x     24   SBS         0.00000         0.00000        -3.00000         3.00000         0.00000     67
+      25  x     25   SBS        -0.00000        -0.00000        -3.00000         3.00000        -0.00000     68
+      26  x     26   SBS         0.00000         0.00000        -3.00000         3.00000         0.00000     69
+ 
+ Time for MPS input                             0.00 seconds
+ Time for solving problem                       0.04 seconds
+ Time for solution output                       0.00 seconds
+ Time for constraint functions                  0.03 seconds
+ Time for objective function                    0.00 seconds
