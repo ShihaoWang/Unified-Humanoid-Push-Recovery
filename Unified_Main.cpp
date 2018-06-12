@@ -12,8 +12,8 @@
 using namespace std;
 Unified_Structure_P Structure_P;
 
-int main( int argc, char **argv)
-{ 
+int main( int argc, char **argv) 
+{
 	// This function is used to generate the contact graph
 	std::vector<double> sigma_init;
 	// sigma_init is used initialize the robot contact at the initial time

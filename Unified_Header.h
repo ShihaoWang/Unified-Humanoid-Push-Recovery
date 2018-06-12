@@ -117,7 +117,7 @@ void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::
 int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child);
 
 void Dynamics_Matrices(Robot_StateNDot &Node_StateNDot, dlib::matrix<double> &D_q, dlib::matrix<double> &B_q, dlib::matrix<double> &C_q_qdot, dlib::matrix<double> &Jac_Full);
-std::vector<double> CubicSpline_Coeff(double T, double x_init, double x_end, double xdot_init, double xdot_end);
+std::vector<double> CubicSpline_Coeff_fn(double T, double x_init, double x_end, double xdot_init, double xdot_end);
 std::vector<double> CubicSpline_PosVelAcc4(double T, double a, double b, double c, double d, double s);
 void Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(double T, dlib::matrix<double> &StateNDot_Coeff, int Grid_Ind, double s, std::vector<double> &Robot_Config,  std::vector<double> &Robot_Vel, dlib::matrix<double> &Robot_Acc, std::vector<double> &Robot_VelfromPos);
 dlib::matrix<double> Dynamics_RHS_Matrix_fn(dlib::matrix<double> &Jac_Full, dlib::matrix<double> &B_q);

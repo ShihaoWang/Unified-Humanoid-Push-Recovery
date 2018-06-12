@@ -1243,32 +1243,33 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 			StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
 
 	// Here is the initialization of the spline coefficients for the stateNdot, control and contact force
-
 	// First is to initialize: StateNDot
 	double x_init, x_end, xdot_init, xdot_end;
-	std::vector<double> CubicSpline_Coeff_vec, PVA_init, PVA_end;
+	std::vector<double> CubicSpline_Coeff_Pos_vec, CubicSpline_Coeff_Vel_vec, PVA_init, PVA_end;
 	for (int i = 0; i < Grids-1; i++)
 	{	for (int j = 0; j < StateNDot_len/2; j++){
-		// Position first
+		    // Position first
 			x_init = StateNDot_Traj(j,i);
 			x_end = StateNDot_Traj(j,i+1);
 			xdot_init = StateNDot_Traj(j+StateNDot_len/2,i);
 			xdot_end = StateNDot_Traj(j+StateNDot_len/2,i+1);
-			CubicSpline_Coeff_vec = CubicSpline_Coeff(T, x_init, x_end, xdot_init, xdot_end); // 4 by 1 vector: a, b, c, d
-			for (int z = 0; z < 4; i++)
-			{
-				StateNDot_Coeff(4*j+z,i) = CubicSpline_Coeff_vec[z];
-			}
+			CubicSpline_Coeff_Pos_vec = CubicSpline_Coeff_fn(T, x_init, x_end, xdot_init, xdot_end); // 4 by 1 vector: a, b, c, d
 			// Velocity second
-			PVA_init = CubicSpline_PosVelAcc4(T, x_init, x_end, xdot_init, xdot_end, 0);
-			PVA_end = CubicSpline_PosVelAcc4(T, x_init, x_end, xdot_init, xdot_end, 1);
-			CubicSpline_Coeff_vec = CubicSpline_Coeff(T, PVA_init[1], PVA_end[1], PVA_init[2], PVA_end[2]); // 4 by 1 vector: a, b, c, d
-			for (int z = 0; z < 4; i++)
-			{
-				StateNDot_Coeff(4*j+2*StateNDot_len+z,i) = CubicSpline_Coeff_vec[z];
-			}
+			PVA_init = CubicSpline_PosVelAcc4(T, CubicSpline_Coeff_Pos_vec[0], CubicSpline_Coeff_Pos_vec[1], CubicSpline_Coeff_Pos_vec[2], CubicSpline_Coeff_Pos_vec[3], 0);
+			PVA_end  = CubicSpline_PosVelAcc4(T, CubicSpline_Coeff_Pos_vec[0], CubicSpline_Coeff_Pos_vec[1], CubicSpline_Coeff_Pos_vec[2], CubicSpline_Coeff_Pos_vec[3], 1);
+			CubicSpline_Coeff_Vel_vec = CubicSpline_Coeff_fn(T, xdot_init,xdot_end, PVA_init[2], PVA_end[2]); // 4 by 1 vector: a, b, c, d
+			StateNDot_Coeff(8*j,i)   = CubicSpline_Coeff_Pos_vec[0];
+			StateNDot_Coeff(8*j+1,i) = CubicSpline_Coeff_Pos_vec[1];
+			StateNDot_Coeff(8*j+2,i) = CubicSpline_Coeff_Pos_vec[2];
+			StateNDot_Coeff(8*j+3,i) = CubicSpline_Coeff_Pos_vec[3];
+			StateNDot_Coeff(8*j+4,i) = CubicSpline_Coeff_Vel_vec[0];
+			StateNDot_Coeff(8*j+5,i) = CubicSpline_Coeff_Vel_vec[1];
+			StateNDot_Coeff(8*j+6,i) = CubicSpline_Coeff_Vel_vec[2];
+			StateNDot_Coeff(8*j+7,i) = CubicSpline_Coeff_Vel_vec[3];
 		}
 	}
+	// cout<<StateNDot_Coeff<<endl;
+
 	// Second is to initialize: Control and Contact Force
 	std::vector<double> Robot_Pos(13), Robot_Vel(13), Robot_VelfromPos(13), Robotstate_Vec_i;		dlib::matrix<double> Robot_Acc; Robot_Acc = dlib::zeros_matrix<double>(13,1);
 	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
@@ -1289,11 +1290,42 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 			}
 		}
 	}
-	cout<<StateNDot_Traj<<endl;
-	cout<<Contact_Force_Traj<<endl;
-	cout<<Ctrl_Traj<<endl;
+	// cout<<StateNDot_Traj<<endl;			cout<<Contact_Force_Traj<<endl;			cout<<Ctrl_Traj<<endl;			cout<<StateNDot_Coeff<<endl;
+	// THen the last column
+	Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, Grids-2, 1, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
+	Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
+	Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
+	Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
+	Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
+	Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
+	Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
+	for (int j = 0; j < Dynamics_RHS.nr(); j++) {
+		if(j<Contact_Force_Traj.nr())
+		{	Contact_Force_Traj(j,Grids-1) = Dynamics_RHS(j);}
+		else
+		{
+			Ctrl_Traj(j - Contact_Force_Traj.nr(),Grids-1) = Dynamics_RHS(j);
+		}
+	}
+	// cout<<StateNDot_Traj<<endl;			cout<<Contact_Force_Traj<<endl;			cout<<Ctrl_Traj<<endl;
+	// The calculation of the coefficients of the control and contact force is easier compared to the robot state due to the assumption of the linear equation
+	Ctrl_Contact_Force_Coeff_fn(Ctrl_Traj, Contact_Force_Traj, Ctrl_Coeff, Contact_Force_Coeff);
 
 }
+void Ctrl_Contact_Force_Coeff_fn(dlib::matrix<double> &Ctrl_Traj, dlib::matrix<double> &Contact_Force_Traj, dlib::matrix<double> &Ctrl_Coeff, dlib::matrix<double> &Contact_Force_Coeff)
+{
+	double Ctrl_init, Ctrl_end, Contact_Force_init, Contact_Force_end;
+	for (int i = 0; i < Grids-1; i++){
+		// Computation of the control coeff
+
+		for (int j = 0; j < 10; j++) {
+		}
+		// Computation of the contact force coeff
+		for (int j = 0; j < 12; j++) {
+		}
+	}
+}
+
 dlib::matrix<double> Dynamics_RHS_Matrix_fn(dlib::matrix<double> &Jac_Full, dlib::matrix<double> &B_q)
 {
 	dlib::matrix<double> Jac_Full_Trans, Dynamics_RHS_Matrix;
@@ -1314,7 +1346,6 @@ dlib::matrix<double> Dynamics_RHS_Matrix_fn(dlib::matrix<double> &Jac_Full, dlib
 	}
 	return Dynamics_RHS_Matrix;
 }
-
 std::vector<double> PosNVel2StateVec(std::vector<double> & Pos, std::vector<double> & Vel)
 {
 	std::vector<double> StateVec_i;
@@ -1339,15 +1370,15 @@ void Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(double T, dlib::matrix<double> &
 	std::vector<double> PVAVP_i;
 	double x_a, x_b, x_c, x_d, xdot_a, xdot_b, xdot_c, xdot_d;
 	for (int i = 0; i < 13; i++) {
-		x_a = StateNDot_Coeff(4*i, Grid_Ind);
-		x_b = StateNDot_Coeff(4*i+1, Grid_Ind);
-		x_c = StateNDot_Coeff(4*i+2, Grid_Ind);
-		x_d = StateNDot_Coeff(4*i+3, Grid_Ind);
+		x_a = StateNDot_Coeff(8*i, Grid_Ind);
+		x_b = StateNDot_Coeff(8*i+1, Grid_Ind);
+		x_c = StateNDot_Coeff(8*i+2, Grid_Ind);
+		x_d = StateNDot_Coeff(8*i+3, Grid_Ind);
 
-		xdot_a = StateNDot_Coeff(4*i+2*13, Grid_Ind);
-		xdot_b = StateNDot_Coeff(4*i+1+2*13, Grid_Ind);
-		xdot_c = StateNDot_Coeff(4*i+2+2*13, Grid_Ind);
-		xdot_d = StateNDot_Coeff(4*i+3+2*13, Grid_Ind);
+		xdot_a = StateNDot_Coeff(8*i+4, Grid_Ind);
+		xdot_b = StateNDot_Coeff(8*i+5, Grid_Ind);
+		xdot_c = StateNDot_Coeff(8*i+6, Grid_Ind);
+		xdot_d = StateNDot_Coeff(8*i+7, Grid_Ind);
 
 		PVAVP_i = CubicSpline_PosVelAcc8(T, x_a, x_b, x_c, x_d, xdot_a, xdot_b, xdot_c, xdot_d, s);
 		Robot_Config[i] = PVAVP_i[0];
@@ -1378,14 +1409,14 @@ std::vector<double> CubicSpline_PosVelAcc8(double T, double x_a, double x_b, dou
 	PVAVP[0] = Pos;				PVAVP[1] = Vel;				PVAVP[2] = Acc;				PVAVP[3] = VelfromPos;
 	return PVAVP;
 }
-std::vector<double> CubicSpline_Coeff(double T, double x_init, double x_end, double xdot_init, double xdot_end)
+std::vector<double> CubicSpline_Coeff_fn(double T, double x_init, double x_end, double xdot_init, double xdot_end)
 {	// This function is used to calcualte the coefficients for the cubic spline
 	// The cubic spline is expressed to be : y(s) = a*s^3 + b*s^2 + c*s + d
 	std::vector<double> CubicSpline_Coeff_vec(4);
 	double a, b, c, d;
-	a = 2*x_init - 2*x_end - T*x_init + T*xdot_end + T*xdot_init;
-    b = 3*x_end - 3*x_init + 2*T*x_init - T*xdot_end - 2*T*xdot_init;
-    c = -T*(x_init - xdot_init);
+	a = 2*x_init - 2*x_end + T*xdot_end + T*xdot_init;
+  	b = 3*x_end - 3*x_init - T*xdot_end - 2*T*xdot_init;
+    c = T*xdot_init;
     d = x_init;
 	CubicSpline_Coeff_vec[0] = a;
 	CubicSpline_Coeff_vec[1] = b;
