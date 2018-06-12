@@ -1209,107 +1209,378 @@ void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::
 	Frontier_Nodes.push_back(&Node_i);
 	Frontier_Nodes_Cost.push_back(Node_i.KE);
 }
-// void Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type)
-// {
-// 	// This function is the main optimization constraint function
-//
-//
-// }
+void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	// This function is the main optimization constraint function
+	double T;		dlib::matrix<double> StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff;
+	Opt_Seed_Unzip(Opt_Seed, T, StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff);
+	std::vector<double> Robot_Config_init(13), Robot_Vel_init(13), Robot_VelfromPos_init(13);
+	std::vector<double> Robot_Config_end(13),  Robot_Vel_end(13),  Robot_VelfromPos_end(13);
+	dlib::matrix<double> Robot_Acc_init, Robot_Acc_end, Ctrl_init, Contact_Force_init, Ctrl_end, Contact_Force_end, Ctrl_ref, Contact_Force_ref;
+	Robot_Acc_init = dlib::zeros_matrix<double>(13,1);			Robot_Acc_end = dlib::zeros_matrix<double>(13,1);
+	Ctrl_init = dlib::zeros_matrix<double>(10,1);				Ctrl_end = dlib::zeros_matrix<double>(10,1);
+	Contact_Force_init = dlib::zeros_matrix<double>(12,1);		Contact_Force_end = dlib::zeros_matrix<double>(12,1);
+
+	std::vector<double> Robot_Config_ref, Robot_Velocity_ref;
+	Tree_Node Node_i, Node_i_child;
+	Node_i = Structure_P.Node_i;		Node_i_child = Structure_P.Node_i_child;
+	std::vector<double> Robot_State_init_vec = StateNDot2StateVec(Node_i.Node_StateNDot);
+	std::vector<double> sigma_trans, sigma_goal;
+	Sigma_TransNGoal(Node_i.sigma, Node_i_child.sigma, sigma_trans, sigma_goal);
+
+	// Define the continuity at grids
+	for (int i = 0; i < Robot_State_init_vec.size()/2; i++) {
+		Robot_Config_ref.push_back(Robot_State_init_vec[i]);
+		Robot_Velocity_ref.push_back(Robot_State_init_vec[i+Robot_State_init_vec.size()/2]);
+	}
+	CtrlNContact_ForcefromCtrlNContact_Force_Coeff(Ctrl_Coeff,Contact_Force_Coeff, 0, 0, Ctrl_ref,  Contact_Force_ref);
+	std::vector<double> StateNDot_vec_i;
+	dlib::matrix<double> StateNDot_Matrix, Matrix_result, Robot_Vel_Matrix, Robot_VelfromPos_Matrix, Robot_Vel_DlibMatrix, Robot_VelfromPos_DlibMatrix;
+
+	for (int i = 0; i < Grids-1; i++) {
+		Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, i, 0, Robot_Config_init, Robot_Vel_init, Robot_Acc_init, Robot_VelfromPos_init);
+		CtrlNContact_ForcefromCtrlNContact_Force_Coeff(Ctrl_Coeff,Contact_Force_Coeff, i, 0, Ctrl_init,  Contact_Force_init);
+
+		Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, i, 1, Robot_Config_end, Robot_Vel_end, Robot_Acc_end, Robot_VelfromPos_end);
+		CtrlNContact_ForcefromCtrlNContact_Force_Coeff(Ctrl_Coeff,Contact_Force_Coeff, i, 1, Ctrl_end,  Contact_Force_end);
+
+		// 1. Robotstate, control feasiblity constraint
+		StateNDot_vec_i = PosNVel2StateVec(Robot_Config_init, Robot_Vel_init);
+		StateNDot_Matrix = StateVec2DlibMatrix_fn(StateNDot_vec_i);
+		Matrix_result = StateNDot_Matrix - xlow_vec;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+		Matrix_result = xupp_vec - StateNDot_Matrix;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+
+		Matrix_result = Ctrl_init - ctrl_low_vec;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+		Matrix_result = ctrl_upp_vec - Ctrl_init;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+		for (int j = 0; j < Robot_Config_ref.size(); j++) {
+			ObjNConstraint_Val.push_back(Robot_Config_init[j] - Robot_Config_ref[j]);
+			ObjNConstraint_Type.push_back(0);
+			ObjNConstraint_Val.push_back(Robot_Vel_init[j] - Robot_Velocity_ref[j]);
+			ObjNConstraint_Type.push_back(0);}
+		Matrix_result = Ctrl_init - Ctrl_ref;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+		Matrix_result = Contact_Force_init - Contact_Force_ref;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+		Robot_Vel_DlibMatrix = StateVec2DlibMatrix_fn(Robot_Vel_init);
+		Robot_VelfromPos_DlibMatrix = StateVec2DlibMatrix_fn(Robot_VelfromPos_init);
+		Matrix_result = Robot_Vel_DlibMatrix - Robot_VelfromPos_DlibMatrix;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+		// reference update
+		Robot_Config_ref = Robot_Config_end;		Robot_Velocity_ref = Robot_Vel_end;		Ctrl_ref = Ctrl_end;		Contact_Force_ref = Contact_Force_end;
+		Real_ObjNConstraint_Stage(Node_i, Node_i_child, sigma_trans, T, Robot_Config_init, Robot_Vel_init, Robot_Acc_init, Ctrl_init, Contact_Force_init, ObjNConstraint_Val, ObjNConstraint_Type);
+		if (i == Grids - 2)
+		{
+			Real_ObjNConstraint_Stage(Node_i, Node_i_child,sigma_goal,  T, Robot_Config_end, Robot_Vel_end, Robot_Acc_end, Ctrl_end, Contact_Force_end, ObjNConstraint_Val, ObjNConstraint_Type);
+		}
+	}
+}
+void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child,std::vector<double> &sigma_trans, std::vector<double> & sigma_goal)
+{	double sigma_result = 0.0;
+	for (int i = 0; i < sigma_i.size(); i++) {
+		sigma_result = sigma_result + sigma_i_child[i] - sigma_i[i];
+	}
+	if(sigma_result>0)
+	{
+		sigma_trans = sigma_i;
+		sigma_goal = sigma_i_child;
+	}
+	else
+	{
+		sigma_trans = sigma_i_child;
+		sigma_goal = sigma_i_child;
+	}
+}
+void Real_ObjNConstraint_Stage(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double>& sigma, double T, std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	// 2. Dynamics Constraint
+	Dynamics_Constraint(Pos, Vel, Acc, Ctrl, Contact_Force, ObjNConstraint_Val, ObjNConstraint_Type);
+
+	// 3. Complementarity constraints: Distance!
+	Distance_Velocity_Constraint(sigma, Pos, Vel, ObjNConstraint_Val, ObjNConstraint_Type);
+
+	// 4. Complementarity constraints: Contact Force!
+	Contact_Force_Complem_Constraint(Contact_Force, sigma, ObjNConstraint_Val, ObjNConstraint_Type);
+
+	// 5. Contact force feasibility constraints: normal force should be positive and the friction cone constraint has to be satisfied
+	Contact_Force_Feasibility_Constraint(Pos, Vel, Contact_Force, ObjNConstraint_Val, ObjNConstraint_Type);
+
+	// 6. Contact maintenance constraint: the previous unchanged active constraint have to be satisfied
+	Contact_Maintenance_Constraint(Node_i, Node_i_child, Pos, Vel, ObjNConstraint_Val, ObjNConstraint_Type);
+
+}
+void Contact_Maintenance_Constraint(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Pos, std::vector<double> &Vel, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	std::vector<double> sigma_i = Node_i.sigma;
+	std::vector<double> sigma_i_child = Node_i_child.sigma;
+
+	dlib::matrix<double,12,1> End_Effector_Pos_ref, End_Effector_Vel_ref;
+	End_Effector_Pos_ref = Node_i.End_Effector_Pos;
+	End_Effector_Vel_ref = Node_i.End_Effector_Vel;
+
+	std::vector<double> StateVec_i;	dlib::matrix<double,12,1> End_Effector_Pos, End_Effector_Vel;
+	StateVec_i = PosNVel2StateVec(Pos, Vel);
+	Robot_StateNDot StateNDot_Init_i(StateVec_i);
+	End_Effector_PosNVel(StateNDot_Init_i, End_Effector_Pos, End_Effector_Vel);
+
+	std::vector<double> sigma_maint(12);
+	sigma_maint[0] = sigma_i[0] * sigma_i_child[0];		sigma_maint[1] = sigma_i[0] * sigma_i_child[0];
+	sigma_maint[2] = sigma_i[0] * sigma_i_child[0];		sigma_maint[3] = sigma_i[0] * sigma_i_child[0];
+	sigma_maint[4] = sigma_i[1] * sigma_i_child[1];		sigma_maint[5] = sigma_i[1] * sigma_i_child[1];
+	sigma_maint[6] = sigma_i[1] * sigma_i_child[1];		sigma_maint[7] = sigma_i[1] * sigma_i_child[1];
+	sigma_maint[8] = sigma_i[2] * sigma_i_child[2];		sigma_maint[9] = sigma_i[2] * sigma_i_child[2];
+	sigma_maint[10] = sigma_i[3] * sigma_i_child[3];	sigma_maint[11] = sigma_i[3] * sigma_i_child[3];
+
+	dlib::matrix<double> Maint_Matrix = Diag_Matrix_fn(sigma_maint);
+	dlib::matrix<double> Matrix_result;
+
+	Matrix_result = Maint_Matrix * (End_Effector_Pos - End_Effector_Pos_ref);
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+	Matrix_result = Maint_Matrix * (End_Effector_Vel - End_Effector_Vel_ref);
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+}
+void Contact_Force_Feasibility_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	std::vector<double> StateVec_i;	dlib::matrix<double,12,1> End_Effector_Pos, End_Effector_Vel;
+	StateVec_i = PosNVel2StateVec(Pos, Vel);
+	Robot_StateNDot StateNDot_Init_i(StateVec_i);
+	End_Effector_PosNVel(StateNDot_Init_i, End_Effector_Pos, End_Effector_Vel);
+	dlib::matrix<double,6,1> End_Effector_Dist; std::vector<int> End_Effector_Obs;
+	End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
+	double Contact_Force_i_x, Contact_Force_i_y; dlib::matrix<double> Matrix_result;
+	std:vector<double> Normal_Force, Tange_Force;
+	for (int i = 0; i < Contact_Force.nr()/2; i++) {
+		Contact_Force_i_x = Contact_Force(2*i);
+		Contact_Force_i_y = Contact_Force(2*i+1);
+		Normal_Force.push_back(Contact_Force_i_x * Envi_Map_Normal(End_Effector_Obs[i],0) + Contact_Force_i_y * Envi_Map_Normal(End_Effector_Obs[i],1));
+		Tange_Force.push_back(Contact_Force_i_x * Envi_Map_Tange(End_Effector_Obs[i],0) + Contact_Force_i_y * Envi_Map_Tange(End_Effector_Obs[i],1));}
+
+	for (int i = 0; i < Contact_Force.nr()/2; i++) {
+		ObjNConstraint_Val.push_back(Normal_Force[i]);
+		ObjNConstraint_Type.push_back(1);}
+
+	double Normal_Force_1, Normal_Force_2, Normal_Force_3, Normal_Force_4;		double Tange_Force_1, Tange_Force_2, Tange_Force_3, Tange_Force_4;
+	Normal_Force_1 = Normal_Force[0] + Normal_Force[1];		Normal_Force_2 = Normal_Force[2] + Normal_Force[3];		Normal_Force_3 = Normal_Force[4];	Normal_Force_4 = Normal_Force[5];
+	Tange_Force_1 = Tange_Force[0] + Tange_Force[1];		Tange_Force_2 = Tange_Force[2] + Tange_Force[3];		Tange_Force_3 = Tange_Force[4];		Tange_Force_4 = Tange_Force[5];
+
+	ObjNConstraint_Val.push_back(Normal_Force_1 * Normal_Force_1 * mu * mu - Tange_Force_1 * Tange_Force_1);
+	ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(Normal_Force_2 * Normal_Force_2 * mu * mu - Tange_Force_2 * Tange_Force_2);
+	ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(Normal_Force_3 * Normal_Force_3 * mu * mu - Tange_Force_3 * Tange_Force_3);
+	ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(Normal_Force_4 * Normal_Force_4 * mu * mu - Tange_Force_4 * Tange_Force_4);
+	ObjNConstraint_Type.push_back(1);
+
+	dlib::matrix<double> ones_vector, temp_matrix;
+	ones_vector = ONES_VECTOR_fn(6);
+	temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
+	Matrix_result = temp_matrix - ones_vector * mini;
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+	return;
+}
+void Contact_Force_Complem_Constraint(dlib::matrix<double> &Contact_Force, std::vector<double> &sigma, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	dlib::matrix<double> Contact_Force_Complem_Matrix, Matrix_result;
+	std::vector<double> sigma_temp;
+	sigma_temp.push_back(!sigma[0]);
+	sigma_temp.push_back(!sigma[0]);
+	sigma_temp.push_back(!sigma[0]);
+	sigma_temp.push_back(!sigma[0]);
+	sigma_temp.push_back(!sigma[1]);
+	sigma_temp.push_back(!sigma[1]);
+	sigma_temp.push_back(!sigma[1]);
+	sigma_temp.push_back(!sigma[1]);
+	sigma_temp.push_back(!sigma[2]);
+	sigma_temp.push_back(!sigma[2]);
+	sigma_temp.push_back(!sigma[3]);
+	sigma_temp.push_back(!sigma[3]);
+	Contact_Force_Complem_Matrix = Diag_Matrix_fn(sigma_temp);
+	Matrix_result = Contact_Force_Complem_Matrix * Contact_Force;
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+	return;
+}
+void Distance_Velocity_Constraint(std::vector<double>& sigma, std::vector<double> &Pos, std::vector<double> &Vel, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	std::vector<double> Robotstate_Vec_i = PosNVel2StateVec(Pos, Vel);
+	Robot_StateNDot StateNDot_Init_i(Robotstate_Vec_i);
+	dlib::matrix<double,12,1> End_Effector_Pos, End_Effector_Vel;
+	End_Effector_PosNVel(StateNDot_Init_i, End_Effector_Pos, End_Effector_Vel);
+
+	dlib::matrix<double,6,1> End_Effector_Dist;
+	std::vector<int> End_Effector_Obs(6);
+
+	End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
+
+	dlib::matrix<double> Eqn_Pos_Matrix, Ineqn_Pos_Matrix, Eqn_Vel_Matrix, Eqn_Maint_Matrix, Matrix_result;
+	std::vector<double> sigma_temp;
+	sigma_temp = Sigma2Pos(sigma, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
+	sigma_temp = Sigma2Pos(sigma, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
+	sigma_temp = Sigma2Vel(sigma);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
+
+	// 1. Active constraints have to be satisfied: Position and Velocity
+	Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+	Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+	// 2. Inactive constraints have to be strictly away from the obstacle
+	dlib::matrix<double> ones_vector, temp_matrix;
+	ones_vector = ONES_VECTOR_fn(6);
+	Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+
+	// 3. Middle joints have to be strictly away from the obs
+	temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
+	Matrix_result = temp_matrix - ones_vector * mini;
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+}
+void Dynamics_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	std::vector<double> Robotstate_Vec_i = PosNVel2StateVec(Pos, Vel);
+	Robot_StateNDot Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
+	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans;
+	Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
+	Jac_Full_Trans = dlib::trans(Jac_Full);
+	dlib::matrix<double> Matrix_result;
+	Matrix_result = D_q * Acc + C_q_qdot - Jac_Full_Trans * Contact_Force - B_q * Ctrl;
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+}
+dlib::matrix<double> StateVec2DlibMatrix_fn(std::vector<double> &StateVec)
+{	const int dim = StateVec.size();
+	dlib::matrix<double> StateVec2DlibMatrix;
+	StateVec2DlibMatrix = dlib::zeros_matrix<double>(dim,1);
+	for (int i = 0; i < dim; i++) {
+		StateVec2DlibMatrix(i) = StateVec[i];}
+	return StateVec2DlibMatrix;
+}
+void CtrlNContact_ForcefromCtrlNContact_Force_Coeff(dlib::matrix<double> &Ctrl_Coeff,dlib::matrix<double> &Contact_Force_Coeff, int Grid_Ind, double s, dlib::matrix<double> &Ctrl_i,  dlib::matrix<double> &Contact_Force_i)
+{	double x_a, x_b;
+	for (int i = 0; i < 10; i++) {
+		x_a = Ctrl_Coeff(2*i, Grid_Ind);
+		x_b = Ctrl_Coeff(2*i+1, Grid_Ind);
+		Ctrl_i(i) = x_a * s + x_b;}
+	for (int i = 0; i < 12; i++) {
+		x_a = Contact_Force_Coeff(2*i, Grid_Ind);
+		x_b = Contact_Force_Coeff(2*i+1, Grid_Ind);
+		Contact_Force_i(i) = x_a * s + x_b;}
+}
 std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int &Nodes_Opt_Flag)
 {	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	// However, the constraint will be set to use the direct collocation method
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
 	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i_child);
+	std::vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
+	Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
+	snoptProblem Nodes_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
 
-	// std::vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
-	// Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
-	// snoptProblem Nodes_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
-	//
-	// integer n = Opt_Seed.size();
-	// integer neF = ObjNConstraint_Val.size();
-	// integer lenA  =  n * neF;
-	//
-	// integer *iAfun = new integer[lenA];              //
-	// integer *jAvar = new integer[lenA];
-	// doublereal *A  = new doublereal[lenA];
-	//
-	// integer lenG   = lenA;
-	// integer *iGfun = new integer[lenG];
-	// integer *jGvar = new integer[lenG];
-	//
-	// doublereal *x      = new doublereal[n];
-	// doublereal *xlow   = new doublereal[n];
-	// doublereal *xupp   = new doublereal[n];
-	// doublereal *xmul   = new doublereal[n];
-	// integer    *xstate = new    integer[n];
-	//
-	// doublereal *F      = new doublereal[neF];
-	// doublereal *Flow   = new doublereal[neF];
-	// doublereal *Fupp   = new doublereal[neF];
-	// doublereal *Fmul   = new doublereal[neF];
-	// integer    *Fstate = new integer[neF];
-	//
-	// integer nxnames = 1;
-	// integer nFnames = 1;
-	// char *xnames = new char[nxnames*8];
-	// char *Fnames = new char[nFnames*8];
-	//
-	// integer    ObjRow = 0;
-	// doublereal ObjAdd = 0;
-	//
-	// for (int i = 0; i < n; i++) {
-	// 	xlow[i] = xlow_vec(i);
-	// 	xupp[i] = xupp_vec(i);
-	// 	xstate[i] = 0.0;
-	// 	x[i] = Opt_Seed[i];  	// Initial guess
-	// }
-	//
-	// for(int i = 0; i<neF; i++){
-	// 	// The lower bound is the same
-	// 	Flow[i] = 0.0;
-	// 	if(ObjNConstraint_Type[i]>0)	// Inequality constraint
-	// 	{	Fupp[i] = Inf;}
-	// 	else{
-	// 		Fupp[i] = 0.0;}
-	// }
-	//
-	// // Load the data for ToyProb ...
-	// Nodes_Optimization_Pr.setPrintFile  ( "Nodes_Optimization_Pr.out" );
-	// Nodes_Optimization_Pr.setProblemSize( n, neF );
-	// Nodes_Optimization_Pr.setObjective  ( ObjRow, ObjAdd );
-	// Nodes_Optimization_Pr.setA          ( lenA, iAfun, jAvar, A );
-	// Nodes_Optimization_Pr.setG          ( lenG, iGfun, jGvar );
-	// Nodes_Optimization_Pr.setX          ( x, xlow, xupp, xmul, xstate );
-	// Nodes_Optimization_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
-	// Nodes_Optimization_Pr.setXNames     ( xnames, nxnames );
-	// Nodes_Optimization_Pr.setFNames     ( Fnames, nFnames );
-	// Nodes_Optimization_Pr.setProbName   ( "Nodes_Optimization_Pr" );
-	// Nodes_Optimization_Pr.setUserFun    ( Nodes_Optimization_Pr_fn);
-	// // snopta will compute the Jacobian by finite-differences.
-	// // The user has the option of calling  snJac  to define the
-	// // coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
-	// Nodes_Optimization_Pr.computeJac    ();
-	// Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
-	// integer Cold = 0, Basis = 1, Warm = 2;
-	// Nodes_Optimization_Pr.solve( Cold );
-	//
-	// for (int i = 0; i < n; i++)
-	// {
-	// 	Opt_Seed[i] = x[i];
-	// }
-	//
-	// delete []iAfun;  delete []jAvar;  delete []A;
-	// delete []iGfun;  delete []jGvar;
-	//
-	// delete []x;      delete []xlow;   delete []xupp;
-	// delete []xmul;   delete []xstate;
-	//
-	// delete []F;      delete []Flow;   delete []Fupp;
-	// delete []Fmul;   delete []Fstate;
-	//
-	// delete []xnames; delete []Fnames;
+	integer n = Opt_Seed.size();
+	integer neF = ObjNConstraint_Val.size();
+	integer lenA  =  n * neF;
+
+	integer *iAfun = new integer[lenA];              //
+	integer *jAvar = new integer[lenA];
+	doublereal *A  = new doublereal[lenA];
+
+	integer lenG   = lenA;
+	integer *iGfun = new integer[lenG];
+	integer *jGvar = new integer[lenG];
+
+	doublereal *x      = new doublereal[n];
+	doublereal *xlow   = new doublereal[n];
+	doublereal *xupp   = new doublereal[n];
+	doublereal *xmul   = new doublereal[n];
+	integer    *xstate = new    integer[n];
+
+	doublereal *F      = new doublereal[neF];
+	doublereal *Flow   = new doublereal[neF];
+	doublereal *Fupp   = new doublereal[neF];
+	doublereal *Fmul   = new doublereal[neF];
+	integer    *Fstate = new integer[neF];
+
+	integer nxnames = 1;
+	integer nFnames = 1;
+	char *xnames = new char[nxnames*8];
+	char *Fnames = new char[nFnames*8];
+
+	integer    ObjRow = 0;
+	doublereal ObjAdd = 0;
+
+	for (int i = 0; i < n; i++) {
+		xlow[i] = xlow_vec(i);
+		xupp[i] = xupp_vec(i);
+		xstate[i] = 0.0;
+		x[i] = Opt_Seed[i];  	// Initial guess
+	}
+
+	for(int i = 0; i<neF; i++){
+		// The lower bound is the same
+		Flow[i] = 0.0;
+		if(ObjNConstraint_Type[i]>0)	// Inequality constraint
+		{	Fupp[i] = Inf;}
+		else{
+			Fupp[i] = 0.0;}
+	}
+
+	// Load the data for ToyProb ...
+	Nodes_Optimization_Pr.setPrintFile  ( "Nodes_Optimization_Pr.out" );
+	Nodes_Optimization_Pr.setProblemSize( n, neF );
+	Nodes_Optimization_Pr.setObjective  ( ObjRow, ObjAdd );
+	Nodes_Optimization_Pr.setA          ( lenA, iAfun, jAvar, A );
+	Nodes_Optimization_Pr.setG          ( lenG, iGfun, jGvar );
+	Nodes_Optimization_Pr.setX          ( x, xlow, xupp, xmul, xstate );
+	Nodes_Optimization_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
+	Nodes_Optimization_Pr.setXNames     ( xnames, nxnames );
+	Nodes_Optimization_Pr.setFNames     ( Fnames, nFnames );
+	Nodes_Optimization_Pr.setProbName   ( "Nodes_Optimization_Pr" );
+	Nodes_Optimization_Pr.setUserFun    ( Nodes_Optimization_Pr_fn);
+	// snopta will compute the Jacobian by finite-differences.
+	// The user has the option of calling  snJac  to define the
+	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
+	Nodes_Optimization_Pr.computeJac    ();
+	Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
+	integer Cold = 0, Basis = 1, Warm = 2;
+	Nodes_Optimization_Pr.solve( Cold );
+
+	for (int i = 0; i < n; i++)
+	{
+		Opt_Seed[i] = x[i];
+	}
+
+	delete []iAfun;  delete []jAvar;  delete []A;
+	delete []iGfun;  delete []jGvar;
+
+	delete []x;      delete []xlow;   delete []xupp;
+	delete []xmul;   delete []xstate;
+
+	delete []F;      delete []Flow;   delete []Fupp;
+	delete []Fmul;   delete []Fstate;
+
+	delete []xnames; delete []Fnames;
 
 	return Opt_Seed;
+}
+int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
+	     integer    *needF,  integer *neF,  doublereal F[],
+	     integer    *needG,  integer *neG,  doublereal G[],
+	     char       *cu,     integer *lencu,
+		 integer    iu[],    integer *leniu,
+		 doublereal ru[],    integer *lenru )
+{	 std::vector<double> Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type;
+	for (int i = 0; i < 26; i++){
+		Opt_Seed.push_back(x[i]);}
+		Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
+	for (int i = 0; i < ObjNConstraint_Val.size(); i++){
+		F[i] = ObjNConstraint_Val[i];}
+	return 0;
 }
 
 std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
@@ -1410,13 +1681,10 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	Opt_Seed.push_back(T);
 	Opt_Seed_Zip(Opt_Seed, StateNDot_Coeff, Ctrl_Coeff, Contact_Force_Coeff);
 
-	// cout<<StateNDot_Coeff<<endl;  
+	// cout<<StateNDot_Coeff<<endl;
 	// cout<<Ctrl_Coeff<<endl;
 	// cout<<Contact_Force_Coeff<<endl;
 	//
-	// dlib::matrix<double> StateNDot_Coeff_test, Ctrl_Coeff_test, Contact_Force_Coeff_test;
-	// double T_test;
-	// Opt_Seed_Unzip(Opt_Seed, T_test, StateNDot_Coeff_test, Ctrl_Coeff_test, Contact_Force_Coeff_test);
 	return Opt_Seed;
 }
 void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff)
@@ -1449,7 +1717,6 @@ void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T, dlib::matrix<doubl
 			Opt_Seed_Index = Opt_Seed_Index + 1;}}
 	// cout<<Contact_Force_Coeff<<endl;
 }
-
 void Opt_Seed_Zip(std::vector<double> &Opt_Seed, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff)
 {	// This function is used to stack the coefficient matrices into a column vector
 	for (int i = 0; i < StateNDot_Coeff.nc(); i++) {
@@ -1491,7 +1758,6 @@ void Ctrl_Contact_Force_Coeff_fn(dlib::matrix<double> &Ctrl_Traj, dlib::matrix<d
 	}
 	return;
 }
-
 dlib::matrix<double> Dynamics_RHS_Matrix_fn(dlib::matrix<double> &Jac_Full, dlib::matrix<double> &B_q)
 {
 	dlib::matrix<double> Jac_Full_Trans, Dynamics_RHS_Matrix;
@@ -1822,443 +2088,3 @@ dlib::matrix<double> Diag_Matrix_fn(std::vector<double> &diag_vec)
 	}
 	return Diag_Matrix;
 }
-
-// std::vector<double> sigma_modi(std::vector<double> sigma_ref, int contas_ind, int AddOrRet)
-// {
-// 	std::vector<double> sigma_child = sigma_ref;
-// 	sigma_child[contas_ind] = 1.0*AddOrRet;
-// 	return sigma_child;
-// }
-// std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
-// {
-// 	int flag = 0;			// The default flag is set to be no-solution found
-// 	std::vector<double> Robot_State_i, Robot_State_i_child, sigma_tran, sigma_goal;
-// 	Robot_State_i = StateNDot2StateVec(Node_i.Node_StateNDot);
-//
-// 	Structure_P.Node_i = Node_i;
-// 	Structure_P.Node_i_child = Node_i_child;
-//
-// 	// This function is used to initialize the seed guess for the optimization
-// 	// The initialized Ctrl_Traj and StateNDot_Traj will be saved into  Node_i_child
-//
-// 	// Due to the elimination of the flying-in-air inertia shaping approach, here we will not consider it for now
-//
-// 	// Three stages need to be conducted to complete this whole initialization process
-//
-// 	/*
-// 	// Allocate and initialize
-// 	// 1. Optimization for a feasible configuration that satisfies the desired mode
-// 	*/
-// 	Robot_State_i_child = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
-// 	// for (int i = 0; i < 26; i++) {
-// 	// 	cout<<"Robot_State_i_child["<<i<<"]: "<<Robot_State_i_child[i]<<endl;
-// 	// }
-// 	// Here the desired configuration has already been generated, then the state, control and control force need to be optimized
-// 	dlib::matrix<double> Robot_State_Tot(26,Grids), Robot_State_Interpol_Array;
-// 	dlib::matrix<double> Ctrl_Tot(10,Grids-1), Contact_Force_Tot(12,Grids-1);
-//
-// 	// Here the robot state has already been interpolated into Robot_State_Tot into the row fashion
-//
-// 	for (int i = 0; i < 26; i++)
-// 	{
-// 		Robot_State_Interpol_Array = dlib::linspace(Robot_State_i[i], Robot_State_i_child[i], Grids);
-//
-// 		for (int j = 0; j < Grids; j++)
-// 		{
-// 			Robot_State_Tot(i,j) = Robot_State_Interpol_Array(j);
-// 		}
-// 	}
-//
-// 	// Two more varaibles to be optimized: control and contact force and they will be initialied according to the method we describe
-//
-//
-// 	Ctrl_Tot = dlib::randm(10,Grids-1);	Contact_Force_Tot = dlib::randm(12,Grids-1);
-//
-// 	// Finally is to concatenate them into a single column vector
-// 	std::vector<double> Opt_Seed;
-// 	double Tme_Seed = 0.5;		  // The duration is set to be 0.5s
-// 	Opt_Seed.push_back(Tme_Seed); // The first element is the time duration on each segment
-//
-// 	// Then it is the robot state
-// 	for (int i = 0; i < Grids-1; i++)
-// 	{
-// 		for (int j = 0; j < 26; j++)
-// 		{
-// 			Opt_Seed.push_back(Robot_State_Tot(j,i+1));
-// 		}
-// 		for (int j = 0; j< 10; j++)
-// 		{
-// 			Opt_Seed.push_back(Ctrl_Tot(j,i));
-// 		}
-// 		for (int j = 0; j < 12; j++)
-// 		{
-// 			Opt_Seed.push_back(Contact_Force_Tot(j,i));
-// 		}
-// 	}
-//
-// 	return Opt_Seed;
-// }
-
-
-
-// double Dot_Product(vector<double> &x1, vector<double> &x2)
-// {
-// 	double result = 0.0;
-// 	// Thisfunction is used to compute the doc product between two vectors
-// 	for (int i = 0; i < x1.size(); i++)
-// 	{
-// 		result = result + x1[i] * x2[i];
-// 	}
-// 	return result;
-// }
-
-// void Reference_Dist_Vel_Update(Tree_Node &Node_i)
-// {
-// 	// Thyis funciton is used to update the value of the reference in the given node
-// 	Robot_StateNDot Node_i_StateNDot = Node_i.Node_StateNDot;
-// 	End_Effector_PosNVel(Node_i_StateNDot, Node_i.End_Effector_Pos, Node_i.End_Effector_Vel);
-// 	return;
-// }
-
-// int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int Opt_Flag)
-// {
-// 	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
-// 	int Optimization_Result = 0;	// 1 means it is possible to find a path that satisfies the constraints while minimizing the objective function value
-//
-// 	// Here there are two different methods to initialize the optimization seeds: 1. pure randomized 2. best guess interpolation
-//
-// 	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i);
-//
-// 	std::vector<double> sigma_i_change = Vec_Minus(Node_i_child.sigma, Node_i.sigma);
-// 	std::vector<double> sigma_tran, sigma_goal;
-// 	double sigma_i_change_val = sigma_i_change[0] + sigma_i_change[1] + sigma_i_change[2] + sigma_i_change[3];
-// 	if(sigma_i_change_val ==1)
-// 	{
-// 		// % In this case, it is making contact
-// 		sigma_tran = Node_i.sigma;
-// 		sigma_goal = Node_i_child.sigma;
-// 	}
-// 	else
-// 	{
-// 		// % In this case, it is retracting contact or maintaining the same	contact condition
-// 		sigma_tran = Node_i_child.sigma;
-// 		sigma_goal = Node_i_child.sigma;
-// 	}
-// 	Structure_P.sigma_tran = sigma_tran;
-// 	Structure_P.sigma_goal = sigma_goal;
-//
-// 	// Now it is the pure
-// 	Optimization_Result = Real_Optimization(Opt_Seed, sigma_tran, sigma_goal, Opt_Flag);
-// 	if(Optimization_Result == 1)
-// 	{	double Tme_Seed; dlib::matrix<double> Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot;
-// 		OptSeed2DlibMat(Opt_Seed, Tme_Seed, Robot_State_Tot, Ctrl_Tot, Contact_Force_Tot);
-// 		Node_i.self_time = Tme_Seed;
-// 		Node_i.self_StateNDot_Traj = Robot_State_Tot;
-// 		Node_i.self_Ctrl_Traj = Ctrl_Tot;
-// 		Node_i.self_Contact_Force_Traj = Contact_Force_Tot;
-// 	}
-// 	return Optimization_Result;
-// }
-// void OptSeed2DlibMat(std::vector<double> &Opt_Seed, double &Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot)
-// {	// This function is used to distill the Tme_Seed, Robot_State_Tot, Ctrl_Tot and Contact_Force_Tot from the Opt_Seed
-// 	Tme_Seed = Opt_Seed[0];
-// 	// Here one thing to remember is that all these matrices are defined rowwise so each row is one trajectory
-// 	// For the Opt_Seed, it is defined column-wise so there is a change to be made
-// 	int Element_Index = 1;
-// 	for (int i = 0; i < Grids-1; i++)
-// 	{
-// 		for (int j = 0; j < 26; j++)
-// 		{
-// 			Robot_State_Tot(j,i) = Opt_Seed[Element_Index];
-// 			Element_Index = Element_Index + 1;
-// 		}
-// 		for (int j = 0; j< 10; j++)
-// 		{
-// 			Ctrl_Tot(j,i) = Opt_Seed[Element_Index];
-// 			Element_Index = Element_Index + 1;
-// 		}
-// 		for (int j = 0; j < 12; j++)
-// 		{
-// 			Contact_Force_Tot(j,i) = Opt_Seed[Element_Index];
-// 			Element_Index = Element_Index + 1;
-// 		}
-// 	}
-// }
-
-// std::vector<double> Opt_Constraint(double Tme_Seed, dlib::matrix<double> &Robot_State_Tot, dlib::matrix<double> &Ctrl_Tot, dlib::matrix<double> &Contact_Force_Tot, int Flag_Choice, std::vector<double> &Constraint_Type)
-// {
-// 	// This function works to provide the constraint used for the optimization also help initalization the optimization problem
-//
-// 	// Here the Flag_Choice has three possibilities: 0------------------------> Node_Self_Opt
-// 	//												 1------------------------> Nodes_Connectivity_Opt
-// 	//												 2------------------------> Pure Constraint formulation
-//
-// 	double Obj_val = 0, Obj_val_i;		// Initialize this value to be 0 and  will be updated later
-// 	double Not_Sigma_t_1, Not_Sigma_t_2, Not_Sigma_t_3, Not_Sigma_t_4, Kinetic_Energy_t, Kinetic_Energy_tp1;
-// 	std::vector<double> Contact_Ind(8), sigma_tran, sigma_goal, sigma_temp;
-//
-// 	sigma_tran = Structure_P.sigma_tran;		sigma_goal = Structure_P.sigma_goal;
-//
-// 	Robot_StateNDot Robot_StateNDot_i;			double delta_t = Tme_Seed/(Grids * 1.0);
-//
-// 	Robot_StateNDot	Robot_State_init = Structure_P.Node_i.Node_StateNDot;
-//
-// 	std::vector<double> Opt_Constraint_vals, StateNDot_vec_i;
-// 	Opt_Constraint_vals.push_back(Obj_val);
-// 	Constraint_Type.push_back(1);			// The fist Constraint is an inequallity constraint
-//
-// 	dlib::matrix<double> D_q_i, B_q_i, C_q_qdot_i, Jac_Full_i, x0, x0p1, x0_state, x0_statedot, x0p1_state, x0p1_statedot, temp_result, qddot_i, Ctrl_i, Contact_Force_i, End_Effector_Obs_Dist;
-// 	dlib::matrix<double> End_Eq_Pos_Matrix, Inq_Pos_Matrix, Eqn_Maint_Matrix, temp_matrix, Normal_Forces, Tang_Forces, End_Eq_Force_Matrix;
-// 	dlib::matrix<double,16,1> End_Effector_Pos, End_Effector_Vel;
-// 	x0_state = dlib::zeros_matrix<double>(13,1);	x0_statedot = x0_state;		x0p1_state = x0_statedot; 	x0p1_statedot = x0p1_state;
-// 	Normal_Forces = dlib::zeros_matrix<double>(6,1);		Tang_Forces = Normal_Forces;
-// 	for (int i = 0; i < Grids-1; i++)
-// 	{
-// 		// Take out the robot from the state vector
-// 		if(i ==0){
-// 			x0 = Robot_StateNDot2DlibMat(Robot_State_init);
-// 			x0p1 = dlib::colm(Robot_State_Tot,0);}
-// 		else{
-// 			x0 = dlib::colm(Robot_State_Tot,i-1);
-// 			x0p1 = dlib::colm(Robot_State_Tot,i);}
-// 		StateNDot_vec_i = DlibMatCol2StdVec(x0p1, 26);
-// 		Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
-//
-// 		D_q_i = D_q_fn(Robot_StateNDot_i);
-// 		// cout<<"D_q_i"<<D_q_i<<endl;
-// 		B_q_i  = B_q_fn();
-// 		C_q_qdot_i = C_q_qdot_fn(Robot_StateNDot_i);
-// 		// cout<<"C_q_qdot_i"<<C_q_qdot_i<<endl;
-//
-// 		Jac_Full_i = Jac_Full_fn(Robot_StateNDot_i);
-// 		// cout<<"Jac_Full_i"<<Jac_Full_i<<endl;
-//
-// 		//
-// 		//				1. First equality constraint is the dynamics update: qp1 	  = q    + qp1dot  * delta * t
-// 		//																	   qdotp1 = qdot + qddotp1 * delta * t
-// 		StateNStatedot_Distill(x0, x0_state, x0_statedot);
-// 		StateNStatedot_Distill(x0p1, x0p1_state, x0p1_statedot);
-//
-// 		temp_result = x0_state + delta_t *x0p1_statedot - x0p1_state;
-// 		// cout<<temp_result<<endl;
-// 		Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 0);
-// 		//
-// 		//				2. Second equality constraint is the dynamics constraint
-// 		//
-// 		qddot_i = (x0p1_statedot - x0_statedot)/delta_t;
-// 		Ctrl_i = dlib::colm(Ctrl_Tot, i);
-// 		Contact_Force_i = dlib::colm(Contact_Force_Tot, i);
-// 		temp_result = D_q_i * qddot_i + C_q_qdot_i - dlib::trans(Jac_Full_i) * Contact_Force_i - B_q_i * Ctrl_i;
-// 		// cout<<Contact_Force_i<<endl;
-// 		// cout<<Ctrl_i<<endl;
-// 		// cout<<temp_result<<endl;
-//
-// 		Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 0);
-// 		//
-// 		//				3. Distance constraints: certain end effectors have to be active/inactive: Two implications: active has to be zero and inactive has to be nonzero
-// 		//
-// 		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
-// 		End_Effector_Obs_Dist = End_Effector_Obs_Dist_Fn(End_Effector_Pos, Contact_Ind);
-//
-// 		Inq_Pos_Matrix = dlib::zeros_matrix<double>(8,8);
-// 		temp_matrix = dlib::ones_matrix<double>(8,1);
-//
-// 		if(i == Grids-2){
-// 			sigma_temp = sigma_goal;}
-// 		else{
-// 			sigma_temp = sigma_tran;}
-//
-// 		Inq_Pos_Matrix(0,0) = !sigma_temp[0];        Inq_Pos_Matrix(1,1) = !sigma_temp[0];
-// 		Inq_Pos_Matrix(2,2) = !sigma_temp[1];        Inq_Pos_Matrix(3,3) = !sigma_temp[1];
-// 		Inq_Pos_Matrix(4,4) = !sigma_temp[2];        Inq_Pos_Matrix(5,5) = !sigma_temp[3];
-//
-// 		temp_result = Inq_Pos_Matrix * (End_Effector_Obs_Dist - temp_matrix * mini);
-// 		// cout<<temp_result<<endl;
-// 		Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 1);
-//
-// 		if(i == Grids-2){
-// 			End_Eq_Pos_Matrix = dlib::zeros_matrix<double>(8,8);
-// 			End_Eq_Pos_Matrix(0,0) = sigma_temp[0];        End_Eq_Pos_Matrix(1,1) = sigma_temp[0];
-// 	        End_Eq_Pos_Matrix(2,2) = sigma_temp[1];        End_Eq_Pos_Matrix(3,3) = sigma_temp[1];
-// 	        End_Eq_Pos_Matrix(4,4) = sigma_temp[2];        End_Eq_Pos_Matrix(5,5) = sigma_temp[3];
-// 			temp_result = End_Eq_Pos_Matrix * End_Effector_Obs_Dist;
-// 			// cout<<temp_result<<endl;
-// 			Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 0);}
-// 		// //
-// 		// //				4. Complementarity constraints: Contact Force!
-// 		// //
-// 		// dlib::matrix<double> Normal_Force_Ones_Matrix = dlib::ones_matrix<double>(6,1);
-// 		// Contact_Force_Proj(Contact_Force_i, Contact_Ind, Normal_Forces, Tang_Forces);
-// 		// temp_result = Normal_Forces - Normal_Force_Ones_Matrix * mini;	// Normal forces have to be nonnegative
-// 		// // cout<<temp_result<<endl;
-// 		// Constraints2ValsNType(temp_result, Opt_Constraint_vals,Constraint_Type,Flag_Choice, 1);
-// 		//
-// 	    // // The Complementarity condition requires the product of contact force with relative distance to be equal to zero
-// 		// End_Eq_Force_Matrix = dlib::zeros_matrix<double>(12,12);		// This matrix helps select the force that have to be zero
-// 		// End_Eq_Force_Matrix(0,0) = !sigma_temp[0];				End_Eq_Force_Matrix(1,1) = !sigma_temp[0];
-// 		// End_Eq_Force_Matrix(2,2) = !sigma_temp[0];				End_Eq_Force_Matrix(3,3) = !sigma_temp[0];
-// 		//
-// 		// End_Eq_Force_Matrix(4,4) = !sigma_temp[1];				End_Eq_Force_Matrix(5,5) = !sigma_temp[1];
-// 		// End_Eq_Force_Matrix(6,6) = !sigma_temp[1];				End_Eq_Force_Matrix(7,7) = !sigma_temp[1];
-// 		//
-// 		// End_Eq_Force_Matrix(8,8) = !sigma_temp[2];				End_Eq_Force_Matrix(9,9) = !sigma_temp[2];
-// 		// End_Eq_Force_Matrix(10,10) = !sigma_temp[3];			End_Eq_Force_Matrix(11,11) = !sigma_temp[3];
-// 		// temp_result = End_Eq_Force_Matrix * Contact_Force_i;	// Normal forces have to be nonnegative
-// 		// // cout<<temp_result<<endl;
-// 		// Constraints2ValsNType(temp_result, Opt_Constraint_vals, Constraint_Type, Flag_Choice, 0);
-// 		//
-// 		//				5. Friction cone constraints:
-// 		//
-// 		temp_result = Friction_Cone_Constraint(Normal_Forces, Tang_Forces);
-// 		// cout<<temp_result<<endl;
-// 		Constraints2ValsNType(temp_result, Opt_Constraint_vals, Constraint_Type, Flag_Choice, 1);
-// 		// //
-// 		// //				6. Contact Constraint maintenance: the previous contacts have to be maintained
-// 		// //
-// 		// Eqn_Maint_Matrix = dlib::matrix<double>(16,16);
-// 		// Eqn_Maint_Matrix(0,0) = sigma_tran[0] * sigma_goal[0];
-// 		// Eqn_Maint_Matrix(1,1) = sigma_tran[0] * sigma_goal[0];
-// 		// Eqn_Maint_Matrix(2,2) = sigma_tran[0] * sigma_goal[0];
-// 		// Eqn_Maint_Matrix(3,3) = sigma_tran[0] * sigma_goal[0];
-// 		// Eqn_Maint_Matrix(4,4) = sigma_tran[1] * sigma_goal[1];
-// 		// Eqn_Maint_Matrix(5,5) = sigma_tran[1] * sigma_goal[1];
-// 		// Eqn_Maint_Matrix(6,6) = sigma_tran[1] * sigma_goal[1];
-// 		// Eqn_Maint_Matrix(7,7) = sigma_tran[1] * sigma_goal[1];
-// 		// Eqn_Maint_Matrix(8,8) = sigma_tran[2] * sigma_goal[2];
-// 		// Eqn_Maint_Matrix(9,9) = sigma_tran[2] * sigma_goal[2];
-// 		// Eqn_Maint_Matrix(10,10) = sigma_tran[3] * sigma_goal[3];
-// 		// Eqn_Maint_Matrix(11,11) = sigma_tran[3] * sigma_goal[3];
-// 		// dlib::matrix<double,16,1> ref_End_Effector_Pos = Structure_P.Node_i.End_Effector_Pos;
-// 		// temp_result = Eqn_Maint_Matrix * (ref_End_Effector_Pos - End_Effector_Pos);
-// 		// // cout<<temp_result<<endl;
-// 		// Constraints2ValsNType(temp_result, Opt_Constraint_vals, Constraint_Type, Flag_Choice, 0);
-// 		// //
-// 		// //				7. Kinetic energy rate constraint
-// 		// //
-// 		// dlib::matrix<double> dlib_colm;std::vector<double> Dlib_Mat_Vec; Robot_StateNDot Dlib_Mat_StateNDot;
-// 		// if(i == 0){
-// 		// 	Kinetic_Energy_t = Structure_P.Node_i.KE;
-// 		// 	dlib_colm = dlib::colm(Robot_State_Tot,0);
-// 		// 	Dlib_Mat_Vec = DlibMatCol2StdVec(dlib_colm,26);
-// 		// 	Dlib_Mat_StateNDot = StateVec2StateNDot(Dlib_Mat_Vec);
-// 		// 	Kinetic_Energy_tp1 = Kinetic_Energy_fn(Dlib_Mat_StateNDot);}
-// 		// else{
-// 		// 	dlib_colm = dlib::colm(Robot_State_Tot,i-1);
-// 		// 	Dlib_Mat_Vec = DlibMatCol2StdVec(dlib_colm,26);
-// 		// 	Dlib_Mat_StateNDot = StateVec2StateNDot(Dlib_Mat_Vec);
-// 		// 	Kinetic_Energy_t = Kinetic_Energy_fn(Dlib_Mat_StateNDot);
-// 		// 	dlib_colm = dlib::colm(Robot_State_Tot,i);
-// 		// 	Dlib_Mat_Vec = DlibMatCol2StdVec(dlib_colm,26);
-// 		// 	Dlib_Mat_StateNDot = StateVec2StateNDot(Dlib_Mat_Vec);
-// 		// 	Kinetic_Energy_tp1 = Kinetic_Energy_fn(Dlib_Mat_StateNDot);
-// 		//
-// 		// }
-// 		// Obj_val_i = (Kinetic_Energy_tp1 - Kinetic_Energy_t)*(Kinetic_Energy_tp1 - Kinetic_Energy_t)/(delta_t * delta_t);
-// 		// Obj_val = Obj_val + Obj_val_i;
-// 	}
-// 	// The last two constraints are objective function and the final kinetic energy constraint
-// 	Opt_Constraint_vals[0] = Obj_val;
-// 	double Kinetic_Energy_constraint;
-// 	if(Flag_Choice == 0){
-// 		// In this case, it is the Node_Self_Opt
-// 		Kinetic_Energy_constraint = 0.1 - Kinetic_Energy_tp1;}
-// 	else{
-// 		// In this case, it is the connectivity constraint
-// 		Kinetic_Energy_constraint = 0.1*Structure_P.Node_i.KE - Kinetic_Energy_tp1;}
-//
-// 	Opt_Constraint_vals.push_back(Kinetic_Energy_constraint);
-// 	Constraint_Type.push_back(1);
-// 	return Opt_Constraint_vals;
-// }
-
-// dlib::matrix<double> Friction_Cone_Constraint(dlib::matrix<double> &Normal_Force, dlib::matrix<double> &Tang_Force)
-// {	// This function is used to compute the holonomic constraint
-// 	dlib::matrix<double> Friction_Cone_Constraint_val(4,1);
-// 	double Tang_Force_1, Tang_Force_2, Tang_Force_3, Tang_Force_4;
-// 	double Norm_Force_1, Norm_Force_2, Norm_Force_3, Norm_Force_4;
-// 	Tang_Force_1 = Tang_Force(0) + Tang_Force(1);
-// 	// cout<<Tang_Force_1<<endl;
-// 	Norm_Force_1 = Normal_Force(0) + Normal_Force(1);
-// 	// cout<<Norm_Force_1<<endl;
-//
-// 	Tang_Force_2 = Tang_Force(2) + Tang_Force(3);
-// 	// cout<<Tang_Force_2<<endl;
-//
-// 	Norm_Force_2 = Normal_Force(2) + Normal_Force(3);
-// 	// cout<<Norm_Force_2<<endl;
-//
-// 	Tang_Force_3 = Tang_Force(4);
-// 	// cout<<Tang_Force_3<<endl;
-//
-// 	Norm_Force_3 = Normal_Force(4);
-// 	// cout<<Norm_Force_3<<endl;
-//
-// 	Tang_Force_4 = Tang_Force(5);
-// 	// cout<<Tang_Force_4<<endl;
-//
-// 	Norm_Force_4 = Normal_Force(5);
-// 	// cout<<Norm_Force_4<<endl;
-//
-// 	Friction_Cone_Constraint_val(0) = mu * mu * Norm_Force_1 * Norm_Force_1 - Tang_Force_1 * Tang_Force_1;
-// 	Friction_Cone_Constraint_val(1) = mu * mu * Norm_Force_2 * Norm_Force_2 - Tang_Force_2 * Tang_Force_2;
-// 	Friction_Cone_Constraint_val(2) = mu * mu * Norm_Force_3 * Norm_Force_3 - Tang_Force_3 * Tang_Force_3;
-// 	Friction_Cone_Constraint_val(3) = mu * mu * Norm_Force_4 * Norm_Force_4 - Tang_Force_4 * Tang_Force_4;
-// 	return Friction_Cone_Constraint_val;}
-//
-// void Contact_Force_Proj(dlib::matrix<double> &Contact_Force_i, std::vector<double> & Contact_Ind, dlib::matrix<double> &Normal_Forces, dlib::matrix<double> &Tang_Force){
-// 	// This function is used to project the contact force into the normal force and the tangential force
-// 	for (int i = 0; i < 6; i++) {
-// 		if(Contact_Ind[i]==0){
-// 			Tang_Force(i) = Contact_Force_i(2*i);
-// 			Normal_Forces(i) = Contact_Force_i(2*i+1);}
-// 		else{
-// 			Tang_Force(i) = Contact_Force_i(2*i+1);
-// 			Normal_Forces(i) = Contact_Force_i(2*i);}
-// 	}
-// }
-//
-// void Constraints2ValsNType(dlib::matrix<double> &temp_result, std::vector<double> &Opt_Constraint_vals, std::vector<double> &Constraint_Type, int Flag_Choice, int Constraint_Type_val)
-// {
-// 	// This function is used to retrieve the computational result back to Vals and Constraint type
-// 	for (int i = 0; i < temp_result.nr(); i++)
-// 	{
-// 		Opt_Constraint_vals.push_back(temp_result(i));
-// 		if(Flag_Choice==2)
-// 		{
-// 			Constraint_Type.push_back(Constraint_Type_val);
-// 		}
-// 	}
-// }
-
-// void StateNStatedot_Distill(dlib::matrix<double> & MatCol, dlib::matrix<double> &MatState, dlib::matrix<double> &MatStatedot)
-// {
-// 	// This function isused to distill the state and statedot from the vector
-// 	for (int i = 0; i < 13; i++)
-// 	{
-// 		MatState(i) = MatCol(i);
-// 		MatStatedot(i) = MatCol(i+13);
-// 	}
-// }
-// dlib::matrix<double> Robot_StateNDot2DlibMat(Robot_StateNDot &Robot_StateNDot_i)
-// {
-// 	dlib::matrix<double> Dlib_StateNDot_i(26,1);
-//
-// 	std::vector<double> StateVec = StateNDot2StateVec(Robot_StateNDot_i);
-//
-// 	for (int i = 0; i < 26; i++)
-// 	{
-// 		Dlib_StateNDot_i(i) = StateVec[i];
-// 	}
-// 	return Dlib_StateNDot_i;
-// }
-// std::vector<double> DlibMatCol2StdVec(dlib::matrix<double> &One_Col, int Col_Length)
-// {
-// 	// This function is used to transform the dlib matrix column to a double type vector
-//
-// 	std::vector<double> StdVec(Col_Length);
-// 	for (int i = 0; i < Col_Length; i++)
-// 	{
-// 		StdVec[i] = One_Col(i);
-// 	}
-// 	return StdVec;
-// }

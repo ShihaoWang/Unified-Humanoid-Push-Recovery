@@ -35,12 +35,12 @@ extern "C" {
         integer    iu[],    integer *leniu,
         doublereal ru[],    integer *lenru );
 
-    // int Real_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
-    //     integer    *needF,  integer *neF,  doublereal F[],
-    //     integer    *needG,  integer *neG,  doublereal G[],
-    //     char       *cu,     integer *lencu,
-    //     integer    iu[],    integer *leniu,
-    //     doublereal ru[],    integer *lenru );
+    int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
+        integer    *needF,  integer *neF,  doublereal F[],
+        integer    *needG,  integer *neG,  doublereal G[],
+        char       *cu,     integer *lencu,
+        integer    iu[],    integer *leniu,
+        doublereal ru[],    integer *lenru );
 
 #ifdef __cplusplus
 }
@@ -128,3 +128,14 @@ void Ctrl_Contact_Force_Coeff_fn(dlib::matrix<double> &Ctrl_Traj, dlib::matrix<d
 
 void Opt_Seed_Zip(std::vector<double> &Opt_Seed, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff);
 void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff);
+
+void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child,std::vector<double> &sigma_trans, std::vector<double> & sigma_goal);
+void CtrlNContact_ForcefromCtrlNContact_Force_Coeff(dlib::matrix<double> &Ctrl_Coeff,dlib::matrix<double> &Contact_Force_Coeff, int Grid_Ind, double s, dlib::matrix<double> &Ctrl_i,  dlib::matrix<double> &Contact_Force_i);
+dlib::matrix<double> StateVec2DlibMatrix_fn(std::vector<double> &StateVec);
+
+void Real_ObjNConstraint_Stage(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double>& sigma, double T, std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
+void Dynamics_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
+void Distance_Velocity_Constraint(std::vector<double>& sigma, std::vector<double> &Pos, std::vector<double> &Vel, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
+void Contact_Force_Complem_Constraint(dlib::matrix<double> &Contact_Force, std::vector<double> &sigma, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
+void Contact_Force_Feasibility_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
+void Contact_Maintenance_Constraint(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Pos, std::vector<double> &Vel, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
