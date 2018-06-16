@@ -146,3 +146,4 @@ dlib::matrix<double> StateNDot_ref_fn(std::vector<double> &Robot_Config_i, std::
 std::vector<double> Opt_Soln_Load();
 dlib::matrix<double> Quadratic_Minus(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B);
 dlib::matrix<double> Minus_Exponential(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B);
+void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum);
