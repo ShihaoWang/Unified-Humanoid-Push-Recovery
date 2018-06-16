@@ -49,7 +49,7 @@ int main( int argc, char **argv)
 		* For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
 		* if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
 		*/
-		Node_i = Pop_Node();
+		Node_i = Pop_Node(); 
 		int Flag;
 		std::vector<double> test;
 		test = Nodes_Optimization_fn(Node_i, Node_i, Flag);
