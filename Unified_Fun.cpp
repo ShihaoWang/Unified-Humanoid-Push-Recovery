@@ -32,14 +32,14 @@ double tau1_max = 100;             		double tau2_max = 100;				double tau3_max =
 double tau5_max = 100;             		double tau6_max = 100;				double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
 
-dlib::matrix<double,26,1> xlow_vec;					dlib::matrix<double,26,1> xupp_vec;
-dlib::matrix<double,10,1> ctrl_low_vec;				dlib::matrix<double,10,1> ctrl_upp_vec;
+dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
+dlib::matrix<double> ctrl_low_vec;					dlib::matrix<double> ctrl_upp_vec;
 dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_Map_Tange; // The Normal and tangential vector of the plane
 /**
  * Some global values are defined
  * Description
  */
-double mini = 0.05;			int Grids = 10;			double mu = 0.5;
+double mini = 0.05;			int Grids = 5;			double mu = 0.5;
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -125,7 +125,8 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i)
 	Envi_Map_Defi();
 	// Then it is to compute the normal and tangential vector of the map
 	Envi_Map_Normal_Cal(Envi_Map);
-
+	xlow_vec = dlib::zeros_matrix<double>(26,1);		xupp_vec = dlib::zeros_matrix<double>(26,1);
+	ctrl_low_vec = dlib::zeros_matrix<double>(10,1);	ctrl_upp_vec = dlib::matrix<double>(10,1) ;
 	xlow_vec(0) = rIxlow; 					xupp_vec(0) = rIxupp;
 	xlow_vec(1) = rIylow; 					xupp_vec(1) = rIyupp;
 	xlow_vec(2) = thetalow; 				xupp_vec(2) = thetaupp;
@@ -1263,6 +1264,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	ObjNConstraint_Val.push_back(0);
 	ObjNConstraint_Type.push_back(1);
 
+	double Quadratic_Angular_Sum;
+
 	for (int i = 0; i < Grids-1; i++) {
 		T = T_array[i];
 		Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, i, 0, Robot_Config_init, Robot_Vel_init, Robot_Acc_init, Robot_VelfromPos_init);
@@ -1278,15 +1281,19 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		KE_tot.push_back(KE_i);
 
 		StateNDot_Matrix = StateVec2DlibMatrix_fn(StateNDot_vec_i);
-		// Matrix_result = StateNDot_Matrix - xlow_vec;
-		// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
-		// Matrix_result = xupp_vec - StateNDot_Matrix;
-		// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
-		//
-		// Matrix_result = Ctrl_init - ctrl_low_vec;
-		// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
-		// Matrix_result = ctrl_upp_vec - Ctrl_init;
-		// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+		Matrix_result = Minus_Exponential(StateNDot_Matrix, xlow_vec);
+		// cout<<Matrix_result<<endl;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+		Matrix_result = Minus_Exponential(xupp_vec, StateNDot_Matrix);
+		// cout<<Matrix_result<<endl;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+
+		// Matrix_result = Minus_Exponential(Ctrl_init, ctrl_low_vec);
+		Matrix_result = Ctrl_init - ctrl_low_vec;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+		Matrix_result = ctrl_upp_vec - Ctrl_init;
+		// Matrix_result = Minus_Exponential(ctrl_upp_vec, Ctrl_init);
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
 		// Start and End should match
 		Matrix_result = Quadratic_Minus(StateNDot_Matrix, StateNDot_ref);
@@ -1313,20 +1320,27 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		StateNDot_ref = StateNDot_ref_fn(Robot_Config_ref, Robot_Velocity_ref);
 
 		Real_ObjNConstraint_Stage(Node_i, Node_i_child, sigma_trans, T, Robot_Config_init, Robot_Vel_init, Robot_Acc_init, Ctrl_init, Contact_Force_init, ObjNConstraint_Val, ObjNConstraint_Type);
-		if (i == Grids - 2)
-		{
-			StateNDot_vec_i = PosNVel2StateVec(Robot_Config_end, Robot_Vel_end);
-			Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
-			KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
-			KE_tot.push_back(KE_i);
-
-			Real_ObjNConstraint_Stage(Node_i, Node_i_child,sigma_goal, T, Robot_Config_end, Robot_Vel_end, Robot_Acc_end, Ctrl_end, Contact_Force_end, ObjNConstraint_Val, ObjNConstraint_Type);
-		}
 	}
+	StateNDot_vec_i = PosNVel2StateVec(Robot_Config_end, Robot_Vel_end);
+	Robot_StateNDot_i = StateVec2StateNDot(StateNDot_vec_i);
+	KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
+	KE_tot.push_back(KE_i);
+	Real_ObjNConstraint_Stage(Node_i, Node_i_child,sigma_goal, T, Robot_Config_end, Robot_Vel_end, Robot_Acc_end, Ctrl_end, Contact_Force_end, ObjNConstraint_Val, ObjNConstraint_Type);
+
 	ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot);
 	// ObjNConstraint_Val[0] = KE_i;
-	ObjNConstraint_Val.push_back(KE_ref - KE_i);
+	ObjNConstraint_Val.push_back(KE_ref - KE_tot[Grids]);
 	ObjNConstraint_Type.push_back(1);
+}
+dlib::matrix<double> Minus_Exponential(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B)
+{
+	// This function is used to take care of the situation where the SNOPT cannot be easily used to optimize the simple minus Inequality constraint
+	dlib::matrix<double> Matrix_Minus, Matrix_result; Matrix_result = Mat_A;
+	Matrix_Minus = Mat_A - Mat_B;
+	for (int i = 0; i < Matrix_Minus.nr(); i++) {
+		Matrix_result(i) = exp(Mat_A(i) - Mat_B(i));
+	}
+	return Matrix_result;
 }
 
 dlib::matrix<double> Quadratic_Minus(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B)
@@ -1374,7 +1388,7 @@ double KE_Variation_fn(std::vector<double> &KE_tot)
 	// {
 	// 	// KE_Variation = KE_Variation + 0.0*KE_tot[i];
 	// 	// KE_Variation = KE_Variation + KE_tot[KE_tot.size()-1];
-	// 	KE_Variation = KE_Variation + (KE_tot[i]) * (KE_tot[i]);
+	// 	KE_Variation = KE_Variation + (KE_tot[i]);
 	// }
 	return KE_Variation;
 }
@@ -1555,6 +1569,10 @@ void Dynamics_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dli
 	Dynamics_RHS = Jac_Full_Trans * Contact_Force + B_q * Ctrl;
 	Matrix_result = Quadratic_Minus(Dynamics_LHS, Dynamics_RHS);
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+	for (int i = 4; i < Acc.nr(); i++) {
+		ObjNConstraint_Val.push_back(9 - Acc(i) * Acc(i));
+		ObjNConstraint_Type.push_back(1);
+	}
 }
 dlib::matrix<double> StateVec2DlibMatrix_fn(std::vector<double> &StateVec)
 {	const int dim = StateVec.size();
@@ -1628,7 +1646,7 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 	// Lower bounds for the time
 	for (int i = 0; i < Grids-1; i++) {
 		xlow[i] = mini;
-		xupp[i] = 1.5;}
+		xupp[i] = 0.5;}
 
 	for(int i = 0; i<neF; i++)
 	{
@@ -1664,6 +1682,8 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 200000);
 	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 200000);
 	Nodes_Optimization_Pr.setIntParameter("Iterations limit", 200000);
+	Nodes_Optimization_Pr.setIntParameter("setFeaTol", 1e-4);
+	Nodes_Optimization_Pr.setIntParameter("setOptTol", 1e-4);
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Nodes_Optimization_Pr.solve( Cold );
 

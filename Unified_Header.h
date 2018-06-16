@@ -145,3 +145,4 @@ double KE_Variation_fn(std::vector<double> &KE_tot);
 dlib::matrix<double> StateNDot_ref_fn(std::vector<double> &Robot_Config_i, std::vector<double> &Robot_Velocity_i);
 std::vector<double> Opt_Soln_Load();
 dlib::matrix<double> Quadratic_Minus(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B);
+dlib::matrix<double> Minus_Exponential(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B);
