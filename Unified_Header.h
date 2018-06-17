@@ -154,3 +154,4 @@ double CubicSpline_1stOrder_Evaluation_fn(const std::vector<double> &CubicSpline
 void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Front, const Robot_StateNDot &Robot_StateNDot_Back, const dlib::matrix<double> &Ctrl_Front, const dlib::matrix<double> &Ctrl_Back, const dlib::matrix<double> &Contact_Force_Front, const dlib::matrix<double> &Contact_Force_Back, Robot_StateNDot &Robot_StateNDot_Mid, dlib::matrix<double> &Robotstate_Mid_Acc,std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj);
 double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj);
+double Torque_Sum(dlib::matrix<double> &Ctrl_Traj);

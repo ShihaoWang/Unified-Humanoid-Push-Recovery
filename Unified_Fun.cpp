@@ -1204,7 +1204,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	double KE_ref;
 	if(Self_Opt_Flag ==1)
 	{// In this way, it is the self_optimization`
-		 KE_ref = 0.1;
+		 KE_ref = 0.01;
 	}
 	else{	KE_ref = 0.25 * Node_i.KE;}
 
@@ -1341,8 +1341,22 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	}
 	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
 	ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+	// ObjNConstraint_Val[0] = Torque_Sum(StateNDot_Traj);
+	// ObjNConstraint_Val[0] = Joint_Velocity_Sum(StateNDot_Traj);
 	ObjNConstraint_Val.push_back(KE_ref - KE_i);
 	ObjNConstraint_Type.push_back(1);
+}
+double Torque_Sum(dlib::matrix<double> &Ctrl_Traj)
+{
+	double Torque_Sum_Val = 0.0;
+	dlib::matrix<double> Ctrl_Traj_i;
+	for (int i = 0; i < Ctrl_Traj.nc(); i++) {
+		Ctrl_Traj_i = dlib::colm(Ctrl_Traj, i);
+		for (int j = 0; j < Ctrl_Traj_i.nr(); j++) {
+			Torque_Sum_Val = Ctrl_Traj_i(j) * Ctrl_Traj_i(j);
+		}
+	}
+	return Torque_Sum_Val;
 }
 double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj)
 {
