@@ -39,7 +39,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.05;			int Grids = 10;			double mu = 0.5;
+double mini = 0.05;			int Grids = 15;			double mu = 0.5;
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -1206,7 +1206,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	{// In this way, it is the self_optimization`
 		 KE_ref = 0.1;
 	}
-	else{	KE_ref = 0.2 * Node_i.KE;}
+	else{	KE_ref = 0.25 * Node_i.KE;}
 
 	// Objective function initialization
 	ObjNConstraint_Val.push_back(0);
@@ -1338,9 +1338,25 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
 		KE_tot.push_back(KE_i);
 	}
-	ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot);
+	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot);
+	ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
 	ObjNConstraint_Val.push_back(KE_ref - KE_tot[Grids-1]);
 	ObjNConstraint_Type.push_back(1);
+}
+double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
+{
+	// This function is used to calcualte the variation of the state trajectory
+	dlib::matrix<double> StateNDot_Traj_Front, StateNDot_Traj_Back, Matrix_result;
+	double Traj_Variation_Val = 0.0;
+	for (int i = 0; i < StateNDot_Traj.nc()-1; i++) {
+		StateNDot_Traj_Front = dlib::colm(StateNDot_Traj, i);
+		StateNDot_Traj_Back = dlib::colm(StateNDot_Traj, i+1);
+		Matrix_result = StateNDot_Traj_Front - StateNDot_Traj_Back;
+		for (int j = 0; j < Matrix_result.nr()/2; j++) {
+			Traj_Variation_Val = Traj_Variation_Val +  Matrix_result(j) * Matrix_result(j);
+		}
+	}
+	return Traj_Variation_Val;
 }
 Robot_StateNDot DlibRobotstate2StateNDot(dlib::matrix<double> &DlibRobotstate)
 {
