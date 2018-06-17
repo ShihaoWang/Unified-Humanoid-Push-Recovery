@@ -39,7 +39,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.05;			int Grids = 10;			double mu = 0.5;
+double mini = 0.05;			int Grids = 10;			double mu = 0.35;
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -1344,6 +1344,20 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	ObjNConstraint_Val.push_back(KE_ref - KE_i);
 	ObjNConstraint_Type.push_back(1);
 }
+double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj)
+{
+	// This function is used to calcualte the variation of the state trajectory
+	dlib::matrix<double> StateNDot_Traj_i;
+	double Traj_Variation_Val = 0.0;
+	for (int i = 0; i < StateNDot_Traj.nc(); i++) {
+		StateNDot_Traj_i = dlib::colm(StateNDot_Traj, i);
+		for (int j = 0; j < StateNDot_Traj_i.nr()/2; j++) {
+			Traj_Variation_Val = Traj_Variation_Val +  StateNDot_Traj_i(j+13) * StateNDot_Traj_i(j+13);
+		}
+	}
+	// Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
+	return Traj_Variation_Val;
+}
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
 {
 	// This function is used to calcualte the variation of the state trajectory
@@ -1845,7 +1859,7 @@ int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
 	return 0;
 }
 
-std::vector<double> (Tree_Node &Node_i, Tree_Node &Node_i_child)
+std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {	// This function will generate the spline coefficients needed for the further optimization
 	double T = 0.5;
 	// The first step is to generate a feasible configuration that can satisfy the contact mode in the node i child
