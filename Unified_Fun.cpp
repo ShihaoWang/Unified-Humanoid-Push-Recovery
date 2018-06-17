@@ -39,7 +39,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.05;			int Grids = 15;			double mu = 0.5;
+double mini = 0.05;			int Grids = 10;			double mu = 0.5;
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -1285,13 +1285,14 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 	// 4. Complementarity constraints: Contact Force!
 	dlib::matrix<double> Contact_Force_Complem_Matrix, Contact_Force_i;
-	// for (int i = 0; i < Grids; i++) {
-	// 	std::vector<double> sigma_temp;				Contact_Force_i = dlib::colm(Contact_Force_Traj,i);
-	// 	sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);				sigma_temp.push_back(!sigma[0]);
-	// 	sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);				sigma_temp.push_back(!sigma[1]);
-	// 	sigma_temp.push_back(!sigma[2]);			sigma_temp.push_back(!sigma[2]);			sigma_temp.push_back(!sigma[3]);				sigma_temp.push_back(!sigma[3]);
-	// 	Contact_Force_Complem_Matrix = Diag_Matrix_fn(sigma_temp);								Matrix_result = Contact_Force_Complem_Matrix * Contact_Force_i;
-	// 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);}
+	// Since up to here, the constraint version works, now we will try the variable bounds version
+	for (int i = 0; i < Grids; i++) {
+		std::vector<double> sigma_temp;				Contact_Force_i = dlib::colm(Contact_Force_Traj,i);
+		sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);				sigma_temp.push_back(!sigma[0]);
+		sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);				sigma_temp.push_back(!sigma[1]);
+		sigma_temp.push_back(!sigma[2]);			sigma_temp.push_back(!sigma[2]);			sigma_temp.push_back(!sigma[3]);				sigma_temp.push_back(!sigma[3]);
+		Contact_Force_Complem_Matrix = Diag_Matrix_fn(sigma_temp);								Matrix_result = Contact_Force_Complem_Matrix * Contact_Force_i;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);}
 
 	// 5. Contact force feasibility constraints: 1. Normal force should be positive and 2. the friction cone constraint has to be satisfied
 	double Contact_Force_i_x, Contact_Force_i_y;												std:vector<double> Normal_Force, Tange_Force;
@@ -1338,7 +1339,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
 		KE_tot.push_back(KE_i);
 	}
-	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot);
+	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
 	ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
 	ObjNConstraint_Val.push_back(KE_ref - KE_i);
 	ObjNConstraint_Type.push_back(1);
@@ -1356,6 +1357,7 @@ double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
 			Traj_Variation_Val = Traj_Variation_Val +  Matrix_result(j) * Matrix_result(j);
 		}
 	}
+	Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
 	return Traj_Variation_Val;
 }
 Robot_StateNDot DlibRobotstate2StateNDot(dlib::matrix<double> &DlibRobotstate)
@@ -1408,6 +1410,8 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 	for (int i = 1; i < 10; i++) {
 		ObjNConstraint_Val.push_back(Acc_Front(i+3));
 		ObjNConstraint_Type.push_back(2);
+		ObjNConstraint_Val.push_back(Robotstate_Mid_Acc(i+3));
+		ObjNConstraint_Type.push_back(2);
 		ObjNConstraint_Val.push_back(Acc_Back(i+3));
 		ObjNConstraint_Type.push_back(2);
 	}
@@ -1457,14 +1461,14 @@ dlib::matrix<double> StateNDot_ref_fn(std::vector<double> &Robot_Config_i, std::
 	return StateNDot_ref_i;
 }
 
-double KE_Variation_fn(std::vector<double> &KE_tot)
+double KE_Variation_fn(std::vector<double> &KE_tot, double T)
 {	double KE_Variation = 0.0;
 	// KE_Variation = KE_tot[KE_tot.size()-1];
-	for (int i = 0; i < KE_tot.size(); i++)
+	for (int i = 0; i < KE_tot.size()-1; i++)
 	{
 	// 	// KE_Variation = KE_Variation + 0.0*KE_tot[i];
 	// 	// KE_Variation = KE_Variation + KE_tot[KE_tot.size()-1];
-		KE_Variation = KE_Variation + KE_tot[i];
+		KE_Variation = KE_Variation + (KE_tot[i+1] -  KE_tot[i])*(KE_tot[i+1] -  KE_tot[i]);
 	}
 	return KE_Variation;
 }
@@ -1717,7 +1721,7 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 		xlow[i] =-Inf;
 		xupp[i] = Inf;
 	}
-	xlow[0] = 0.5;		xupp[0] = 2.5;
+	xlow[0] = 0.5;		xupp[0] = 2;
 	int Index_Count = 1;
 	for (int i = 0; i < Grids; i++) {
 		for (int j = 0; j < 26; j++) {
@@ -1775,8 +1779,8 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 	Nodes_Optimization_Pr.computeJac    ();
 	Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
 	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 300);
-	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 200000);
-	Nodes_Optimization_Pr.setIntParameter("Iterations limit", 200000);
+	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 2000000);
+	Nodes_Optimization_Pr.setIntParameter("Iterations limit", 2000000);
 	Nodes_Optimization_Pr.setIntParameter("setFeaTol", 1e-4);
 	Nodes_Optimization_Pr.setIntParameter("setOptTol", 1e-3);
 	integer Cold = 0, Basis = 1, Warm = 2;
@@ -1808,6 +1812,17 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 
 	return Opt_Seed;
 }
+void Contact_Force_Bounds(std::vector<double> &sigma, std::vector<double> &Contact_Force_Status_i)
+{
+	Contact_Force_Status_i[0] = !sigma[0];				Contact_Force_Status_i[1] = !sigma[0];
+	Contact_Force_Status_i[2] = !sigma[0];				Contact_Force_Status_i[3] = !sigma[0];
+
+	Contact_Force_Status_i[4] = !sigma[1];				Contact_Force_Status_i[5] = !sigma[1];
+	Contact_Force_Status_i[6] = !sigma[1];				Contact_Force_Status_i[7] = !sigma[1];
+
+	Contact_Force_Status_i[8] = !sigma[2];				Contact_Force_Status_i[9] = !sigma[2];
+	Contact_Force_Status_i[10] = !sigma[3];				Contact_Force_Status_i[11] = !sigma[3];
+}
 int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
 	     integer    *needF,  integer *neF,  doublereal F[],
 	     integer    *needG,  integer *neG,  doublereal G[],
@@ -1830,7 +1845,7 @@ int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
 	return 0;
 }
 
-std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
+std::vector<double> (Tree_Node &Node_i, Tree_Node &Node_i_child)
 {	// This function will generate the spline coefficients needed for the further optimization
 	double T = 0.5;
 	// The first step is to generate a feasible configuration that can satisfy the contact mode in the node i child
