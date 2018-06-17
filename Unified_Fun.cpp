@@ -1242,7 +1242,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Robot_StateNDot_Front = DlibRobotstate2StateNDot(Robostate_Dlib_Front);		Dynamics_Matrices(Robot_StateNDot_Front, D_q_Front, B_q_Front, C_q_qdot_Front, Jac_Full_Front);
 		Robot_StateNDot_Back = DlibRobotstate2StateNDot(Robostate_Dlib_Back);		Dynamics_Matrices(Robot_StateNDot_Back, D_q_Back, B_q_Back, C_q_qdot_Back, Jac_Full_Back);
 
-		Robot_StateNDot_MidNAcc(T, Robot_StateNDot_Front, Robot_StateNDot_Back, Ctrl_Front, Ctrl_Back, Contact_Force_Front, Contact_Force_Back, Robot_StateNDot_Mid, Robotstate_Mid_Acc);
+		Robot_StateNDot_MidNAcc(T, Robot_StateNDot_Front, Robot_StateNDot_Back, Ctrl_Front, Ctrl_Back, Contact_Force_Front, Contact_Force_Back, Robot_StateNDot_Mid, Robotstate_Mid_Acc, ObjNConstraint_Val, ObjNConstraint_Type);
 		Dynamics_Matrices(Robot_StateNDot_Mid, D_q_Mid, B_q_Mid, C_q_qdot_Mid, Jac_Full_Mid);		Jac_Full_Trans_Mid = dlib::trans(Jac_Full_Mid);
 		Dynamics_LHS = D_q_Mid * Robotstate_Mid_Acc + C_q_qdot_Mid;
 		Dynamics_RHS = Jac_Full_Trans_Mid * (0.5 * Contact_Force_Front + 0.5 * Contact_Force_Back) + B_q_Mid * (0.5 * Ctrl_Front + 0.5 * Ctrl_Back);
@@ -1281,10 +1281,6 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		ones_vector = ONES_VECTOR_fn(6);
 		Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
-		// // 3. Middle joints have to be strictly away from the obs
-		// temp_matrix = Middle_Joint_Obs_Dist_Fn(Robot_StateNDot_i);
-		// Matrix_result = temp_matrix - ones_vector * mini;
-		// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 	}
 
 	// 4. Complementarity constraints: Contact Force!
@@ -1355,7 +1351,7 @@ Robot_StateNDot DlibRobotstate2StateNDot(dlib::matrix<double> &DlibRobotstate)
 	Robot_StateNDot Robot_StateNDot_i(Robot_StateNDot_vec);
 	return Robot_StateNDot_i;
 }
-void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Front, const Robot_StateNDot &Robot_StateNDot_Back, const dlib::matrix<double> &Ctrl_Front, const dlib::matrix<double> &Ctrl_Back, const dlib::matrix<double> &Contact_Force_Front, const dlib::matrix<double> &Contact_Force_Back, Robot_StateNDot &Robot_StateNDot_Mid, dlib::matrix<double> &Robotstate_Mid_Acc)
+void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Front, const Robot_StateNDot &Robot_StateNDot_Back, const dlib::matrix<double> &Ctrl_Front, const dlib::matrix<double> &Ctrl_Back, const dlib::matrix<double> &Contact_Force_Front, const dlib::matrix<double> &Contact_Force_Back, Robot_StateNDot &Robot_StateNDot_Mid, dlib::matrix<double> &Robotstate_Mid_Acc,std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
 {
 	std::vector<double> Robotstate_Vec_Front, Robotstate_Vec_Back;
 	dlib::matrix<double> D_q_Front, B_q_Front, 	C_q_qdot_Front, Jac_Full_Front, Jac_Full_Trans_Front, Acc_Front;
@@ -1393,6 +1389,13 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 	}
 	// cout<<Acc_Front<<endl;			cout<<Acc_Back<<endl;			cout<<Robotstate_Mid_Acc<<endl;
 	Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
+	for (int i = 1; i < 10; i++) {
+		ObjNConstraint_Val.push_back(Acc_Front(i+3));
+		ObjNConstraint_Type.push_back(2);
+		ObjNConstraint_Val.push_back(Acc_Back(i+3));
+		ObjNConstraint_Type.push_back(2);
+	}
+	// ObjNConstraint_ValNType_Update(Robotstate_Mid_Acc, ObjNConstraint_Val, ObjNConstraint_Type, 2);
 }
 void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum)
 {
@@ -1698,7 +1701,7 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 		xlow[i] =-Inf;
 		xupp[i] = Inf;
 	}
-	xlow[0] = mini;		xupp[0] = 2.5;
+	xlow[0] = 0.5;		xupp[0] = 2.5;
 	int Index_Count = 1;
 	for (int i = 0; i < Grids; i++) {
 		for (int j = 0; j < 26; j++) {
@@ -1719,15 +1722,22 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 
 	for(int i = 0; i<neF; i++)
 	{
-		// The lower bound is the same
-		Flow[i] = 0.0;
-		if(ObjNConstraint_Type[i]>0)	// Inequality constraint
+		if (ObjNConstraint_Type[i]>1.0)
 		{
-			Fupp[i] = Inf;
+			Flow[i] = -5.0;
+			Fupp[i] = 5.0;
 		}
 		else
 		{
-			Fupp[i] = 0.0;
+			Flow[i] = 0.0;
+			if(ObjNConstraint_Type[i]>0.0)
+			{
+				Fupp[i] = Inf;
+			}
+			else
+			{
+				Fupp[i] = 0.0;
+			}
 		}
 	}
 
