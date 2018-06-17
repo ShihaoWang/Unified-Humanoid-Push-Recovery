@@ -1340,7 +1340,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	}
 	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot);
 	ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
-	ObjNConstraint_Val.push_back(KE_ref - KE_tot[Grids-1]);
+	ObjNConstraint_Val.push_back(KE_ref - KE_i);
 	ObjNConstraint_Type.push_back(1);
 }
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
