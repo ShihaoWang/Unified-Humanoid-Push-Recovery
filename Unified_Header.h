@@ -115,7 +115,7 @@ dlib::matrix<double> Eqn_Maint_Matrix_fn(std::vector<double> &sigma_i, std::vect
 Tree_Node Pop_Node();
 void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::vector<double> &sigma);
 
-std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int &Nodes_Opt_Flag);
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child);
 
 void Dynamics_Matrices(const Robot_StateNDot &Node_StateNDot, dlib::matrix<double> &D_q, dlib::matrix<double> &B_q, dlib::matrix<double> &C_q_qdot, dlib::matrix<double> &Jac_Full);
 std::vector<double> CubicSpline_Coeff_fn(double T, double x_init, double x_end, double xdot_init, double xdot_end);
@@ -155,3 +155,5 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj);
 double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj);
 double Torque_Sum(dlib::matrix<double> &Ctrl_Traj);
+
+std::vector<double> Nodes_Optimization_fn_inner(Tree_Node &Node_i, Tree_Node &Node_i_child, double &Constraint_Vio);
