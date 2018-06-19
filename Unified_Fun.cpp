@@ -40,7 +40,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Description
  */
 double mini = 0.05;			int Grids = 10;			double mu = 0.35;
-double Time_Seed = 0.25; 							// This value will be adaptively changed to formulate an optimal solution
+double Time_Seed; 							// This value will be adaptively changed to formulate an optimal solution
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -1339,8 +1339,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
 		KE_tot.push_back(KE_i);
 	}
-	ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
-	// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
+	ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
 	// ObjNConstraint_Val[0] = Torque_Sum(Ctrl_Traj);
 	// ObjNConstraint_Val[0] = Joint_Velocity_Sum(StateNDot_Traj);
 	ObjNConstraint_Val.push_back(KE_ref - KE_i);
@@ -1702,10 +1702,49 @@ void CtrlNContact_ForcefromCtrlNContact_Force_Coeff(dlib::matrix<double> &Ctrl_C
 		x_b = Contact_Force_Coeff(2*i+1, Grid_Ind);
 		Contact_Force_i(i) = x_a * s + x_b;}
 }
-std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, int &Nodes_Opt_Flag)
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	// However, the constraint will be set to use the direct collocation method
+	int Opt_Flag = 0;
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
+	for (int i = 0; i < 15; i++) {
+		std::vector<double> Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
+		Time_Seed = 0.5 + std::pow(-1, i) * i * 0.05;
+		Opt_Soln = Nodes_Optimization_Inner_Opt(Node_i, Node_i_child);
+		Nodes_Optimization_ObjNConstraint(Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type);
+		double ObjNConstraint_Violation_Val = ObjNConstraint_Violation(ObjNConstraint_Val, ObjNConstraint_Type);
+		if(ObjNConstraint_Violation_Val<0.1)
+		{
+			ofstream output_file;
+			std::string pre_filename = "From_Node_";
+			std::string Node_i_name = to_string(Node_i.Node_Index);
+			std::string mid_filename = "_To_Node_";
+			std::string Node_i_Child_name = to_string(Node_i_child.Node_Index);
+			std::string post_filename = "_Opt_Soln.txt";
+			std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + post_filename;
+			output_file.open(filename, std::ofstream::out);
+			for (int i = 0; i < Opt_Soln.size(); i++)
+			{
+				output_file<<Opt_Soln[i]<<endl;
+			}
+			output_file.close();
+			Opt_Flag = 1;
+			break;
+		}
+	}
+	return Opt_Flag;
+}
+double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type)
+{
+	double ObjNConstraint_Violation_Val = 0.0;
+	for (int i = 0; i < ObjNConstraint_Val.size(); i++) {
+		if(ObjNConstraint_Type[i]==0){
+			if(abs(ObjNConstraint_Val[i])>ObjNConstraint_Violation_Val){
+				ObjNConstraint_Violation_Val = abs(ObjNConstraint_Val[i]);}}}
+	return ObjNConstraint_Violation_Val;
+}
+std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child)
+{
 	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i_child);
 	std::vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
 	Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
@@ -1818,15 +1857,6 @@ std::vector<double> Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_c
 	{
 		Opt_Seed[i] = x[i];
 	}
-
-	ofstream output_file;
-	output_file.open("Opt_Soln.txt", std::ofstream::out);
-	for (int i = 0; i < n; i++)
-	{
-		output_file<<Opt_Seed[i]<<endl;
-	}
-	output_file.close();
-
 	delete []iAfun;  delete []jAvar;  delete []A;
 	delete []iGfun;  delete []jGvar;
 
@@ -1875,7 +1905,7 @@ int Nodes_Optimization_Pr_fn(integer    *Status, integer *n,    doublereal x[],
 
 std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {	// This function will generate the spline coefficients needed for the further optimization
-	double T = 0.25;
+	double T = Time_Seed;
 	// The first step is to generate a feasible configuration that can satisfy the contact mode in the node i child
 	std::vector<double> Init_Config = StateNDot2StateVec(Node_i.Node_StateNDot);
 	std::vector<double> Seed_Config = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
