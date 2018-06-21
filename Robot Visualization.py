@@ -142,7 +142,6 @@ def main():
     # while vis.shown():
     #     pass
 
-
     # parse arguments and decide what we can do
     # args = getOnOffArgs('one', 'two')
     # if args.one:
@@ -171,7 +170,7 @@ def KE_fn(robot, dataArray):
 def Path_Loader():
     # This function is used to read the Opt_Soln txt file
     global Grids
-    with open("Opt_Soln4.txt",'r') as robot_soln_file:
+    with open("Opt_Soln3.txt",'r') as robot_soln_file:
         robot_soln_i = robot_soln_file.readlines()
         robot_soln = [x.strip() for x in robot_soln_i]
         robot_soln = np.array(robot_soln, dtype = float)

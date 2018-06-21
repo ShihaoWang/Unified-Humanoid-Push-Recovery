@@ -163,3 +163,7 @@ dlib::matrix<double> Node_Expansion_fn(const Tree_Node &Node_i, int &Adjacent_Nu
 std::vector<double> End_RobotNDot_Extract(std::vector<double> &Opt_Soln);
 
 void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<double> &Opt_Soln);
+
+std::vector<double> Final_State_Opt(std::vector<double> &Opt_Soln, Tree_Node &Node_i, Tree_Node &Node_i_child);
+
+std::vector<double> Default_Init_Opt(std::vector<double> &Robot_State_Init);

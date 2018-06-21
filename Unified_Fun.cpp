@@ -208,103 +208,108 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i)
 	// Robot_StateNDot Robot_StateNDot_init(Robot_State_Init);
 	// std::string input_name = "init_given";
 	// Robot_Plot_fn(Robot_StateNDot_init,input_name);
-
-	snoptProblem Default_Init_Pr;                     // This is the name of the Optimization problem
-	// Allocate and initialize
-	std:vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
-	integer n = Robot_State_Init.size();
-	Default_Init_Pr_ObjNConstraint(Robot_State_Init, ObjNConstraint_Val, ObjNConstraint_Type);
-	integer neF = ObjNConstraint_Val.size();     							  // 1 objective function
-	integer lenA  =  n * neF;                         // This is the number of nonzero elements in the linear part A    F(x) = f(x)+Ax
-
-	integer *iAfun = new integer[lenA];              //
-	integer *jAvar = new integer[lenA];
-	doublereal *A  = new doublereal[lenA];
-
-	integer lenG   = lenA;
-	integer *iGfun = new integer[lenG];
-	integer *jGvar = new integer[lenG];
-
-	doublereal *x      = new doublereal[n];
-	doublereal *xlow   = new doublereal[n];
-	doublereal *xupp   = new doublereal[n];
-	doublereal *xmul   = new doublereal[n];
-	integer    *xstate = new    integer[n];
-
-	doublereal *F      = new doublereal[neF];
-	doublereal *Flow   = new doublereal[neF];
-	doublereal *Fupp   = new doublereal[neF];
-	doublereal *Fmul   = new doublereal[neF];
-	integer    *Fstate = new integer[neF];
-
-	integer nxnames = 1;
-	integer nFnames = 1;
-	char *xnames = new char[nxnames*8];
-	char *Fnames = new char[nFnames*8];
-
-	integer    ObjRow = 0;
-	doublereal ObjAdd = 0;
-
-	// Set the upper and lower bounds.
-	for (int i = 0; i < n; i++) {
-		xlow[i] = xlow_vec(i);
-		xupp[i] = xupp_vec(i);
-		xstate[i] = 0.0;
-		x[i] = Robot_State_Init[i];  	// Initial guess
-	}
-
-	for(int i = 0; i<neF; i++){
-		// The lower bound is the same
-		Flow[i] = 0.0;
-		if(ObjNConstraint_Type[i]>0)	// Inequality constraint
-		{	Fupp[i] = Inf;}
-		else{
-			Fupp[i] = 0.0;}
-	}
-
-	// Load the data for ToyProb ...
-	Default_Init_Pr.setPrintFile  ( "Default_Init_Pr.out" );
-	Default_Init_Pr.setProblemSize( n, neF );
-	Default_Init_Pr.setObjective  ( ObjRow, ObjAdd );
-	Default_Init_Pr.setA          ( lenA, iAfun, jAvar, A );
-	Default_Init_Pr.setG          ( lenG, iGfun, jGvar );
-	Default_Init_Pr.setX          ( x, xlow, xupp, xmul, xstate );
-	Default_Init_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
-	Default_Init_Pr.setXNames     ( xnames, nxnames );
-	Default_Init_Pr.setFNames     ( Fnames, nFnames );
-	Default_Init_Pr.setProbName   ( "Default_Init_Pr" );
-	Default_Init_Pr.setUserFun    ( Default_Init_Pr_);
-	// snopta will compute the Jacobian by finite-differences.
-	// The user has the option of calling  snJac  to define the
-	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
-	Default_Init_Pr.computeJac    ();
-	Default_Init_Pr.setIntParameter( "Derivative option", 0 );
-	Default_Init_Pr.setIntParameter( "Major print level", 0 );
-	Default_Init_Pr.setIntParameter( "Minor print level", 0 );
-	integer Cold = 0, Basis = 1, Warm = 2;
-	Default_Init_Pr.solve( Cold );
-
-	// Take the value out from x
-	for (int i = 0; i < n; i++)
-	{
-		Robot_State_Init[i] = x[i];
-	}
-	// Robot_StateNDot Init_Opt_vec(Robot_State_Init);
-	// Robot_Plot_fn(Init_Opt_vec);
-
-	delete []iAfun;  delete []jAvar;  delete []A;
-	delete []iGfun;  delete []jGvar;
-
-	delete []x;      delete []xlow;   delete []xupp;
-	delete []xmul;   delete []xstate;
-
-	delete []F;		 delete []Flow;	  delete []Fupp;
-	delete []Fmul;	 delete []Fstate;
-
-	delete []xnames; delete []Fnames;
-
+	Robot_State_Init = Default_Init_Opt(Robot_State_Init);
 	return Robot_State_Init;
 }
+std::vector<double> Default_Init_Opt(std::vector<double> &Robot_State_Init)
+{
+		snoptProblem Default_Init_Pr;                     // This is the name of the Optimization problem
+		// Allocate and initialize
+		std:vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
+		integer n = Robot_State_Init.size();
+		Default_Init_Pr_ObjNConstraint(Robot_State_Init, ObjNConstraint_Val, ObjNConstraint_Type);
+		integer neF = ObjNConstraint_Val.size();     							  // 1 objective function
+		integer lenA  =  n * neF;                         // This is the number of nonzero elements in the linear part A    F(x) = f(x)+Ax
+
+		integer *iAfun = new integer[lenA];              //
+		integer *jAvar = new integer[lenA];
+		doublereal *A  = new doublereal[lenA];
+
+		integer lenG   = lenA;
+		integer *iGfun = new integer[lenG];
+		integer *jGvar = new integer[lenG];
+
+		doublereal *x      = new doublereal[n];
+		doublereal *xlow   = new doublereal[n];
+		doublereal *xupp   = new doublereal[n];
+		doublereal *xmul   = new doublereal[n];
+		integer    *xstate = new    integer[n];
+
+		doublereal *F      = new doublereal[neF];
+		doublereal *Flow   = new doublereal[neF];
+		doublereal *Fupp   = new doublereal[neF];
+		doublereal *Fmul   = new doublereal[neF];
+		integer    *Fstate = new integer[neF];
+
+		integer nxnames = 1;
+		integer nFnames = 1;
+		char *xnames = new char[nxnames*8];
+		char *Fnames = new char[nFnames*8];
+
+		integer    ObjRow = 0;
+		doublereal ObjAdd = 0;
+
+		// Set the upper and lower bounds.
+		for (int i = 0; i < n; i++) {
+			xlow[i] = xlow_vec(i);
+			xupp[i] = xupp_vec(i);
+			xstate[i] = 0.0;
+			x[i] = Robot_State_Init[i];  	// Initial guess
+		}
+
+		for(int i = 0; i<neF; i++){
+			// The lower bound is the same
+			Flow[i] = 0.0;
+			if(ObjNConstraint_Type[i]>0)	// Inequality constraint
+			{	Fupp[i] = Inf;}
+			else{
+				Fupp[i] = 0.0;}
+		}
+
+		// Load the data for ToyProb ...
+		Default_Init_Pr.setPrintFile  ( "Default_Init_Pr.out" );
+		Default_Init_Pr.setProblemSize( n, neF );
+		Default_Init_Pr.setObjective  ( ObjRow, ObjAdd );
+		Default_Init_Pr.setA          ( lenA, iAfun, jAvar, A );
+		Default_Init_Pr.setG          ( lenG, iGfun, jGvar );
+		Default_Init_Pr.setX          ( x, xlow, xupp, xmul, xstate );
+		Default_Init_Pr.setF          ( F, Flow, Fupp, Fmul, Fstate );
+		Default_Init_Pr.setXNames     ( xnames, nxnames );
+		Default_Init_Pr.setFNames     ( Fnames, nFnames );
+		Default_Init_Pr.setProbName   ( "Default_Init_Pr" );
+		Default_Init_Pr.setUserFun    ( Default_Init_Pr_);
+		// snopta will compute the Jacobian by finite-differences.
+		// The user has the option of calling  snJac  to define the
+		// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
+		Default_Init_Pr.computeJac    ();
+		Default_Init_Pr.setIntParameter( "Derivative option", 0 );
+		Default_Init_Pr.setIntParameter( "Major print level", 0 );
+		Default_Init_Pr.setIntParameter( "Minor print level", 0 );
+		integer Cold = 0, Basis = 1, Warm = 2;
+		Default_Init_Pr.solve( Cold );
+
+		// Take the value out from x
+		for (int i = 0; i < n; i++)
+		{
+			Robot_State_Init[i] = x[i];
+		}
+		// Robot_StateNDot Init_Opt_vec(Robot_State_Init);
+		// Robot_Plot_fn(Init_Opt_vec);
+
+		delete []iAfun;  delete []jAvar;  delete []A;
+		delete []iGfun;  delete []jGvar;
+
+		delete []x;      delete []xlow;   delete []xupp;
+		delete []xmul;   delete []xstate;
+
+		delete []F;		 delete []Flow;	  delete []Fupp;
+		delete []Fmul;	 delete []Fstate;
+
+		delete []xnames; delete []Fnames;
+
+		return Robot_State_Init;
+}
+
 std::vector<double> StateNDot2StateVec(const Robot_StateNDot &Robot_StateNDot_i)
 {
 	std::vector<double> StateVec(26);
@@ -1382,8 +1387,6 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		ObjNConstraint_Val.push_back(KE_tot[0] * KE_tot[0] - KE_tot[i+1] * KE_tot[i+1]);
 		ObjNConstraint_Type.push_back(1);
 	}
-	// ObjNConstraint_Val[0] = T_tot * T_tot;
-
 	ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
 	// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
 	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T) + Traj_Variation(StateNDot_Traj);
@@ -1392,11 +1395,6 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	// ObjNConstraint_Val[0] = Joint_Velocity_Sum(StateNDot_Traj);
 	ObjNConstraint_Val.push_back(KE_ref - KE_i);
 	ObjNConstraint_Type.push_back(1);
-}
-void Dynamics_Viariation_Bounds()
-{
-	// This function is used to bound the change of the robot angle to be within a valid range
-
 }
 double Torque_Sum(dlib::matrix<double> &Ctrl_Traj)
 {
@@ -1557,7 +1555,7 @@ double KE_Variation_fn(std::vector<double> &KE_tot, double T)
 	// 	// KE_Variation = KE_Variation + KE_tot[KE_tot.size()-1];
 		KE_Variation = KE_Variation + KE_tot[i];
 	}
-	KE_Variation = KE_tot[KE_tot.size()-1];
+	// KE_Variation = KE_tot[KE_tot.size()-1];
 	return KE_Variation;
 }
 void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child,std::vector<double> &sigma_trans, std::vector<double> & sigma_goal, int &Self_Opt_Flag)
@@ -1783,6 +1781,8 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 		{
 			Opt_Flag = 1;
 			Feasible_Num = Feasible_Num + 1;
+			// However, due to the small constraint violation, the robot may not 100% satisfy the holonomic constraint so here we would like to check the robot final state
+			Opt_Soln =  Final_State_Opt(Opt_Soln, Node_i, Node_i_child);
 			for (int i = 0; i < Opt_Soln.size(); i++) {
 				Opt_Soln_Tot.push_back(Opt_Soln[i]);}
 			time_t now = time(0);
@@ -1849,6 +1849,39 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 			Opt_Soln_Output.push_back(Opt_Soln[h]);}
 	}
 	return Opt_Flag;
+}
+
+std::vector<double> Final_State_Opt(std::vector<double> &Opt_Soln, Tree_Node &Node_i, Tree_Node &Node_i_child)
+{
+	dlib::matrix<double> StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj; double T_tot;
+
+	Opt_Seed_Unzip(Opt_Soln, T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+
+	dlib::matrix<double> Final_State = dlib::colm(StateNDot_Traj, StateNDot_Traj.nc()-1);
+
+	std::vector<double> Robot_State_Final;			Robot_StateNDot StateNDot_Final_Opt;
+
+	for (int i = 0; i < Final_State.nr(); i++)
+	{
+		Robot_State_Final.push_back(Final_State(i));
+	}
+	Robot_StateNDot Node_i_Ori = Node_i.Node_StateNDot;
+	Structure_P.Node_i = Node_i;
+	Structure_P.Node_i_child = Node_i_child;
+	Node_i.Node_StateNDot = StateVec2StateNDot(Robot_State_Final);
+
+	Robot_State_Final = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
+
+	for (int i = 0; i < Final_State.nr(); i++) {
+		StateNDot_Traj(i, StateNDot_Traj.nc()-1) = Robot_State_Final[i];
+	}
+	// Now it is time to rewrite this vector back into the zip
+	std::vector<double> Opt_Seed;
+	Opt_Seed.push_back(T_tot);
+	Opt_Seed_Zip(Opt_Seed, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+
+	Node_i.Node_StateNDot = Node_i_Ori;
+	return Opt_Seed;
 }
 void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<double> &Opt_Soln)
 {
