@@ -41,18 +41,50 @@ int main( int argc, char **argv)
 	// After the robot state initialization, the next job is to conduct the multi-contact staiblization strategy: the root node initialization
 	Tree_Node Root_Node;
 	Node_UpdateNCon(Root_Node, StateNDot_Init_Opt, sigma_init);
-	Tree_Node Node_i, Node_i_child;
-	int Opt_Flag;
+	Tree_Node Node_i;
+	int Opt_Flag = 0;
 	while(Frontier_Nodes.size()>0)
 	{
 		/**
 		* For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
 		* if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
 		*/
+		std::vector<double> Opt_Soln;
 		Node_i = Pop_Node();
-		Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i);
+		// Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
+		if(Opt_Flag==1)
+		{
+			// Optimal solution has been found
+			Opt_Soln_Write2Txt(Node_i, Node_i, Opt_Soln);
+			break;
+		}
+		else
+		{
+			// Here it is the node expansion
+			int Adjacent_Number;	int Nodes_Opt_Flag;
+			dlib::matrix<double> Nodes_Sigma_Matrix = Node_Expansion_fn(Node_i, Adjacent_Number);
+			for (int i = 0; i < Adjacent_Number; i++)
+			{
+				Tree_Node Node_i_child;
 
+				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,0));
+				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,1));
+				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,2));
+				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,3));
+				Nodes_Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i_child, Opt_Soln);
+				if(Nodes_Opt_Flag==1)
+				{
+					std::vector<double> Robot_StateNDot_vec_i;
+					Robot_StateNDot_vec_i = End_RobotNDot_Extract(Opt_Soln);
+					Robot_StateNDot Robot_StateNDot_Child_i(Robot_StateNDot_vec_i);
+					Node_UpdateNCon(Node_i_child, Robot_StateNDot_Child_i, Node_i_child.sigma);
+					Node_i_child.Parent_Node = &Node_i;
+					Node_i.Children_Nodes.push_back(&Node_i_child);
+					Opt_Soln_Write2Txt(Node_i, Node_i_child, Opt_Soln);
 
+				}
+			}
+		}
 	}
 	return 0;
 }

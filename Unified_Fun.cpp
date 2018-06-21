@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctime>
 #include <string.h>
 #include <iostream>
 #include "snopt.hh"
@@ -277,6 +278,8 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i)
 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
 	Default_Init_Pr.computeJac    ();
 	Default_Init_Pr.setIntParameter( "Derivative option", 0 );
+	Default_Init_Pr.setIntParameter( "Major print level", 0 );
+	Default_Init_Pr.setIntParameter( "Minor print level", 0 );
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Default_Init_Pr.solve( Cold );
 
@@ -1236,7 +1239,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 		// cout<<Robostate_Dlib_Front<<endl;											cout<<Robostate_Dlib_Back<<endl;
 		// cout<<Ctrl_Front<<endl;														cout<<Ctrl_Back<<endl;
-		// cout<<Contact_Force_Front<<endl;											cout<<Contact_Force_Back<<endl;
+		// cout<<Contact_Force_Front<<endl;												cout<<Contact_Force_Back<<endl;
 
 		// Compute the Dynamics matrices at Front and Back
 		Robot_StateNDot_Front = DlibRobotstate2StateNDot(Robostate_Dlib_Front);		Dynamics_Matrices(Robot_StateNDot_Front, D_q_Front, B_q_Front, C_q_qdot_Front, Jac_Full_Front);
@@ -1287,6 +1290,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	dlib::matrix<double> Contact_Force_Complem_Matrix, Contact_Force_i;
 	// Since up to here, the constraint version works, now we will try the variable bounds version
 	for (int i = 0; i < Grids; i++) {
+		if(i<Grids-1){	sigma = sigma_trans;}
+		else{			sigma = sigma_goal;}
 		std::vector<double> sigma_temp;				Contact_Force_i = dlib::colm(Contact_Force_Traj,i);
 		sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);				sigma_temp.push_back(!sigma[0]);
 		sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);				sigma_temp.push_back(!sigma[1]);
@@ -1339,12 +1344,21 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
 		KE_tot.push_back(KE_i);
 	}
+	// ObjNConstraint_Val[0] = T_tot * T_tot;
+
 	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
 	ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+	// ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T) + Traj_Variation(StateNDot_Traj);
+
 	// ObjNConstraint_Val[0] = Torque_Sum(Ctrl_Traj);
 	// ObjNConstraint_Val[0] = Joint_Velocity_Sum(StateNDot_Traj);
 	ObjNConstraint_Val.push_back(KE_ref - KE_i);
 	ObjNConstraint_Type.push_back(1);
+}
+void Dynamics_Viariation_Bounds()
+{
+	// This function is used to bound the change of the robot angle to be within a valid range
+
 }
 double Torque_Sum(dlib::matrix<double> &Ctrl_Traj)
 {
@@ -1369,7 +1383,7 @@ double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj)
 			Traj_Variation_Val = Traj_Variation_Val +  StateNDot_Traj_i(j+13) * StateNDot_Traj_i(j+13);
 		}
 	}
-	// Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
+	Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
 	return Traj_Variation_Val;
 }
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
@@ -1385,7 +1399,7 @@ double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
 			Traj_Variation_Val = Traj_Variation_Val +  Matrix_result(j) * Matrix_result(j);
 		}
 	}
-	Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
+	// Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
 	return Traj_Variation_Val;
 }
 Robot_StateNDot DlibRobotstate2StateNDot(dlib::matrix<double> &DlibRobotstate)
@@ -1435,7 +1449,7 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 	}
 	// cout<<Acc_Front<<endl;			cout<<Acc_Back<<endl;			cout<<Robotstate_Mid_Acc<<endl;
 	Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
-	for (int i = 1; i < 10; i++) {
+	for (int i = -1; i < 10; i++) {
 		ObjNConstraint_Val.push_back(Acc_Front(i+3));
 		ObjNConstraint_Type.push_back(2);
 		ObjNConstraint_Val.push_back(Robotstate_Mid_Acc(i+3));
@@ -1702,45 +1716,118 @@ void CtrlNContact_ForcefromCtrlNContact_Force_Coeff(dlib::matrix<double> &Ctrl_C
 		x_b = Contact_Force_Coeff(2*i+1, Grid_Ind);
 		Contact_Force_i(i) = x_a * s + x_b;}
 }
-int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child)
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Opt_Soln_Output)
 {	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	// However, the constraint will be set to use the direct collocation method
 	int Opt_Flag = 0;
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
-	for (int i = 0; i < 15; i++) {
+	double Time_Interval = 0.05;
+	int Total_Num = 15;					int Feasible_Num = 0;
+	std::vector<double> Time_Queue =  Time_Seed_Queue_fn(Time_Interval, Total_Num);
+	std::vector<double> Opt_Soln, Opt_Soln_Tot;
+
+	for (int j = 0; j < Time_Queue.size(); j++) {
 		std::vector<double> Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
-		Time_Seed = 0.5 + std::pow(-1, i) * i * 0.05;
+		Time_Seed = Time_Queue[j];
 		Opt_Soln = Nodes_Optimization_Inner_Opt(Node_i, Node_i_child);
 		Nodes_Optimization_ObjNConstraint(Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type);
 		double ObjNConstraint_Violation_Val = ObjNConstraint_Violation(ObjNConstraint_Val, ObjNConstraint_Type);
+		cout<<"ObjNConstraint_Violation_Val: "<<ObjNConstraint_Violation_Val<<endl;
 		if(ObjNConstraint_Violation_Val<0.1)
 		{
-			ofstream output_file;
-			std::string pre_filename = "From_Node_";
-			std::string Node_i_name = to_string(Node_i.Node_Index);
-			std::string mid_filename = "_To_Node_";
-			std::string Node_i_Child_name = to_string(Node_i_child.Node_Index);
-			std::string post_filename = "_Opt_Soln.txt";
-			std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + post_filename;
-			output_file.open(filename, std::ofstream::out);
-			for (int i = 0; i < Opt_Soln.size(); i++)
-			{
-				output_file<<Opt_Soln[i]<<endl;
-			}
-			output_file.close();
 			Opt_Flag = 1;
-			break;
+			Feasible_Num = Feasible_Num + 1;
+			for (int i = 0; i < Opt_Soln.size(); i++) {
+				Opt_Soln_Tot.push_back(Opt_Soln[i]);}
 		}
 	}
+	if(Opt_Flag == 1)
+	{
+		// Now it is time to select the best one from all feasible solutions
+		time_t now = time(0);
+		// convert now to string form
+		char* dt = ctime(&now);
+
+		ofstream output_file;
+		std::string pre_filename = "From_Node_";
+		std::string Node_i_name = to_string(Node_i.Node_Index);
+		std::string mid_filename = "_Expansion_At_";
+		std::string Node_i_Child_name = dt;
+		std::string post_filename = "_Opt_Soln.txt";
+
+		std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + post_filename;
+		output_file.open(filename, std::ofstream::out);
+		for (int i = 0; i < Opt_Soln_Tot.size(); i++)
+		{
+			output_file<<Opt_Soln_Tot[i]<<endl;
+		}
+		output_file.close();
+
+
+		int Start_Ind;
+		std::vector<double> State_Violation;
+		for (int i = 0; i < Feasible_Num; i++)
+		{
+			std::vector<double> Opt_Soln_Temp;
+			Start_Ind = i * 481;
+			for (int k = Start_Ind; k < Start_Ind + 481; k++)
+			{
+				Opt_Soln_Temp.push_back(Opt_Soln_Tot[k]);
+			}
+			dlib::matrix<double> StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj; double T_tot;
+			Opt_Seed_Unzip(Opt_Soln_Temp, T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+		 	double Traj_Variation_i = Traj_Variation(StateNDot_Traj);
+			State_Violation.push_back(Traj_Variation_i);
+		}
+		int Min_Ind = Minimum_Index(State_Violation);
+		Start_Ind = Min_Ind *481;
+		for (int h = Start_Ind; h < Start_Ind + 481; h++) {
+			Opt_Soln_Output.push_back(Opt_Soln[h]);}
+	}
 	return Opt_Flag;
+}
+void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<double> &Opt_Soln)
+{
+	ofstream output_file;
+	std::string pre_filename = "From_Node_";
+	std::string Node_i_name = to_string(Node_i.Node_Index);
+	std::string mid_filename = "_To_Node_";
+	std::string Node_i_Child_name = to_string(Node_i_child.Node_Index);
+	std::string post_filename = "_Opt_Soln.txt";
+	std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + post_filename;
+	output_file.open(filename, std::ofstream::out);
+	for (int i = 0; i < Opt_Soln.size(); i++)
+	{
+		output_file<<Opt_Soln[i]<<endl;
+	}
+	output_file.close();
+}
+std::vector<double> Time_Seed_Queue_fn(double Time_Interval, int Total_Num)
+{
+	// This function is used to generate the Time_Seed_Queue
+	double Time_Center = 0.5;
+	int One_Side_Num = (Total_Num - 1)/2;
+	std::vector<double> Time_Seed_Queue;
+	Time_Seed_Queue.push_back(Time_Center);
+	for (int i = 1; i < One_Side_Num; i++) {
+		Time_Seed_Queue.push_back(Time_Center + 0.05 * i);
+		Time_Seed_Queue.push_back(Time_Center - 0.05 * i);
+	}
+	return Time_Seed_Queue;
 }
 double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type)
 {
 	double ObjNConstraint_Violation_Val = 0.0;
-	for (int i = 0; i < ObjNConstraint_Val.size(); i++) {
-		if(ObjNConstraint_Type[i]==0){
-			if(abs(ObjNConstraint_Val[i])>ObjNConstraint_Violation_Val){
-				ObjNConstraint_Violation_Val = abs(ObjNConstraint_Val[i]);}}}
+	for (int i = 0; i < ObjNConstraint_Val.size(); i++)
+	{
+		if(ObjNConstraint_Type[i]==0)
+		{
+			if(abs(ObjNConstraint_Val[i])>ObjNConstraint_Violation_Val)
+			{
+				ObjNConstraint_Violation_Val = abs(ObjNConstraint_Val[i]);
+			}
+		}
+	}
 	return ObjNConstraint_Violation_Val;
 }
 std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child)
@@ -1811,8 +1898,8 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	{
 		if (ObjNConstraint_Type[i]>1.0)
 		{
-			Flow[i] = -5.0;
-			Fupp[i] = 5.0;
+			Flow[i] = -3.0;
+			Fupp[i] = 3.0;
 		}
 		else
 		{
@@ -1845,11 +1932,12 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
 	Nodes_Optimization_Pr.computeJac    ();
 	Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
-	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 200);
-	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 2000000);
+	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 300);
+	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 35000);
 	Nodes_Optimization_Pr.setIntParameter("Iterations limit", 2000000);
 	Nodes_Optimization_Pr.setIntParameter("setFeaTol", 1e-4);
 	Nodes_Optimization_Pr.setIntParameter("setOptTol", 1e-3);
+
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Nodes_Optimization_Pr.solve( Cold );
 
@@ -2267,6 +2355,9 @@ std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Nod
 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
 	Seed_Conf_Optimization_Pr.computeJac    ();
 	Seed_Conf_Optimization_Pr.setIntParameter( "Derivative option", 0 );
+	Seed_Conf_Optimization_Pr.setIntParameter( "Major print level", 0 );
+	Seed_Conf_Optimization_Pr.setIntParameter( "Minor print level", 0 );
+
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Seed_Conf_Optimization_Pr.solve( Cold );
 
@@ -2313,12 +2404,22 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	End_Effector_Pos_ref = Structure_P.Node_i.End_Effector_Pos;
 	End_Effector_Vel_ref = Structure_P.Node_i.End_Effector_Vel;
 
-	double KE_opt = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back(KE_opt);
-	ObjNConstraint_Type.push_back(1);
-
 	std::vector<double> sigma_i = Structure_P.Node_i.sigma;
 	std::vector<double> sigma_i_child = Structure_P.Node_i_child.sigma;
+
+	double sigma_diff = 0.0; double Obj_val;
+	for (int i = 0; i < 4; i++) {
+		sigma_diff = sigma_diff + abs(sigma_i_child[i] - sigma_i[i]);
+	}
+	if(sigma_diff>0)
+	{Obj_val = 0.0;}
+	else
+	{Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);}
+
+	ObjNConstraint_Val.push_back(Obj_val);
+	ObjNConstraint_Type.push_back(1);
+
+
 	dlib::matrix<double,6,1> End_Effector_Dist;
 	std::vector<int> End_Effector_Obs(6);
 
@@ -2425,4 +2526,43 @@ dlib::matrix<double> Diag_Matrix_fn(std::vector<double> &diag_vec)
 		Diag_Matrix(i,i) = diag_vec[i];
 	}
 	return Diag_Matrix;
+}
+dlib::matrix<double> Node_Expansion_fn(const Tree_Node &Node_i, int &Adjacent_Number)
+{
+	// This function is used to conduct the node expansion for a given parent node
+	// The basic consideration is not to have the flying-in-air phase
+	std::vector<double> sigma_i = Node_i.sigma;
+	dlib::matrix<double> Nodes_Sigma_Matrix;
+	Nodes_Sigma_Matrix = dlib::zeros_matrix<double>(4,4);
+	double sigma_sum;
+	Adjacent_Number = 0;
+	for (int i = 0; i < 4; i++) {
+		std::vector<double> sigma_t = sigma_i;
+		sigma_t[i] = !sigma_t[i];
+		sigma_sum = sigma_t[0] + sigma_t[1] + sigma_t[2] + sigma_t[3];
+		if(sigma_sum==0)
+		{continue;}
+		else{
+			Nodes_Sigma_Matrix(Adjacent_Number, 0) = sigma_t[0];
+			Nodes_Sigma_Matrix(Adjacent_Number, 1) = sigma_t[1];
+			Nodes_Sigma_Matrix(Adjacent_Number, 2) = sigma_t[2];
+			Nodes_Sigma_Matrix(Adjacent_Number, 3) = sigma_t[3];
+			Adjacent_Number = Adjacent_Number + 1;
+		}
+	}
+	cout<<Nodes_Sigma_Matrix<<endl;
+	return Nodes_Sigma_Matrix;
+}
+
+std::vector<double> End_RobotNDot_Extract(std::vector<double> &Opt_Soln)
+{
+	double T_tot;
+	dlib::matrix<double> StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj;
+	Opt_Seed_Unzip(Opt_Soln, T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+	dlib::matrix<double> End_RobotstateDlib;
+	End_RobotstateDlib = dlib::colm(StateNDot_Traj, Grids-1);
+	std::vector<double> Robotstate_vec;
+	for (int i = 0; i < End_RobotstateDlib.nr(); i++) {
+		Robotstate_vec.push_back(End_RobotstateDlib(i));}
+	return Robotstate_vec;
 }

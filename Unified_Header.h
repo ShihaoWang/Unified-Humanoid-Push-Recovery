@@ -62,7 +62,6 @@ struct Tree_Node
     Tree_Node_Ptr Parent_Node;          std::vector<Tree_Node_Ptr> Children_Nodes;
     std::vector<double> sigma;
     dlib::matrix<double,12,1> End_Effector_Pos, End_Effector_Vel;
-    std::vector<double> Self_Opt_Soln, Parent_Opt_Soln;
 };
 class Unified_Structure_P{
 public:
@@ -115,7 +114,7 @@ dlib::matrix<double> Eqn_Maint_Matrix_fn(std::vector<double> &sigma_i, std::vect
 Tree_Node Pop_Node();
 void Node_UpdateNCon(Tree_Node &Node_i, Robot_StateNDot &Node_StateNDot_i, std::vector<double> &sigma);
 
-int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child);
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Opt_Soln_Output);
 
 void Dynamics_Matrices(const Robot_StateNDot &Node_StateNDot, dlib::matrix<double> &D_q, dlib::matrix<double> &B_q, dlib::matrix<double> &C_q_qdot, dlib::matrix<double> &Jac_Full);
 std::vector<double> CubicSpline_Coeff_fn(double T, double x_init, double x_end, double xdot_init, double xdot_end);
@@ -157,3 +156,10 @@ double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj);
 double Torque_Sum(dlib::matrix<double> &Ctrl_Traj);
 double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type);
 std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child);
+
+std::vector<double> Time_Seed_Queue_fn(double Time_Interval, int Total_Num);
+
+dlib::matrix<double> Node_Expansion_fn(const Tree_Node &Node_i, int &Adjacent_Number);
+std::vector<double> End_RobotNDot_Extract(std::vector<double> &Opt_Soln);
+
+void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<double> &Opt_Soln);
