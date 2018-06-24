@@ -101,7 +101,7 @@ dlib::matrix<double> Middle_Joint_Obs_Dist_Fn(Robot_StateNDot &StateNDot_Init_i)
 std::vector<double> Vec_Minus(std::vector<double> &vec1, std::vector<double> &vec2);
 dlib::matrix<double> ONES_VECTOR_fn(int Dim);
 
-void Obs_Dist_Fn(std::vector<double> &r_Pos, double &Obs_Dist, int &Obs_Dist_Index);
+void Obs_Dist_Fn(std::vector<double> &r_Pos, double &Obs_Dist, int &Obs_Dist_Index, const char* name);
 dlib::matrix<double> Diag_Matrix_fn(std::vector<double> &diag_vec);
 
 std::vector<double> Sigma2Pos(std::vector<double> &sigma, int EqOrIneq);
@@ -129,9 +129,9 @@ void Ctrl_Contact_Force_Coeff_fn(dlib::matrix<double> &Ctrl_Traj, dlib::matrix<d
 void Opt_Seed_Zip(std::vector<double> &Opt_Seed, dlib::matrix<double> & StateNDot_Coeff, dlib::matrix<double> & Ctrl_Coeff, dlib::matrix<double> & Contact_Force_Coeff);
 void Opt_Seed_Unzip(std::vector<double> &Opt_Seed, double &T_tot, dlib::matrix<double> & StateNDot_Traj, dlib::matrix<double> & Ctrl_Traj, dlib::matrix<double> & Contact_Force_Traj);
 
-void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child,std::vector<double> &sigma_trans, std::vector<double> & sigma_goal, int &Self_Opt_Flag);
+void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma_i_child, int &Self_Opt_Flag, int &Crit_Grid);
 void CtrlNContact_ForcefromCtrlNContact_Force_Coeff(dlib::matrix<double> &Ctrl_Coeff,dlib::matrix<double> &Contact_Force_Coeff, int Grid_Ind, double s, dlib::matrix<double> &Ctrl_i,  dlib::matrix<double> &Contact_Force_i);
-dlib::matrix<double> StateVec2DlibMatrix_fn(std::vector<double> &StateVec);
+dlib::matrix<double> StateVec2DlibMatrix_fn(const std::vector<double> &StateVec);
 
 void Real_ObjNConstraint_Stage(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double>& sigma, double T, std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 void Dynamics_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Acc, dlib::matrix<double> &Ctrl, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
@@ -152,8 +152,6 @@ double CubicSpline_1stOrder_Evaluation_fn(const std::vector<double> &CubicSpline
 
 void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Front, const Robot_StateNDot &Robot_StateNDot_Back, const dlib::matrix<double> &Ctrl_Front, const dlib::matrix<double> &Ctrl_Back, const dlib::matrix<double> &Contact_Force_Front, const dlib::matrix<double> &Contact_Force_Back, Robot_StateNDot &Robot_StateNDot_Mid, dlib::matrix<double> &Robotstate_Mid_Acc,std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj);
-double Joint_Velocity_Sum(dlib::matrix<double> &StateNDot_Traj);
-double Torque_Sum(dlib::matrix<double> &Ctrl_Traj);
 double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type);
 std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child);
 
@@ -167,3 +165,7 @@ void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<d
 std::vector<double> Final_State_Opt(std::vector<double> &Opt_Soln, Tree_Node &Node_i, Tree_Node &Node_i_child);
 
 std::vector<double> Default_Init_Opt(std::vector<double> &Robot_State_Init);
+
+void End_Effector_Upper_Vel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double> &End_Effector_Upper_Normal_Speed);
+
+void Contact_Force_Proj(dlib::matrix<double> &StateNDot_Traj, dlib::matrix<double> &Contact_Force_Traj, std::vector<double> &Normal_Force_vec, std::vector<double> &Tange_Force_vec, int Grid_Index);

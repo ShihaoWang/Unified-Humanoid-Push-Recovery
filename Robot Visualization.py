@@ -25,7 +25,7 @@ class MyGLPlugin(vis.GLPluginInterface):
         vis.GLPluginInterface.__init__(self)
         self.world = world
         self.quit = False
-        self.nextone = False
+        self.starp = False
 
     def mousefunc(self, button, state, x, y):
         print("mouse",button,state,x,y)
@@ -43,8 +43,8 @@ class MyGLPlugin(vis.GLPluginInterface):
         if c == 'q':
             self.quit = True
             return True
-        if c == 'c':
-            self.nextone = True
+        if c == 's':
+            self.starp = not self.starp
             return True
         return False
 
@@ -115,39 +115,35 @@ def main():
     plugin = MyGLPlugin(world)
     vis.pushPlugin(plugin)
     #add the world to the visualizer
-    # vis.add("world", world)
-    # vis.add("robot",world.robot(0))
-    # vis.show()
-
-    Kinetic_Energy = []  # This list is used to save the value of the kinetic energy
-
-    T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj = Path_Loader()
-
-    Time = np.linspace(0, T_tot, num=StateNDot_Traj.shape[1])
-
-    for i in range(0, StateNDot_Traj.shape[1]):
-        StateNDot_Traj_i = StateNDot_Traj[:,i]
-        KE_i = KE_fn(robot, StateNDot_Traj_i)
-        Kinetic_Energy.append(KE_i)
-
-    fig, ax = plt.subplots()
-    ax.plot(Time, Kinetic_Energy)
-    ax.set(xlabel='time (s)', ylabel='voltage (mV)',title='About as simple as it gets, folks')
-    ax.grid()
-
-    fig.savefig("test.png")
-    plt.show()
+    vis.add("world", world)
+    vis.add("robot",world.robot(0))
+    vis.show()
+    while vis.shown() and not plugin.quit:
+        # This is the main plot program
+        Traj_Loader()
 
 
-    # while vis.shown():
-    #     pass
 
-    # parse arguments and decide what we can do
-    # args = getOnOffArgs('one', 'two')
-    # if args.one:
-    #     showOneStep(plugin, world, robot, ground1, ground2, ground3, link_foot, link_foot_other)
-    # if args.two:
-    #     showTwoStep(plugin, world, robot, ground1, ground2, ground3, ground4, link_foot, link_foot_other)
+
+
+
+
+
+
+    # Kinetic_Energy = []  # This list is used to save the value of the kinetic energy
+    # T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj = Path_Loader()
+    # Time = np.linspace(0, T_tot, num=StateNDot_Traj.shape[1])
+    # for i in range(0, StateNDot_Traj.shape[1]):
+    #     StateNDot_Traj_i = StateNDot_Traj[:,i]
+    #     KE_i = KE_fn(robot, StateNDot_Traj_i)
+    #     Kinetic_Energy.append(KE_i)
+    # fig, ax = plt.subplots()
+    # ax.plot(Time, Kinetic_Energy)
+    # ax.set(xlabel='time (s)', ylabel='voltage (mV)',title='About as simple as it gets, folks')
+    # ax.grid()
+    # fig.savefig("test.png")
+    # plt.show()
+
 def Robot_ConfigNVel_Update(robot, x):
     OptConfig_Low = x[0:len(x)/2]
     OptVelocity_Low = x[len(x)/2:]
@@ -167,6 +163,17 @@ def KE_fn(robot, dataArray):
     T = 0.5 * qdot_i_trans.dot(D_q.dot(qdot_i))
     return T
 
+def Traj_Loader():
+    # This function will load the robotstate and contact force trajectories
+    with open("State_6_22_13_28.txt",'r') as robot_soln_file:
+        robot_state_traj = robot_soln_file.readlines()
+        robot_state_traj = [x.replace("\r\n","") for x in robot_state_traj]
+        robot_state_traj = np.array(robot_state_traj, dtype = float)
+    Robotstate_Traj = np.array([])
+    ipdb.set_trace()
+    for i in range(0, len(robot_state_traj)):
+        Robotstate_Traj = np.append(Robotstate_Traj, robot_state_traj[i])
+    return Robotstate_Traj
 def Path_Loader():
     # This function is used to read the Opt_Soln txt file
     global Grids
