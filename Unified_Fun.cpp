@@ -42,7 +42,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  */
 double mini = 0.025;			int Grids = 10;			double mu = 0.35;
 int Variable_Num = 48 * Grids + 1;
-double Time_Seed; 							// This value will be adaptively changed to formulate an optimal solution
+double Time_Seed; 									// This value will be adaptively changed to formulate an optimal solution
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -620,100 +620,100 @@ dlib::matrix<double> D_q_fn(const Robot_StateNDot &Robot_StateNDot_i)
 	double q10 = Robot_StateNDot_i.q10;
 
 	dlib::matrix<double>  T;									T = dlib::zeros_matrix<double>(13,13);
+	T(0,0) = 1.13E2/2.0;
+	T(0,2) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q4+q5+theta)*(9.1E1/1.0E2)-cos(q7+q8+theta)*(9.9E1/1.6E2)-cos(q9+q10+theta)*(9.9E1/1.6E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-cos(q4+theta)*(3.9E1/2.0E1)-cos(q7+theta)*(1.9E1/1.6E1)-cos(q9+theta)*(1.9E1/1.6E1)+cos(theta)*(2.97E2/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,3) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,4) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,5) = cos(q1+q2+q3+theta)*(-2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,6) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q4+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,7) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,8) = cos(q4+q5+q6+theta)*(-2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(0,9) = cos(q7+q8+theta)*(-9.9E1/1.6E2)-cos(q7+theta)*(1.9E1/1.6E1);
+	T(0,10) = cos(q7+q8+theta)*(-9.9E1/1.6E2);
+	T(0,11) = cos(q9+q10+theta)*(-9.9E1/1.6E2)-cos(q9+theta)*(1.9E1/1.6E1);
+	T(0,12) = cos(q9+q10+theta)*(-9.9E1/1.6E2);
+	T(1,1) = 1.13E2/2.0;
+	T(1,2) = sin(q1+q2+theta)*(9.1E1/1.0E2)+sin(q4+q5+theta)*(9.1E1/1.0E2)+sin(q7+q8+theta)*(9.9E1/1.6E2)+sin(q9+q10+theta)*(9.9E1/1.6E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sin(q4+theta)*(3.9E1/2.0E1)+sin(q7+theta)*(1.9E1/1.6E1)+sin(q9+theta)*(1.9E1/1.6E1)-sin(theta)*(2.97E2/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,3) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,4) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,5) = cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,6) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,7) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,8) = cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(1,9) = sin(q7+q8+theta)*(9.9E1/1.6E2)+sin(q7+theta)*(1.9E1/1.6E1);
+	T(1,10) = sin(q7+q8+theta)*(9.9E1/1.6E2);
+	T(1,11) = sin(q9+q10+theta)*(9.9E1/1.6E2)+sin(q9+theta)*(1.9E1/1.6E1);
+	T(1,12) = sin(q9+q10+theta)*(9.9E1/1.6E2);
+	T(2,0) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q4+q5+theta)*(9.1E1/1.0E2)-cos(q7+q8+theta)*(9.9E1/1.6E2)-cos(q9+q10+theta)*(9.9E1/1.6E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-cos(q4+theta)*(3.9E1/2.0E1)-cos(q7+theta)*(1.9E1/1.6E1)-cos(q9+theta)*(1.9E1/1.6E1)+cos(theta)*(2.97E2/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(2,1) = sin(q1+q2+theta)*(9.1E1/1.0E2)+sin(q4+q5+theta)*(9.1E1/1.0E2)+sin(q7+q8+theta)*(9.9E1/1.6E2)+sin(q9+q10+theta)*(9.9E1/1.6E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sin(q4+theta)*(3.9E1/2.0E1)+sin(q7+theta)*(1.9E1/1.6E1)+sin(q9+theta)*(1.9E1/1.6E1)-sin(theta)*(2.97E2/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(2,2) = cos(q2+q3)*(1.3E1/2.5E2)+cos(q5+q6)*(1.3E1/2.5E2)-cos(q7+q8)*6.80625E-1-cos(q9+q10)*6.80625E-1-sin(q2+q3)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-cos(q7)*(2.09E2/1.6E2)+cos(q8)*(9.9E1/3.2E2)-cos(q9)*(2.09E2/1.6E2)+cos(q10)*(9.9E1/3.2E2)-sin(q3)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/2.5E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/2.5E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+1.171739583333333E1;
+	T(2,3) = cos(q2+q3)*(1.3E1/2.5E2)-sin(q2+q3)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+1.409583333333333;
+	T(2,4) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(2,5) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(2,6) = cos(q5+q6)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+1.409583333333333;
+	T(2,7) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(2,8) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(2,9) = cos(q7+q8)*(-3.403125E-1)-cos(q7)*(2.09E2/3.2E2)+cos(q8)*(9.9E1/3.2E2)+1.045989583333333;
+	T(2,10) = cos(q7+q8)*(-3.403125E-1)+cos(q8)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(2,11) = cos(q9+q10)*(-3.403125E-1)-cos(q9)*(2.09E2/3.2E2)+cos(q10)*(9.9E1/3.2E2)+1.045989583333333;
+	T(2,12) = cos(q9+q10)*(-3.403125E-1)+cos(q10)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(3,0) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(3,1) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(3,2) = cos(q2+q3)*(1.3E1/2.5E2)-sin(q2+q3)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+1.409583333333333;
+	T(3,3) = cos(q2+q3)*(1.3E1/2.5E2)-sin(q2+q3)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+1.409583333333333;
+	T(3,4) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(3,5) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(4,0) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(4,1) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(4,2) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(4,3) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(4,4) = cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+5.29375E-1;
+	T(4,5) = cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+8.575E-2;
+	T(5,0) = cos(q1+q2+q3+theta)*(-2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(5,1) = cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(5,2) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(5,3) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(5,4) = cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+8.575E-2;
+	T(5,5) = sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+8.575E-2;
+	T(6,0) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q4+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(6,1) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(6,2) = cos(q5+q6)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+1.409583333333333;
+	T(6,6) = cos(q5+q6)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+1.409583333333333;
+	T(6,7) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(6,8) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(7,0) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(7,1) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(7,2) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(7,6) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+5.29375E-1;
+	T(7,7) = cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+5.29375E-1;
+	T(7,8) = cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+8.575E-2;
+	T(8,0) = cos(q4+q5+q6+theta)*(-2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(8,1) = cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
+	T(8,2) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(8,6) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+8.575E-2;
+	T(8,7) = cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+8.575E-2;
+	T(8,8) = sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+8.575E-2;
+	T(9,0) = cos(q7+q8+theta)*(-9.9E1/1.6E2)-cos(q7+theta)*(1.9E1/1.6E1);
+	T(9,1) = sin(q7+q8+theta)*(9.9E1/1.6E2)+sin(q7+theta)*(1.9E1/1.6E1);
+	T(9,2) = cos(q7+q8)*(-3.403125E-1)-cos(q7)*(2.09E2/3.2E2)+cos(q8)*(9.9E1/3.2E2)+1.045989583333333;
+	T(9,9) = cos(q8)*(9.9E1/3.2E2)+1.045989583333333;
+	T(9,10) = cos(q8)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(10,0) = cos(q7+q8+theta)*(-9.9E1/1.6E2);
+	T(10,1) = sin(q7+q8+theta)*(9.9E1/1.6E2);
+	T(10,2) = cos(q7+q8)*(-3.403125E-1)+cos(q8)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(10,9) = cos(q8)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(10,10) = 6.0328125E-1;
+	T(11,0) = cos(q9+q10+theta)*(-9.9E1/1.6E2)-cos(q9+theta)*(1.9E1/1.6E1);
+	T(11,1) = sin(q9+q10+theta)*(9.9E1/1.6E2)+sin(q9+theta)*(1.9E1/1.6E1);
+	T(11,2) = cos(q9+q10)*(-3.403125E-1)-cos(q9)*(2.09E2/3.2E2)+cos(q10)*(9.9E1/3.2E2)+1.045989583333333;
+	T(11,11) = cos(q10)*(9.9E1/3.2E2)+1.045989583333333;
+	T(11,12) = cos(q10)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(12,0) = cos(q9+q10+theta)*(-9.9E1/1.6E2);
+	T(12,1) = sin(q9+q10+theta)*(9.9E1/1.6E2);
+	T(12,2) = cos(q9+q10)*(-3.403125E-1)+cos(q10)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(12,11) = cos(q10)*(9.9E1/6.4E2)+6.0328125E-1;
+	T(12,12) = 6.0328125E-1;
 
-	T(0 ,0) = 1.13E2/2.0;
-	T(0 ,2) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q4+q5+theta)*(9.1E1/1.0E2)-cos(q7+q8+theta)*(9.0/1.0E1)-cos(q9+q10+theta)*(9.0/1.0E1)-cos(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-cos(q4+theta)*(3.9E1/2.0E1)-cos(q7+theta)*(4.3E1/3.2E1)-cos(q9+theta)*(4.3E1/3.2E1)+cos(theta)*(2.97E2/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,3) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,4) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,5) = cos(q1+q2+q3+theta)*(-2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,6) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q4+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,7) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,8) = cos(q4+q5+q6+theta)*(-2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(0 ,9) = cos(q7+q8+theta)*(-9.0/1.0E1)-cos(q7+theta)*(4.3E1/3.2E1);
-	T(0 ,10) = cos(q7+q8+theta)*(-9.0/1.0E1);
-	T(0 ,11) = cos(q9+q10+theta)*(-9.0/1.0E1)-cos(q9+theta)*(4.3E1/3.2E1);
-	T(0 ,12) = cos(q9+q10+theta)*(-9.0/1.0E1);
-	T(1 ,1) = 1.13E2/2.0;
-	T(1 ,2) = sin(q1+q2+theta)*(9.1E1/1.0E2)+sin(q4+q5+theta)*(9.1E1/1.0E2)+sin(q7+q8+theta)*(9.0/1.0E1)+sin(q9+q10+theta)*(9.0/1.0E1)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sin(q4+theta)*(3.9E1/2.0E1)+sin(q7+theta)*(4.3E1/3.2E1)+sin(q9+theta)*(4.3E1/3.2E1)-sin(theta)*(2.97E2/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,3) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,4) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,5) = cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,6) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,7) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,8) = cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(1 ,9) = sin(q7+q8+theta)*(9.0/1.0E1)+sin(q7+theta)*(4.3E1/3.2E1);
-	T(1 ,10) = sin(q7+q8+theta)*(9.0/1.0E1);
-	T(1 ,11) = sin(q9+q10+theta)*(9.0/1.0E1)+sin(q9+theta)*(4.3E1/3.2E1);
-	T(1 ,12) = sin(q9+q10+theta)*(9.0/1.0E1);
-	T(2 ,0) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q4+q5+theta)*(9.1E1/1.0E2)-cos(q7+q8+theta)*(9.0/1.0E1)-cos(q9+q10+theta)*(9.0/1.0E1)-cos(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-cos(q4+theta)*(3.9E1/2.0E1)-cos(q7+theta)*(4.3E1/3.2E1)-cos(q9+theta)*(4.3E1/3.2E1)+cos(theta)*(2.97E2/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(2 ,1) = sin(q1+q2+theta)*(9.1E1/1.0E2)+sin(q4+q5+theta)*(9.1E1/1.0E2)+sin(q7+q8+theta)*(9.0/1.0E1)+sin(q9+q10+theta)*(9.0/1.0E1)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sin(q4+theta)*(3.9E1/2.0E1)+sin(q7+theta)*(4.3E1/3.2E1)+sin(q9+theta)*(4.3E1/3.2E1)-sin(theta)*(2.97E2/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(2 ,2) = cos(q2+q3)*(1.3E1/2.5E2)+cos(q5+q6)*(1.3E1/2.5E2)-cos(q7+q8)*(9.9E1/1.0E2)-cos(q9+q10)*(9.9E1/1.0E2)-sin(q2+q3)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-cos(q7)*(4.73E2/3.2E2)+cos(q8)*(9.0/2.0E1)-cos(q9)*(4.73E2/3.2E2)+cos(q10)*(9.0/2.0E1)-sin(q3)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/2.5E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/2.5E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+9.615333333333333;
-	T(2 ,3) = cos(q2+q3)*(1.3E1/2.5E2)-sin(q2+q3)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+8.418333333333333E-1;
-	T(2 ,4) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(2 ,5) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(2 ,6) = cos(q5+q6)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+8.418333333333333E-1;
-	T(2 ,7) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(2 ,8) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(2 ,9) = cos(q7+q8)*(-9.9E1/2.0E2)-cos(q7)*(4.73E2/6.4E2)+cos(q8)*(9.0/2.0E1)+5.627083333333333E-1;
-	T(2 ,10) = cos(q7+q8)*(-9.9E1/2.0E2)+cos(q8)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(2 ,11) = cos(q9+q10)*(-9.9E1/2.0E2)-cos(q9)*(4.73E2/6.4E2)+cos(q10)*(9.0/2.0E1)+5.627083333333333E-1;
-	T(2 ,12) = cos(q9+q10)*(-9.9E1/2.0E2)+cos(q10)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(3 ,0) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-cos(q1+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(3 ,1) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(3 ,2) = cos(q2+q3)*(1.3E1/2.5E2)-sin(q2+q3)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+8.418333333333333E-1;
-	T(3 ,3) = cos(q2+q3)*(1.3E1/2.5E2)-sin(q2+q3)*(1.3E1/2.5E2)+cos(q2)*5.915E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)+8.418333333333333E-1;
-	T(3 ,4) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(3 ,5) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(4 ,0) = cos(q1+q2+theta)*(-9.1E1/1.0E2)-cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(4 ,1) = sin(q1+q2+theta)*(9.1E1/1.0E2)+cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(4 ,2) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(4 ,3) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q2)*2.9575E-1+cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(4 ,4) = cos(q3)*(1.3E1/2.5E2)-sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+2.785E-1;
-	T(4 ,5) = cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+1.0/4.0E1;
-	T(5 ,0) = cos(q1+q2+q3+theta)*(-2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(5 ,1) = cos(q1+q2+q3+theta)*(2.0/2.5E1)+sin(q1+q2+q3+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(5 ,2) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(5 ,3) = cos(q2+q3)*(1.3E1/5.0E2)-sin(q2+q3)*(1.3E1/5.0E2)+cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q2+q3-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(5 ,4) = cos(q3)*(1.3E1/5.0E2)-sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+1.0/4.0E1;
-	T(5 ,5) = sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+1.0/4.0E1;
-	T(6 ,0) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-cos(q4+theta)*(3.9E1/2.0E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(6 ,1) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+theta)*(3.9E1/2.0E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(6 ,2) = cos(q5+q6)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+8.418333333333333E-1;
-	T(6 ,6) = cos(q5+q6)*(1.3E1/2.5E2)-sin(q5+q6)*(1.3E1/2.5E2)+cos(q5)*5.915E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)+8.418333333333333E-1;
-	T(6 ,7) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(6 ,8) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(7 ,0) = cos(q4+q5+theta)*(-9.1E1/1.0E2)-cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(7 ,1) = sin(q4+q5+theta)*(9.1E1/1.0E2)+cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(7 ,2) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(7 ,6) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q5)*2.9575E-1+cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+2.785E-1;
-	T(7 ,7) = cos(q6)*(1.3E1/2.5E2)-sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+2.785E-1;
-	T(7 ,8) = cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+1.0/4.0E1;
-	T(8 ,0) = cos(q4+q5+q6+theta)*(-2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)-sqrt(4.1E1)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(8 ,1) = cos(q4+q5+q6+theta)*(2.0/2.5E1)+sin(q4+q5+q6+theta)*(2.0/2.5E1)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1);
-	T(8 ,2) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(8 ,6) = cos(q5+q6)*(1.3E1/5.0E2)-sin(q5+q6)*(1.3E1/5.0E2)+cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+sqrt(4.1E1)*cos(q5+q6-8.960553845713439E-1)*6.5E-3+1.0/4.0E1;
-	T(8 ,7) = cos(q6)*(1.3E1/5.0E2)-sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*cos(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+1.0/4.0E1;
-	T(8 ,8) = sqrt(4.1E1)*cos(8.960553845713439E-1)*(1.0/5.0E2)-sqrt(4.1E1)*sin(8.960553845713439E-1)*(1.0/5.0E2)+1.0/4.0E1;
-	T(9 ,0) = cos(q7+q8+theta)*(-9.0/1.0E1)-cos(q7+theta)*(4.3E1/3.2E1);
-	T(9 ,1) = sin(q7+q8+theta)*(9.0/1.0E1)+sin(q7+theta)*(4.3E1/3.2E1);
-	T(9 ,2) = cos(q7+q8)*(-9.9E1/2.0E2)-cos(q7)*(4.73E2/6.4E2)+cos(q8)*(9.0/2.0E1)+5.627083333333333E-1;
-	T(9 ,9) = cos(q8)*(9.0/2.0E1)+5.627083333333333E-1;
-	T(9 ,10) = cos(q8)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(10 ,0) = cos(q7+q8+theta)*(-9.0/1.0E1);
-	T(10 ,1) = sin(q7+q8+theta)*(9.0/1.0E1);
-	T(10 ,2) = cos(q7+q8)*(-9.9E1/2.0E2)+cos(q8)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(10 ,9) = cos(q8)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(10 ,10) = 6.7E1/3.0E2;
-	T(11 ,0) = cos(q9+q10+theta)*(-9.0/1.0E1)-cos(q9+theta)*(4.3E1/3.2E1);
-	T(11 ,1) = sin(q9+q10+theta)*(9.0/1.0E1)+sin(q9+theta)*(4.3E1/3.2E1);
-	T(11 ,2) = cos(q9+q10)*(-9.9E1/2.0E2)-cos(q9)*(4.73E2/6.4E2)+cos(q10)*(9.0/2.0E1)+5.627083333333333E-1;
-	T(11 ,11) = cos(q10)*(9.0/2.0E1)+5.627083333333333E-1;
-	T(11 ,12) = cos(q10)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(12 ,0) = cos(q9+q10+theta)*(-9.0/1.0E1);
-	T(12 ,1) = sin(q9+q10+theta)*(9.0/1.0E1);
-	T(12 ,2) = cos(q9+q10)*(-9.9E1/2.0E2)+cos(q10)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(12 ,11) = cos(q10)*(9.0/4.0E1)+6.7E1/3.0E2;
-	T(12 ,12) = 6.7E1/3.0E2;
 	return T;
 }
 dlib::matrix<double> B_q_fn()
@@ -734,49 +734,34 @@ dlib::matrix<double> B_q_fn()
 }
 dlib::matrix<double> C_q_qdot_fn(const Robot_StateNDot &Robot_StateNDot_i)
 {
-	double rIx = Robot_StateNDot_i.rIx;
-	double rIy = Robot_StateNDot_i.rIy;
-	double theta = Robot_StateNDot_i.theta;
-	double q1 = Robot_StateNDot_i.q1;
-	double q2 = Robot_StateNDot_i.q2;
-	double q3 = Robot_StateNDot_i.q3;
-	double q4 = Robot_StateNDot_i.q4;
-	double q5 = Robot_StateNDot_i.q5;
-	double q6 = Robot_StateNDot_i.q6;
-	double q7 = Robot_StateNDot_i.q7;
-	double q8 = Robot_StateNDot_i.q8;
-	double q9 = Robot_StateNDot_i.q9;
+	double rIx = Robot_StateNDot_i.rIx;					double rIy = Robot_StateNDot_i.rIy;						double theta = Robot_StateNDot_i.theta;
+	double q1 = Robot_StateNDot_i.q1;					double q2 = Robot_StateNDot_i.q2;						double q3 = Robot_StateNDot_i.q3;
+	double q4 = Robot_StateNDot_i.q4;					double q5 = Robot_StateNDot_i.q5;						double q6 = Robot_StateNDot_i.q6;
+	double q7 = Robot_StateNDot_i.q7;					double q8 = Robot_StateNDot_i.q8;						double q9 = Robot_StateNDot_i.q9;
 	double q10 = Robot_StateNDot_i.q10;
 
-	double rIxdot = Robot_StateNDot_i.rIxdot;
-	double rIydot = Robot_StateNDot_i.rIydot;
-	double thetadot = Robot_StateNDot_i.thetadot;
-	double q1dot = Robot_StateNDot_i.q1dot;
-	double q2dot = Robot_StateNDot_i.q2dot;
-	double q3dot = Robot_StateNDot_i.q3dot;
-	double q4dot = Robot_StateNDot_i.q4dot;
-	double q5dot = Robot_StateNDot_i.q5dot;
-	double q6dot = Robot_StateNDot_i.q6dot;
-	double q7dot = Robot_StateNDot_i.q7dot;
-	double q8dot = Robot_StateNDot_i.q8dot;
-	double q9dot = Robot_StateNDot_i.q9dot;
+	double rIxdot = Robot_StateNDot_i.rIxdot;			double rIydot = Robot_StateNDot_i.rIydot;				double thetadot = Robot_StateNDot_i.thetadot;
+	double q1dot = Robot_StateNDot_i.q1dot;				double q2dot = Robot_StateNDot_i.q2dot;					double q3dot = Robot_StateNDot_i.q3dot;
+	double q4dot = Robot_StateNDot_i.q4dot;				double q5dot = Robot_StateNDot_i.q5dot;					double q6dot = Robot_StateNDot_i.q6dot;
+	double q7dot = Robot_StateNDot_i.q7dot;				double q8dot = Robot_StateNDot_i.q8dot;					double q9dot = Robot_StateNDot_i.q9dot;
 	double q10dot = Robot_StateNDot_i.q10dot;
 
 	dlib::matrix<double> T;
 	T = dlib::zeros_matrix<double>(13,1);
-	T(0,0) = (thetadot*thetadot)*sin(theta)*(-1.3585E1)+(q10dot*q10dot)*sin(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(q2dot*q2dot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(q4dot*q4dot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(q5dot*q5dot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(q7dot*q7dot)*sin(q7+q8+theta)*(6.3E1/8.0E1)+(q8dot*q8dot)*sin(q7+q8+theta)*(6.3E1/8.0E1)+(q9dot*q9dot)*sin(q9+q10+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*sin(q7+q8+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*sin(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*sin(q1+theta)*(3.9E1/2.0E1)+(q4dot*q4dot)*sin(q4+theta)*(3.9E1/2.0E1)+(q7dot*q7dot)*sin(q7+theta)*(9.1E1/8.0E1)+(q9dot*q9dot)*sin(q9+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*sin(q1+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*sin(q4+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*sin(q7+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*sin(q9+theta)*(9.1E1/8.0E1)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q4dot*q4dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q5dot*q5dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q6dot*q6dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+q10dot*q9dot*sin(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*q5dot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*q8dot*sin(q7+q8+theta)*(6.3E1/4.0E1)+q10dot*thetadot*sin(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*thetadot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q2dot*thetadot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*thetadot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q5dot*thetadot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*thetadot*sin(q7+q8+theta)*(6.3E1/4.0E1)+q8dot*thetadot*sin(q7+q8+theta)*(6.3E1/4.0E1)+q9dot*thetadot*sin(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*q2dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*sin(q1+theta)*(3.9E1/1.0E1)+q4dot*thetadot*sin(q4+theta)*(3.9E1/1.0E1)+q7dot*thetadot*sin(q7+theta)*(9.1E1/4.0E1)+q9dot*thetadot*sin(q9+theta)*(9.1E1/4.0E1)+sqrt(4.1E1)*q1dot*q2dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q5dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q3dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q6dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1);
-	T(1,0) = (thetadot*thetadot)*cos(theta)*(-1.3585E1)+(q10dot*q10dot)*cos(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(q2dot*q2dot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(q4dot*q4dot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(q5dot*q5dot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(q7dot*q7dot)*cos(q7+q8+theta)*(6.3E1/8.0E1)+(q8dot*q8dot)*cos(q7+q8+theta)*(6.3E1/8.0E1)+(q9dot*q9dot)*cos(q9+q10+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*cos(q7+q8+theta)*(6.3E1/8.0E1)+(thetadot*thetadot)*cos(q9+q10+theta)*(6.3E1/8.0E1)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)-(q1dot*q1dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q2dot*q2dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q3dot*q3dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q4dot*q4dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(q5dot*q5dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(q6dot*q6dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(thetadot*thetadot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(thetadot*thetadot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*cos(q1+theta)*(3.9E1/2.0E1)+(q4dot*q4dot)*cos(q4+theta)*(3.9E1/2.0E1)+(q7dot*q7dot)*cos(q7+theta)*(9.1E1/8.0E1)+(q9dot*q9dot)*cos(q9+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*cos(q1+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*cos(q4+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*cos(q7+theta)*(9.1E1/8.0E1)+(thetadot*thetadot)*cos(q9+theta)*(9.1E1/8.0E1)+sqrt(4.1E1)*(q1dot*q1dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q4dot*q4dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q5dot*q5dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q6dot*q6dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+q10dot*q9dot*cos(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*q5dot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*q8dot*cos(q7+q8+theta)*(6.3E1/4.0E1)+q10dot*thetadot*cos(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*thetadot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q2dot*thetadot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*thetadot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q5dot*thetadot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*thetadot*cos(q7+q8+theta)*(6.3E1/4.0E1)+q8dot*thetadot*cos(q7+q8+theta)*(6.3E1/4.0E1)+q9dot*thetadot*cos(q9+q10+theta)*(6.3E1/4.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)-q1dot*q2dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q1dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q2dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q4dot*q5dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q4dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q5dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q1dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q2dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q3dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q4dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q5dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q6dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+theta)*(3.9E1/1.0E1)+q4dot*thetadot*cos(q4+theta)*(3.9E1/1.0E1)+q7dot*thetadot*cos(q7+theta)*(9.1E1/4.0E1)+q9dot*thetadot*cos(q9+theta)*(9.1E1/4.0E1)+sqrt(4.1E1)*q1dot*q2dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q5dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q3dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q6dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+5.31702E2;
-	T(2,0) = sin(q1+q2+theta)*8.9271+sin(q4+q5+theta)*8.9271+sin(q7+q8+theta)*7.725375+sin(q9+q10+theta)*7.725375+sin(q1+theta)*1.91295E1+sin(q4+theta)*1.91295E1+sin(q7+theta)*1.1158875E1+sin(q9+theta)*1.1158875E1-sin(theta)*1.3326885E2-(q3dot*q3dot)*cos(q3)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q6)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*7.848E-1+sqrt(2.0)*sin(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*7.848E-1-(q10dot*q10dot)*sin(q10)*(6.3E1/3.2E2)-(q2dot*q2dot)*sin(q2)*2.9575E-1-(q3dot*q3dot)*sin(q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5)*2.9575E-1-(q6dot*q6dot)*sin(q6)*(1.3E1/5.0E2)+(q7dot*q7dot)*sin(q7)*6.25625E-1-(q8dot*q8dot)*sin(q8)*(6.3E1/3.2E2)+(q9dot*q9dot)*sin(q9)*6.25625E-1+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*1.962E-1+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*1.962E-1-(q2dot*q2dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*cos(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q5+q6)*(1.3E1/5.0E2)+(q10dot*q10dot)*sin(q9+q10)*4.33125E-1-(q2dot*q2dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*sin(q5+q6)*(1.3E1/5.0E2)+(q7dot*q7dot)*sin(q7+q8)*4.33125E-1+(q8dot*q8dot)*sin(q7+q8)*4.33125E-1+(q9dot*q9dot)*sin(q9+q10)*4.33125E-1-q1dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q3)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q6)*(1.3E1/2.5E2)-q10dot*q9dot*sin(q10)*(6.3E1/1.6E2)-q1dot*q2dot*sin(q2)*5.915E-1-q1dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5)*5.915E-1-q4dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q7dot*q8dot*sin(q8)*(6.3E1/1.6E2)-q10dot*thetadot*sin(q10)*(6.3E1/1.6E2)-q2dot*thetadot*sin(q2)*5.915E-1-q3dot*thetadot*sin(q3)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5)*5.915E-1-q6dot*thetadot*sin(q6)*(1.3E1/2.5E2)+q7dot*thetadot*sin(q7)*1.25125-q8dot*thetadot*sin(q8)*(6.3E1/1.6E2)+q9dot*thetadot*sin(q9)*1.25125-sqrt(4.1E1)*(q2dot*q2dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q3dot*q3dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q5dot*q5dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-q1dot*q2dot*cos(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q4dot*q5dot*cos(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q2dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q5dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)+q10dot*q9dot*sin(q9+q10)*(6.93E2/8.0E2)-q1dot*q2dot*sin(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)+q7dot*q8dot*sin(q7+q8)*(6.93E2/8.0E2)+q10dot*thetadot*sin(q9+q10)*(6.93E2/8.0E2)-q2dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)+q7dot*thetadot*sin(q7+q8)*(6.93E2/8.0E2)+q8dot*thetadot*sin(q7+q8)*(6.93E2/8.0E2)+q9dot*thetadot*sin(q9+q10)*(6.93E2/8.0E2)-sqrt(4.1E1)*(q3dot*q3dot)*sin(q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q1dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q2dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q5dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3);
+	T(0,0) = (thetadot*thetadot)*sin(theta)*(-2.97E2/2.0E1)+(q10dot*q10dot)*sin(q9+q10+theta)*(9.9E1/1.6E2)+(q1dot*q1dot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(q2dot*q2dot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(q4dot*q4dot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(q5dot*q5dot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(q7dot*q7dot)*sin(q7+q8+theta)*(9.9E1/1.6E2)+(q8dot*q8dot)*sin(q7+q8+theta)*(9.9E1/1.6E2)+(q9dot*q9dot)*sin(q9+q10+theta)*(9.9E1/1.6E2)+(thetadot*thetadot)*sin(q1+q2+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*sin(q4+q5+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*sin(q7+q8+theta)*(9.9E1/1.6E2)+(thetadot*thetadot)*sin(q9+q10+theta)*(9.9E1/1.6E2)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*sin(q1+theta)*(3.9E1/2.0E1)+(q4dot*q4dot)*sin(q4+theta)*(3.9E1/2.0E1)+(q7dot*q7dot)*sin(q7+theta)*(1.9E1/1.6E1)+(q9dot*q9dot)*sin(q9+theta)*(1.9E1/1.6E1)+(thetadot*thetadot)*sin(q1+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*sin(q4+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*sin(q7+theta)*(1.9E1/1.6E1)+(thetadot*thetadot)*sin(q9+theta)*(1.9E1/1.6E1)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q4dot*q4dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q5dot*q5dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q6dot*q6dot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+q10dot*q9dot*sin(q9+q10+theta)*(9.9E1/8.0E1)+q1dot*q2dot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*q5dot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*q8dot*sin(q7+q8+theta)*(9.9E1/8.0E1)+q10dot*thetadot*sin(q9+q10+theta)*(9.9E1/8.0E1)+q1dot*thetadot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q2dot*thetadot*sin(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*thetadot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q5dot*thetadot*sin(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*thetadot*sin(q7+q8+theta)*(9.9E1/8.0E1)+q8dot*thetadot*sin(q7+q8+theta)*(9.9E1/8.0E1)+q9dot*thetadot*sin(q9+q10+theta)*(9.9E1/8.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*q2dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*sin(q1+theta)*(3.9E1/1.0E1)+q4dot*thetadot*sin(q4+theta)*(3.9E1/1.0E1)+q7dot*thetadot*sin(q7+theta)*(1.9E1/8.0)+q9dot*thetadot*sin(q9+theta)*(1.9E1/8.0)+sqrt(4.1E1)*q1dot*q2dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q5dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q3dot*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q6dot*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1);
+	T(1,0) = (thetadot*thetadot)*cos(theta)*(-2.97E2/2.0E1)+(q10dot*q10dot)*cos(q9+q10+theta)*(9.9E1/1.6E2)+(q1dot*q1dot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(q2dot*q2dot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(q4dot*q4dot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(q5dot*q5dot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(q7dot*q7dot)*cos(q7+q8+theta)*(9.9E1/1.6E2)+(q8dot*q8dot)*cos(q7+q8+theta)*(9.9E1/1.6E2)+(q9dot*q9dot)*cos(q9+q10+theta)*(9.9E1/1.6E2)+(thetadot*thetadot)*cos(q1+q2+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*cos(q4+q5+theta)*(9.1E1/1.0E2)+(thetadot*thetadot)*cos(q7+q8+theta)*(9.9E1/1.6E2)+(thetadot*thetadot)*cos(q9+q10+theta)*(9.9E1/1.6E2)+(q1dot*q1dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q2dot*q2dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q3dot*q3dot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(q4dot*q4dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q5dot*q5dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(q6dot*q6dot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q1+q2+q3+theta)*(2.0/2.5E1)+(thetadot*thetadot)*cos(q4+q5+q6+theta)*(2.0/2.5E1)-(q1dot*q1dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q2dot*q2dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q3dot*q3dot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(q4dot*q4dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(q5dot*q5dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(q6dot*q6dot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)-(thetadot*thetadot)*sin(q1+q2+q3+theta)*(2.0/2.5E1)-(thetadot*thetadot)*sin(q4+q5+q6+theta)*(2.0/2.5E1)+(q1dot*q1dot)*cos(q1+theta)*(3.9E1/2.0E1)+(q4dot*q4dot)*cos(q4+theta)*(3.9E1/2.0E1)+(q7dot*q7dot)*cos(q7+theta)*(1.9E1/1.6E1)+(q9dot*q9dot)*cos(q9+theta)*(1.9E1/1.6E1)+(thetadot*thetadot)*cos(q1+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*cos(q4+theta)*(3.9E1/2.0E1)+(thetadot*thetadot)*cos(q7+theta)*(1.9E1/1.6E1)+(thetadot*thetadot)*cos(q9+theta)*(1.9E1/1.6E1)+sqrt(4.1E1)*(q1dot*q1dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q2dot*q2dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q3dot*q3dot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q4dot*q4dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q5dot*q5dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(q6dot*q6dot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/5.0E1)+sqrt(4.1E1)*(thetadot*thetadot)*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/5.0E1)+q10dot*q9dot*cos(q9+q10+theta)*(9.9E1/8.0E1)+q1dot*q2dot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*q5dot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*q8dot*cos(q7+q8+theta)*(9.9E1/8.0E1)+q10dot*thetadot*cos(q9+q10+theta)*(9.9E1/8.0E1)+q1dot*thetadot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q2dot*thetadot*cos(q1+q2+theta)*(9.1E1/5.0E1)+q4dot*thetadot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q5dot*thetadot*cos(q4+q5+theta)*(9.1E1/5.0E1)+q7dot*thetadot*cos(q7+q8+theta)*(9.9E1/8.0E1)+q8dot*thetadot*cos(q7+q8+theta)*(9.9E1/8.0E1)+q9dot*thetadot*cos(q9+q10+theta)*(9.9E1/8.0E1)+q1dot*q2dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q1dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*q3dot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*q5dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q4dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*q6dot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q2dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q3dot*thetadot*cos(q1+q2+q3+theta)*(4.0/2.5E1)+q4dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q5dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)+q6dot*thetadot*cos(q4+q5+q6+theta)*(4.0/2.5E1)-q1dot*q2dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q1dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q2dot*q3dot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q4dot*q5dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q4dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q5dot*q6dot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q1dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q2dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q3dot*thetadot*sin(q1+q2+q3+theta)*(4.0/2.5E1)-q4dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q5dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)-q6dot*thetadot*sin(q4+q5+q6+theta)*(4.0/2.5E1)+q1dot*thetadot*cos(q1+theta)*(3.9E1/1.0E1)+q4dot*thetadot*cos(q4+theta)*(3.9E1/1.0E1)+q7dot*thetadot*cos(q7+theta)*(1.9E1/8.0)+q9dot*thetadot*cos(q9+theta)*(1.9E1/8.0)+sqrt(4.1E1)*q1dot*q2dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q5dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q1dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q2dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q3dot*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q4dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q5dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+sqrt(4.1E1)*q6dot*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*(1.0/2.5E1)+5.54265E2;
+	T(2,0) = sin(q1+q2+theta)*8.9271+sin(q4+q5+theta)*8.9271+sin(q7+q8+theta)*6.0699375+sin(q9+q10+theta)*6.0699375+sin(q1+theta)*1.91295E1+sin(q4+theta)*1.91295E1+sin(q7+theta)*1.1649375E1+sin(q9+theta)*1.1649375E1-sin(theta)*1.456785E2-(q3dot*q3dot)*cos(q3)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q6)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*7.848E-1+sqrt(2.0)*sin(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*7.848E-1-(q10dot*q10dot)*sin(q10)*(9.9E1/6.4E2)-(q2dot*q2dot)*sin(q2)*2.9575E-1-(q3dot*q3dot)*sin(q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5)*2.9575E-1-(q6dot*q6dot)*sin(q6)*(1.3E1/5.0E2)+(q7dot*q7dot)*sin(q7)*(2.09E2/3.2E2)-(q8dot*q8dot)*sin(q8)*(9.9E1/6.4E2)+(q9dot*q9dot)*sin(q9)*(2.09E2/3.2E2)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*1.962E-1+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*1.962E-1-(q2dot*q2dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*cos(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q5+q6)*(1.3E1/5.0E2)+(q10dot*q10dot)*sin(q9+q10)*3.403125E-1-(q2dot*q2dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*sin(q5+q6)*(1.3E1/5.0E2)+(q7dot*q7dot)*sin(q7+q8)*3.403125E-1+(q8dot*q8dot)*sin(q7+q8)*3.403125E-1+(q9dot*q9dot)*sin(q9+q10)*3.403125E-1-q1dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q3)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q6)*(1.3E1/2.5E2)-q10dot*q9dot*sin(q10)*(9.9E1/3.2E2)-q1dot*q2dot*sin(q2)*5.915E-1-q1dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5)*5.915E-1-q4dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q7dot*q8dot*sin(q8)*(9.9E1/3.2E2)-q10dot*thetadot*sin(q10)*(9.9E1/3.2E2)-q2dot*thetadot*sin(q2)*5.915E-1-q3dot*thetadot*sin(q3)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5)*5.915E-1-q6dot*thetadot*sin(q6)*(1.3E1/2.5E2)+q7dot*thetadot*sin(q7)*(2.09E2/1.6E2)-q8dot*thetadot*sin(q8)*(9.9E1/3.2E2)+q9dot*thetadot*sin(q9)*(2.09E2/1.6E2)-sqrt(4.1E1)*(q2dot*q2dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q3dot*q3dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q5dot*q5dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-q1dot*q2dot*cos(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q4dot*q5dot*cos(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q2dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q5dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)+q10dot*q9dot*sin(q9+q10)*6.80625E-1-q1dot*q2dot*sin(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)+q7dot*q8dot*sin(q7+q8)*6.80625E-1+q10dot*thetadot*sin(q9+q10)*6.80625E-1-q2dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)+q7dot*thetadot*sin(q7+q8)*6.80625E-1+q8dot*thetadot*sin(q7+q8)*6.80625E-1+q9dot*thetadot*sin(q9+q10)*6.80625E-1-sqrt(4.1E1)*(q3dot*q3dot)*sin(q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q1dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q2dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q5dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3);
 	T(3,0) = sin(q1+q2+theta)*8.9271+sin(q1+theta)*1.91295E1-(q3dot*q3dot)*cos(q3)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*7.848E-1-(q2dot*q2dot)*sin(q2)*2.9575E-1-(q3dot*q3dot)*sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*1.962E-1-(q2dot*q2dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*cos(q2+q3)*(1.3E1/5.0E2)-(q2dot*q2dot)*sin(q2+q3)*(1.3E1/5.0E2)-(q3dot*q3dot)*sin(q2+q3)*(1.3E1/5.0E2)-q1dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q3)*(1.3E1/2.5E2)-q1dot*q2dot*sin(q2)*5.915E-1-q1dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q2dot*thetadot*sin(q2)*5.915E-1-q3dot*thetadot*sin(q3)*(1.3E1/2.5E2)-sqrt(4.1E1)*(q2dot*q2dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q3dot*q3dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3-q1dot*q2dot*cos(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q2+q3)*(1.3E1/2.5E2)-q2dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)-q1dot*q2dot*sin(q2+q3)*(1.3E1/2.5E2)-q1dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q2+q3)*(1.3E1/2.5E2)-q2dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-q3dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-sqrt(4.1E1)*(q3dot*q3dot)*sin(q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q1dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q2dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q1dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3);
 	T(4,0) = sin(q1+q2+theta)*8.9271-(q3dot*q3dot)*cos(q3)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*7.848E-1+(q1dot*q1dot)*sin(q2)*2.9575E-1-(q3dot*q3dot)*sin(q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q2)*2.9575E-1+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*1.962E-1+(q1dot*q1dot)*cos(q2+q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*cos(q2+q3)*(1.3E1/5.0E2)+(q1dot*q1dot)*sin(q2+q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q2+q3)*(1.3E1/5.0E2)-q1dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q2dot*q3dot*cos(q3)*(1.3E1/2.5E2)-q3dot*thetadot*cos(q3)*(1.3E1/2.5E2)-q1dot*q3dot*sin(q3)*(1.3E1/2.5E2)-q2dot*q3dot*sin(q3)*(1.3E1/2.5E2)+q1dot*thetadot*sin(q2)*5.915E-1-q3dot*thetadot*sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*(thetadot*thetadot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3+q1dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)+q1dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)-sqrt(4.1E1)*(q3dot*q3dot)*sin(q3-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q1dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q2dot*q3dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q3dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q1dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3);
 	T(5,0) = (q1dot*q1dot)*cos(q3)*(1.3E1/5.0E2)+(q2dot*q2dot)*cos(q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*cos(q3)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q1+q2+q3+theta+3.141592653589793*(1.0/4.0))*7.848E-1+(q1dot*q1dot)*sin(q3)*(1.3E1/5.0E2)+(q2dot*q2dot)*sin(q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*sin(q1+q2+q3+theta-8.960553845713439E-1)*1.962E-1+(q1dot*q1dot)*cos(q2+q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*cos(q2+q3)*(1.3E1/5.0E2)+(q1dot*q1dot)*sin(q2+q3)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q2+q3)*(1.3E1/5.0E2)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q3-8.960553845713439E-1)*6.5E-3+q1dot*q2dot*cos(q3)*(1.3E1/2.5E2)+q1dot*thetadot*cos(q3)*(1.3E1/2.5E2)+q2dot*thetadot*cos(q3)*(1.3E1/2.5E2)+q1dot*q2dot*sin(q3)*(1.3E1/2.5E2)+q1dot*thetadot*sin(q3)*(1.3E1/2.5E2)+q2dot*thetadot*sin(q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*(thetadot*thetadot)*sin(q2+q3-8.960553845713439E-1)*6.5E-3+q1dot*thetadot*cos(q2+q3)*(1.3E1/2.5E2)+q1dot*thetadot*sin(q2+q3)*(1.3E1/2.5E2)+sqrt(4.1E1)*(q1dot*q1dot)*sin(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*(q2dot*q2dot)*sin(q3-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*q1dot*q2dot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q1dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q2dot*thetadot*sin(q3-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q1dot*thetadot*sin(q2+q3-8.960553845713439E-1)*(1.3E1/1.0E3);
 	T(6,0) = sin(q4+q5+theta)*8.9271+sin(q4+theta)*1.91295E1-(q6dot*q6dot)*cos(q6)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*7.848E-1-(q5dot*q5dot)*sin(q5)*2.9575E-1-(q6dot*q6dot)*sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*1.962E-1-(q5dot*q5dot)*cos(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*cos(q5+q6)*(1.3E1/5.0E2)-(q5dot*q5dot)*sin(q5+q6)*(1.3E1/5.0E2)-(q6dot*q6dot)*sin(q5+q6)*(1.3E1/5.0E2)-q4dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q6)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5)*5.915E-1-q4dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5)*5.915E-1-q6dot*thetadot*sin(q6)*(1.3E1/2.5E2)-sqrt(4.1E1)*(q5dot*q5dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*(q6dot*q6dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3-q4dot*q5dot*cos(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q5+q6)*(1.3E1/2.5E2)-q5dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)-q4dot*q5dot*sin(q5+q6)*(1.3E1/2.5E2)-q4dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q5+q6)*(1.3E1/2.5E2)-q5dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)-q6dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)-sqrt(4.1E1)*(q6dot*q6dot)*sin(q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q4dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q5dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q4dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3);
 	T(7,0) = sin(q4+q5+theta)*8.9271-(q6dot*q6dot)*cos(q6)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*7.848E-1+(q4dot*q4dot)*sin(q5)*2.9575E-1-(q6dot*q6dot)*sin(q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q5)*2.9575E-1+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*1.962E-1+(q4dot*q4dot)*cos(q5+q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*cos(q5+q6)*(1.3E1/5.0E2)+(q4dot*q4dot)*sin(q5+q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q5+q6)*(1.3E1/5.0E2)-q4dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q5dot*q6dot*cos(q6)*(1.3E1/2.5E2)-q6dot*thetadot*cos(q6)*(1.3E1/2.5E2)-q4dot*q6dot*sin(q6)*(1.3E1/2.5E2)-q5dot*q6dot*sin(q6)*(1.3E1/2.5E2)+q4dot*thetadot*sin(q5)*5.915E-1-q6dot*thetadot*sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*(q4dot*q4dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*(thetadot*thetadot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3+q4dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)+q4dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)-sqrt(4.1E1)*(q6dot*q6dot)*sin(q6-8.960553845713439E-1)*6.5E-3-sqrt(4.1E1)*q4dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q5dot*q6dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)-sqrt(4.1E1)*q6dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q4dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3);
 	T(8,0) = (q4dot*q4dot)*cos(q6)*(1.3E1/5.0E2)+(q5dot*q5dot)*cos(q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*cos(q6)*(1.3E1/5.0E2)+sqrt(2.0)*sin(q4+q5+q6+theta+3.141592653589793*(1.0/4.0))*7.848E-1+(q4dot*q4dot)*sin(q6)*(1.3E1/5.0E2)+(q5dot*q5dot)*sin(q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*sin(q4+q5+q6+theta-8.960553845713439E-1)*1.962E-1+(q4dot*q4dot)*cos(q5+q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*cos(q5+q6)*(1.3E1/5.0E2)+(q4dot*q4dot)*sin(q5+q6)*(1.3E1/5.0E2)+(thetadot*thetadot)*sin(q5+q6)*(1.3E1/5.0E2)+sqrt(4.1E1)*(thetadot*thetadot)*sin(q6-8.960553845713439E-1)*6.5E-3+q4dot*q5dot*cos(q6)*(1.3E1/2.5E2)+q4dot*thetadot*cos(q6)*(1.3E1/2.5E2)+q5dot*thetadot*cos(q6)*(1.3E1/2.5E2)+q4dot*q5dot*sin(q6)*(1.3E1/2.5E2)+q4dot*thetadot*sin(q6)*(1.3E1/2.5E2)+q5dot*thetadot*sin(q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*(q4dot*q4dot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*(thetadot*thetadot)*sin(q5+q6-8.960553845713439E-1)*6.5E-3+q4dot*thetadot*cos(q5+q6)*(1.3E1/2.5E2)+q4dot*thetadot*sin(q5+q6)*(1.3E1/2.5E2)+sqrt(4.1E1)*(q4dot*q4dot)*sin(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*(q5dot*q5dot)*sin(q6-8.960553845713439E-1)*6.5E-3+sqrt(4.1E1)*q4dot*q5dot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q4dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q5dot*thetadot*sin(q6-8.960553845713439E-1)*(1.3E1/1.0E3)+sqrt(4.1E1)*q4dot*thetadot*sin(q5+q6-8.960553845713439E-1)*(1.3E1/1.0E3);
-	T(9,0) = sin(q7+q8+theta)*7.725375+sin(q7+theta)*1.1158875E1-(q8dot*q8dot)*sin(q8)*(6.3E1/3.2E2)-(thetadot*thetadot)*sin(q7)*6.25625E-1-(thetadot*thetadot)*sin(q7+q8)*4.33125E-1-q7dot*q8dot*sin(q8)*(6.3E1/1.6E2)-q8dot*thetadot*sin(q8)*(6.3E1/1.6E2);
-	T(10,0) = sin(q7+q8+theta)*7.725375+(q7dot*q7dot)*sin(q8)*(6.3E1/3.2E2)+(thetadot*thetadot)*sin(q8)*(6.3E1/3.2E2)-(thetadot*thetadot)*sin(q7+q8)*4.33125E-1+q7dot*thetadot*sin(q8)*(6.3E1/1.6E2);
-	T(11,0) = sin(q9+q10+theta)*7.725375+sin(q9+theta)*1.1158875E1-(q10dot*q10dot)*sin(q10)*(6.3E1/3.2E2)-(thetadot*thetadot)*sin(q9)*6.25625E-1-(thetadot*thetadot)*sin(q9+q10)*4.33125E-1-q10dot*q9dot*sin(q10)*(6.3E1/1.6E2)-q10dot*thetadot*sin(q10)*(6.3E1/1.6E2);
-	T(12,0) = sin(q9+q10+theta)*7.725375+(q9dot*q9dot)*sin(q10)*(6.3E1/3.2E2)+(thetadot*thetadot)*sin(q10)*(6.3E1/3.2E2)-(thetadot*thetadot)*sin(q9+q10)*4.33125E-1+q9dot*thetadot*sin(q10)*(6.3E1/1.6E2);
+	T(9,0) = sin(q7+q8+theta)*6.0699375+sin(q7+theta)*1.1649375E1-(q8dot*q8dot)*sin(q8)*(9.9E1/6.4E2)-(thetadot*thetadot)*sin(q7)*(2.09E2/3.2E2)-(thetadot*thetadot)*sin(q7+q8)*3.403125E-1-q7dot*q8dot*sin(q8)*(9.9E1/3.2E2)-q8dot*thetadot*sin(q8)*(9.9E1/3.2E2);
+	T(10,0) = sin(q7+q8+theta)*6.0699375+(q7dot*q7dot)*sin(q8)*(9.9E1/6.4E2)+(thetadot*thetadot)*sin(q8)*(9.9E1/6.4E2)-(thetadot*thetadot)*sin(q7+q8)*3.403125E-1+q7dot*thetadot*sin(q8)*(9.9E1/3.2E2);
+	T(11,0) = sin(q9+q10+theta)*6.0699375+sin(q9+theta)*1.1649375E1-(q10dot*q10dot)*sin(q10)*(9.9E1/6.4E2)-(thetadot*thetadot)*sin(q9)*(2.09E2/3.2E2)-(thetadot*thetadot)*sin(q9+q10)*3.403125E-1-q10dot*q9dot*sin(q10)*(9.9E1/3.2E2)-q10dot*thetadot*sin(q10)*(9.9E1/3.2E2);
+	T(12,0) = sin(q9+q10+theta)*6.0699375+(q9dot*q9dot)*sin(q10)*(9.9E1/6.4E2)+(thetadot*thetadot)*sin(q10)*(9.9E1/6.4E2)-(thetadot*thetadot)*sin(q9+q10)*3.403125E-1+q9dot*thetadot*sin(q10)*(9.9E1/3.2E2);
+
 	return T;
 }
 dlib::matrix<double> Jac_Full_fn(const Robot_StateNDot &Robot_StateNDot_i)
@@ -1163,7 +1148,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	dlib::matrix<double> Dynamics_LHS, Dynamics_RHS;
 	Robot_StateNDot Robot_StateNDot_Front, Robot_StateNDot_Mid, Robot_StateNDot_Back;
 	for (int i = 0; i < Grids-1; i++)
-	{	// Get the robot state, ctrl, and contact force at the front and end of each segment
+	{
+		// Get the robot state, ctrl, and contact force at the front and end of each segment
 		Robostate_Dlib_Front = dlib::colm(StateNDot_Traj, i);						Robostate_Dlib_Back = dlib::colm(StateNDot_Traj, i+1);
 		Ctrl_Front = dlib::colm(Ctrl_Traj,i);										Ctrl_Back = dlib::colm(Ctrl_Traj,i+1);
 		Contact_Force_Front = dlib::colm(Contact_Force_Traj,i);						Contact_Force_Back = dlib::colm(Contact_Force_Traj,i+1);
@@ -1238,9 +1224,17 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 			Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
 			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 
-			Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-
+			if((Opt_Type_Flag == 1)&&(i == Grids-1))
+			{
+				// In this case, the velocity constraint at the end frame does not have to satisfied
+				// Because an impact mapping will exist to shape the post-impact state
+				double Impact_Mapping_Val = 1;
+			}
+			else
+			{
+				Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+				ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+			}
 			// 3.2. Inactive constraints have to be strictly away from the obstacle
 			dlib::matrix<double> ones_vector, temp_matrix;
 			ones_vector = ONES_VECTOR_fn(6);
@@ -1263,18 +1257,30 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	}
 
 	// 5. Contact force feasibility constraints
-	for (int i = 0; i < Grids; i++) {
+	std::vector<double> Normal_Force_Front_vec(4), Tange_Force_Front_vec(4);
+	std::vector<double> Normal_Force_Back_vec(4), Tange_Force_Back_vec(4);
+	for (int i = 0; i < Grids-1; i++) {
 		// 5. Contact force feasibility constraints: 1. Normal force should be positive and
 		//											 2. the friction cone constraint has to be satisfied
 		//											 3. the horizontal force has to lie on the same side to avoid oscilation
-		std::vector<double> Normal_Force_vec(4), Tange_Force_vec(4);
-		Contact_Force_Proj(StateNDot_Traj, Contact_Force_Traj, Normal_Force_vec, Tange_Force_vec, i);
-		for (int k = 0; k < 4; k++) {
-			ObjNConstraint_Val.push_back(Normal_Force_vec[k] * Normal_Force_vec[k] * mu * mu - Tange_Force_vec[k] * Tange_Force_vec[k]);
+		Contact_Force_Proj(StateNDot_Traj, Contact_Force_Traj, Normal_Force_Front_vec, Tange_Force_Front_vec, i);
+		Contact_Force_Proj(StateNDot_Traj, Contact_Force_Traj, Normal_Force_Back_vec, Tange_Force_Back_vec, i+1);
+		for (int k = 0; k < 4; k++)
+		{
+			ObjNConstraint_Val.push_back(Normal_Force_Front_vec[k] * Normal_Force_Front_vec[k] * mu * mu - Tange_Force_Front_vec[k] * Tange_Force_Front_vec[k]);
 			ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(Normal_Force_vec[k]);
+			ObjNConstraint_Val.push_back(Normal_Force_Front_vec[k]);
+			ObjNConstraint_Type.push_back(1);
+			ObjNConstraint_Val.push_back(Tange_Force_Front_vec[k] * Tange_Force_Back_vec[k]);
 			ObjNConstraint_Type.push_back(1);
 		}
+	}
+	for (int k = 0; k < 4; k++)
+	{
+		ObjNConstraint_Val.push_back(Normal_Force_Back_vec[k] * Normal_Force_Back_vec[k] * mu * mu - Tange_Force_Back_vec[k] * Tange_Force_Back_vec[k]);
+		ObjNConstraint_Type.push_back(1);
+		ObjNConstraint_Val.push_back(Normal_Force_Back_vec[k]);
+		ObjNConstraint_Type.push_back(1);
 	}
 
 	// 6. Contact maintenance constraint: the previous unchanged active constraint have to be satisfied
@@ -1296,23 +1302,86 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Matrix_result = Maint_Matrix * Matrix_Minus_result;
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 	}
+	if(Opt_Type_Flag == 0)
+	{	dlib::matrix<double> Robostate_Dlib_j = dlib::colm(StateNDot_Traj, Grids-1);
+		Robot_StateNDot Robot_StateNDot_j = DlibRobotstate2StateNDot(Robostate_Dlib_j);
+		double KE_j = Kinetic_Energy_fn(Robot_StateNDot_j);
+		// ObjNConstraint_Val[0] = KE_j;
+		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag);
+
+		// One more constraint to be added is the acceleration to be trivial value
+		dlib::matrix<double> End_State_Traj = dlib::colm(StateNDot_Traj,Grids-1);			Robot_StateNDot End_StateNDot = DlibRobotstate2StateNDot(End_State_Traj);
+		dlib::matrix<double> End_Ctrl_Traj = dlib::colm(Ctrl_Traj, Grids-1);				dlib::matrix<double> End_Contact_Force_Traj = dlib::colm(Contact_Force_Traj, Grids-1);
+
+		dlib::matrix<double> D_q_End, B_q_End, C_q_qdot_End, Jac_Full_End, Ones_End_Dlib;
+		Dynamics_Matrices(End_StateNDot, D_q_End, B_q_End, C_q_qdot_End, Jac_Full_End);
+
+		dlib::matrix<double> Trivial_Acc_Matrix, Jac_Full_Trans_End;						Jac_Full_Trans_End = dlib::trans(Jac_Full_End);
+		Trivial_Acc_Matrix = Jac_Full_Trans_End * End_Contact_Force_Traj + B_q_End * End_Ctrl_Traj - C_q_qdot_End;
+		ObjNConstraint_ValNType_Update(Trivial_Acc_Matrix, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+		ObjNConstraint_Val.push_back(KE_ref - KE_j);
+		ObjNConstraint_Type.push_back(1);
+	}
+	else
+	{
+		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag);
+	}
+}
+double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag)
+{
 	// 7. Objective function value: the first value is fixed
-	double KE_i;					std::vector<double> KE_tot;
+	double KE_i;					double KE_tot = 0.0;
+	double Impulse_Mag = 0.0;		double Obj_val = 0.0;
 	for (int i = 0; i < Grids; i++) {
 		// 7. Objective function value: the first value is fixed
-		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
-		Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
+		dlib::matrix<double> Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
+		Robot_StateNDot Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
 		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
-		KE_tot.push_back(KE_i);
+		KE_tot = KE_tot + KE_i;
 	}
-	// for (int i = 0; i < KE_tot.size()-1; i++)
-	// {
-	// 	ObjNConstraint_Val.push_back(KE_tot[0] * KE_tot[0] - KE_tot[i+1] * KE_tot[i+1]);
-	// 	ObjNConstraint_Type.push_back(1);
-	// }
-	ObjNConstraint_Val[0] = KE_Variation_fn(KE_tot, T);
-	// ObjNConstraint_Val.push_back(KE_ref - KE_i);
-	// ObjNConstraint_Type.push_back(1);
+	if(Opt_Type_Flag == 1)
+	{
+		// In this case, there is impact mapping involved
+		Robot_StateNDot Robot_StateNDot_End_Grid;
+		Robot_StateNDot_End_Grid = Impact_Mapping_fn(StateNDot_Traj, Impulse_Mag);
+	}
+	Obj_val = KE_tot + 10 * Impulse_Mag;
+	return Obj_val;
+}
+
+Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &Impulse_Mag)
+{
+	dlib::matrix<double> End_State_Traj = dlib::colm(StateNDot_Traj,Grids-1);
+	Robot_StateNDot End_StateNDot = DlibRobotstate2StateNDot(End_State_Traj);
+	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full;
+	Dynamics_Matrices(End_StateNDot, D_q, B_q, C_q_qdot, Jac_Full);
+	dlib::matrix<double> Jac_Full_Trans = dlib::trans(Jac_Full);
+	dlib::matrix<double> D_q_Inv = dlib::inv(D_q);
+	dlib::matrix<double> Pre_Impact_Vel, Post_Impact_Vel;
+	Pre_Impact_Vel = dlib::zeros_matrix<double>(13,1);
+	Post_Impact_Vel = Pre_Impact_Vel;
+	for (int i = 0; i < 13; i++)
+	{
+		Pre_Impact_Vel(i) = End_State_Traj(i+13);
+	}
+	dlib::matrix<double> Impulse_Lamda;
+	Impulse_Lamda = -dlib::pinv(Jac_Full * D_q_Inv * Jac_Full_Trans) * Jac_Full * Pre_Impact_Vel;
+	Post_Impact_Vel = D_q_Inv * Jac_Full_Trans * Impulse_Lamda + Pre_Impact_Vel;
+	std::vector<double> Robotstate_End(26);
+	for (int i = 0; i < 13; i++) {
+		Robotstate_End[i] = End_State_Traj(i);
+		Robotstate_End[i+13] = Post_Impact_Vel(i);
+	}
+	Robot_StateNDot Robot_StateNDot_End;
+	Robot_StateNDot_End = StateVec2StateNDot(Robotstate_End);
+
+
+	Impulse_Mag = 0.0;
+	for (int i = 0; i < Impulse_Lamda.nr(); i++) {
+		Impulse_Mag = Impulse_Mag + Impulse_Lamda(i) * Impulse_Lamda(i);
+	}
+	return Robot_StateNDot_End;
 }
 void Contact_Force_Proj(dlib::matrix<double> &StateNDot_Traj, dlib::matrix<double> &Contact_Force_Traj, std::vector<double> &Normal_Force_vec, std::vector<double> &Tange_Force_vec, int Grid_Index)
 {
@@ -1418,6 +1487,8 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 	Dynamics_Matrices(Robot_StateNDot_Back, D_q_Back, B_q_Back, C_q_qdot_Back, Jac_Full_Back);
 	Jac_Full_Trans_Back = dlib::trans(Jac_Full_Back);
 
+	// cout<<D_q_Front<<endl;				cout<<B_q_Front<<endl;				cout<<C_q_qdot_Front<<endl;			cout<<Jac_Full_Front<<endl;
+
 	Acc_Front = dlib::inv(D_q_Front) * (Jac_Full_Trans_Front * Contact_Force_Front + B_q_Front * Ctrl_Front - C_q_qdot_Front);
 	Acc_Back =  dlib::inv(D_q_Back) *  (Jac_Full_Trans_Back *  Contact_Force_Back +  B_q_Back *  Ctrl_Back -  C_q_qdot_Back);
 
@@ -1459,7 +1530,6 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 		ObjNConstraint_Val.push_back(Acc_Back(i+3));
 		ObjNConstraint_Type.push_back(2);
 	}
-	// ObjNConstraint_ValNType_Update(Robotstate_Mid_Acc, ObjNConstraint_Val, ObjNConstraint_Type, 2);
 }
 void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum)
 {
@@ -1495,7 +1565,6 @@ std::vector<double> Opt_Soln_Load()
 	}
 	return Opt_Seed;
 }
-
 double KE_Variation_fn(std::vector<double> &KE_tot, double T)
 {	double KE_Variation = 0.0;
 	for (int i = 0; i < KE_tot.size(); i++)
@@ -1561,7 +1630,7 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 	// However, the constraint will be set to use the direct collocation method
 	int Opt_Flag = 0;
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
-	double Time_Interval = 0.03;		int Total_Num = 15;
+	double Time_Interval = 0.05;		int Total_Num = 15;
 	std::vector<double> Time_Queue = Time_Seed_Queue_fn(Time_Interval, Total_Num);
 	std::vector<double> Opt_Soln, Opt_Soln_Tot;
 	int Feasible_Num = 0;
@@ -1570,11 +1639,12 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 		std::vector<double> Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
 		Time_Seed = Time_Queue[j];
 		cout<<"--------------------------------- Time Guess Iteration: "<<j<<" --------------------------------- "<<endl;
+		cout<<"The Guess for the time duaration is :" <<Time_Seed<<" s"<<endl;
 		Opt_Soln = Nodes_Optimization_Inner_Opt(Node_i, Node_i_child);
 		Nodes_Optimization_ObjNConstraint(Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type);
 		double ObjNConstraint_Violation_Val = ObjNConstraint_Violation(ObjNConstraint_Val, ObjNConstraint_Type);
 		cout<<endl;
-		cout<<"							ObjNConstraint_Violation_Val: "<<ObjNConstraint_Violation_Val<<endl;
+		cout<<"-----------------------------ObjNConstraint_Violation_Val: "<<ObjNConstraint_Violation_Val<<"-------------------------------"<<endl;
 		if(ObjNConstraint_Violation_Val<0.1)
 		{
 			Opt_Flag = 1;
@@ -1590,11 +1660,11 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 			ofstream output_file;
 			std::string pre_filename = "From_Node_";
 			std::string Node_i_name = to_string(Node_i.Node_Index);
-			std::string mid_filename = "_Expansion_At_";
-			std::string Node_i_Child_name = dt;
-			std::string post_filename = "_.txt";
+			std::string mid_filename = "_Expansion_At_Feasible_";
+			std::string Node_i_Child_name = to_string(Feasible_Num);
+			std::string post_filename = ".txt";
 
-			std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + post_filename;
+			std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + dt + post_filename;
 			output_file.open(filename, std::ofstream::out);
 			for (int i = 0; i < Opt_Soln.size(); i++)
 			{
@@ -1624,8 +1694,6 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 			output_file<<Opt_Soln_Tot[i]<<endl;
 		}
 		output_file.close();
-
-
 		int Start_Ind;
 		std::vector<double> State_Violation;
 		for (int i = 0; i < Feasible_Num; i++)
@@ -1700,18 +1768,18 @@ void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<d
 std::vector<double> Time_Seed_Queue_fn(double Time_Interval, int Total_Num)
 {
 	// This function is used to generate the Time_Seed_Queue
-	double Time_Center = 0.5;
+	double Time_Center = 0.05;
 	// int One_Side_Num = (Total_Num - 1)/2;
 	// std::vector<double> Time_Seed_Queue;
 	// Time_Seed_Queue.push_back(Time_Center);
 	// for (int i = 1; i < One_Side_Num; i++) {
-	// 	Time_Seed_Queue.push_back(Time_Center + 0.05 * i);
-	// 	Time_Seed_Queue.push_back(Time_Center - 0.05 * i);
+	// 	Time_Seed_Queue.push_back(Time_Center + Time_Interval * i);
+	// 	Time_Seed_Queue.push_back(Time_Center - Time_Interval * i);
 	// }
 	std::vector<double> Time_Seed_Queue;
 	Time_Seed_Queue.push_back(Time_Center);
 	for (int i = 0; i < Total_Num; i++) {
-		Time_Seed_Queue.push_back(Time_Center - (i+1) * Time_Interval);
+		Time_Seed_Queue.push_back(Time_Center + (i+1) * Time_Interval);
 	}
 	return Time_Seed_Queue;
 }
@@ -1741,7 +1809,7 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	integer neF = ObjNConstraint_Val.size();
 	integer lenA  =  n * neF;
 
-	Structure_P.Opt_Val_No = Opt_Seed.size();		Structure_P.ObjNConst_No = ObjNConstraint_Val.size();
+	Structure_P.Opt_Val_No = Opt_Seed.size();			Structure_P.ObjNConst_No = ObjNConstraint_Val.size();
 
 	integer *iAfun = new integer[lenA];              	integer *jAvar = new integer[lenA];					doublereal *A  = new doublereal[lenA];
 	integer lenG   = lenA;								integer *iGfun = new integer[lenG];					integer *jGvar = new integer[lenG];
