@@ -52,7 +52,7 @@ int main( int argc, char **argv)
 		*/
 		std::vector<double> Opt_Soln;
 		Node_i = Pop_Node();
-		Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
+		// Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
 		if(Opt_Flag==1)
 		{
 			// Optimal solution has been found

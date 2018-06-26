@@ -169,5 +169,8 @@ std::vector<double> Default_Init_Opt(std::vector<double> &Robot_State_Init);
 void End_Effector_Upper_Vel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double> &End_Effector_Upper_Normal_Speed);
 
 void Contact_Force_Proj(dlib::matrix<double> &StateNDot_Traj, dlib::matrix<double> &Contact_Force_Traj, std::vector<double> &Normal_Force_vec, std::vector<double> &Tange_Force_vec, int Grid_Index);
-double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag);
-Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &Impulse_Mag);
+double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag, std::vector<double> &sigma_i_child);
+Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &Impulse_Mag, std::vector<double> &sigma_i_child);
+
+std::vector<double> Full_Row_Rank_Index(std::vector<double> &sigma_i_child);
+void Integration_Consistent(dlib::matrix<double> &Robostate_Dlib_Front, dlib::matrix<double> &Robostate_Dlib_Back, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);

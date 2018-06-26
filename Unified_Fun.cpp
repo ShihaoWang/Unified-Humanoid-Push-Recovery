@@ -40,7 +40,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.025;			int Grids = 10;			double mu = 0.35;
+double mini = 0.025;			int Grids = 12;			double mu = 0.35;
 int Variable_Num = 48 * Grids + 1;
 double Time_Seed; 									// This value will be adaptively changed to formulate an optimal solution
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
@@ -1154,6 +1154,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Ctrl_Front = dlib::colm(Ctrl_Traj,i);										Ctrl_Back = dlib::colm(Ctrl_Traj,i+1);
 		Contact_Force_Front = dlib::colm(Contact_Force_Traj,i);						Contact_Force_Back = dlib::colm(Contact_Force_Traj,i+1);
 
+		// Integration_Consistent(Robostate_Dlib_Front, Robostate_Dlib_Back, ObjNConstraint_Val, ObjNConstraint_Type);
+
 		// Compute the Dynamics matrices at Front and Back
 		Robot_StateNDot_Front = DlibRobotstate2StateNDot(Robostate_Dlib_Front);		Dynamics_Matrices(Robot_StateNDot_Front, D_q_Front, B_q_Front, C_q_qdot_Front, Jac_Full_Front);
 		Robot_StateNDot_Back = DlibRobotstate2StateNDot(Robostate_Dlib_Back);		Dynamics_Matrices(Robot_StateNDot_Back, D_q_Back, B_q_Back, C_q_qdot_Back, Jac_Full_Back);
@@ -1229,6 +1231,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 				// In this case, the velocity constraint at the end frame does not have to satisfied
 				// Because an impact mapping will exist to shape the post-impact state
 				double Impact_Mapping_Val = 1;
+				// cout<<"Impact Mapping!"<<endl;
 			}
 			else
 			{
@@ -1307,7 +1310,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Robot_StateNDot Robot_StateNDot_j = DlibRobotstate2StateNDot(Robostate_Dlib_j);
 		double KE_j = Kinetic_Energy_fn(Robot_StateNDot_j);
 		// ObjNConstraint_Val[0] = KE_j;
-		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag);
+		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
 
 		// One more constraint to be added is the acceleration to be trivial value
 		dlib::matrix<double> End_State_Traj = dlib::colm(StateNDot_Traj,Grids-1);			Robot_StateNDot End_StateNDot = DlibRobotstate2StateNDot(End_State_Traj);
@@ -1325,38 +1328,71 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	}
 	else
 	{
-		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag);
+		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
 	}
 }
-double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag)
+void Integration_Consistent(dlib::matrix<double> &Robostate_Dlib_Front, dlib::matrix<double> &Robostate_Dlib_Back, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
+{
+	// This function is used to gurantee the change of the pos is consistent with the vel
+	for (int i = 0; i < 13; i++) {
+		if(abs(Robostate_Dlib_Front(i+13))>mini)
+		{
+			double Integration_Consistent_val = (Robostate_Dlib_Back(i) - Robostate_Dlib_Front(i)) * Robostate_Dlib_Front(i+13);
+			ObjNConstraint_Val.push_back(Integration_Consistent_val);
+			ObjNConstraint_Type.push_back(1);
+		}
+	}
+}
+double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag, std::vector<double> &sigma_i_child)
 {
 	// 7. Objective function value: the first value is fixed
 	double KE_i;					double KE_tot = 0.0;
 	double Impulse_Mag = 0.0;		double Obj_val = 0.0;
-	for (int i = 0; i < Grids; i++) {
-		// 7. Objective function value: the first value is fixed
-		dlib::matrix<double> Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
-		Robot_StateNDot Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
-		KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
-		KE_tot = KE_tot + KE_i;
+	dlib::matrix<double> End_Robotstate;
+	End_Robotstate = dlib::colm(StateNDot_Traj, Grids-1);
+	double Obj_Val = 0.0;
+	for (int i = 0; i < 13; i++) {
+		Obj_Val = Obj_Val + End_Robotstate(i+13) * End_Robotstate(i+13);
 	}
-	if(Opt_Type_Flag == 1)
-	{
-		// In this case, there is impact mapping involved
-		Robot_StateNDot Robot_StateNDot_End_Grid;
-		Robot_StateNDot_End_Grid = Impact_Mapping_fn(StateNDot_Traj, Impulse_Mag);
-	}
-	Obj_val = KE_tot + 10 * Impulse_Mag;
-	return Obj_val;
+
+	// for (int i = 0; i < Grids; i++) {
+	// 	// 7. Objective function value: the first value is fixed
+	// 	dlib::matrix<double> Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
+	// 	Robot_StateNDot Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
+	// 	KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
+	// 	KE_tot = KE_tot + KE_i;
+	// }
+	// if(Opt_Type_Flag == 1)
+	// {
+	// 	// In this case, there is impact mapping involved
+	// 	Robot_StateNDot Robot_StateNDot_End_Grid;
+	// 	Robot_StateNDot_End_Grid = Impact_Mapping_fn(StateNDot_Traj, Impulse_Mag, sigma_i_child);
+	// }
+
+	// Obj_val = KE_tot + 10 * Impulse_Mag;
+	// Obj_val = KE_tot;
+
+	return Obj_Val;
 }
 
-Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &Impulse_Mag)
+Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &Impulse_Mag, std::vector<double> &sigma_i_child)
 {
 	dlib::matrix<double> End_State_Traj = dlib::colm(StateNDot_Traj,Grids-1);
 	Robot_StateNDot End_StateNDot = DlibRobotstate2StateNDot(End_State_Traj);
+	std::vector<double> End_Statevec = StateNDot2StateVec(End_StateNDot);
 	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full;
 	Dynamics_Matrices(End_StateNDot, D_q, B_q, C_q_qdot, Jac_Full);
-	dlib::matrix<double> Jac_Full_Trans = dlib::trans(Jac_Full);
+
+	// Here sigma_i_child is used to select the full row rank Jacobian matrix
+	std::vector<double> Jac_Act_Index = Full_Row_Rank_Index(sigma_i_child);
+	const int Jac_Row_Number = Jac_Act_Index.size();
+	dlib::matrix<double> Jac_Act;					Jac_Act = dlib::zeros_matrix<double>(Jac_Row_Number,13);
+	for (int j = 0; j < Jac_Row_Number; j++) {
+		for (int k = 0; k < 13; k++) {
+			Jac_Act(j,k) = Jac_Full(Jac_Act_Index[j],k);
+		}
+	}
+	dlib::matrix<double> Jac_Act_Trans = dlib::trans(Jac_Act);
 	dlib::matrix<double> D_q_Inv = dlib::inv(D_q);
 	dlib::matrix<double> Pre_Impact_Vel, Post_Impact_Vel;
 	Pre_Impact_Vel = dlib::zeros_matrix<double>(13,1);
@@ -1366,8 +1402,11 @@ Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &
 		Pre_Impact_Vel(i) = End_State_Traj(i+13);
 	}
 	dlib::matrix<double> Impulse_Lamda;
-	Impulse_Lamda = -dlib::pinv(Jac_Full * D_q_Inv * Jac_Full_Trans) * Jac_Full * Pre_Impact_Vel;
-	Post_Impact_Vel = D_q_Inv * Jac_Full_Trans * Impulse_Lamda + Pre_Impact_Vel;
+	// cout<<D_q<<endl;			cout<<B_q<<endl;			cout<<C_q_qdot<<endl;			cout<<Jac_Act<<endl;
+	Impulse_Lamda = -dlib::pinv(Jac_Act * D_q_Inv * Jac_Act_Trans) * Jac_Act * Pre_Impact_Vel;
+	// cout<<Impulse_Lamda<<endl;
+	Post_Impact_Vel = D_q_Inv * Jac_Act_Trans * Impulse_Lamda + Pre_Impact_Vel;
+	// cout<<Post_Impact_Vel<<endl;
 	std::vector<double> Robotstate_End(26);
 	for (int i = 0; i < 13; i++) {
 		Robotstate_End[i] = End_State_Traj(i);
@@ -1382,6 +1421,33 @@ Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &
 		Impulse_Mag = Impulse_Mag + Impulse_Lamda(i) * Impulse_Lamda(i);
 	}
 	return Robot_StateNDot_End;
+}
+std::vector<double> Full_Row_Rank_Index(std::vector<double> &sigma_i_child)
+{
+	std::vector<double> Row_Rank_Index_Vec;
+	if(sigma_i_child[0]==1)
+	{
+		Row_Rank_Index_Vec.push_back(0);
+		Row_Rank_Index_Vec.push_back(1);
+		Row_Rank_Index_Vec.push_back(3);
+	}
+	if(sigma_i_child[1]==1)
+	{
+		Row_Rank_Index_Vec.push_back(4);
+		Row_Rank_Index_Vec.push_back(5);
+		Row_Rank_Index_Vec.push_back(7);
+	}
+	if(sigma_i_child[2]==1)
+	{
+		Row_Rank_Index_Vec.push_back(8);
+		Row_Rank_Index_Vec.push_back(9);
+	}
+	if(sigma_i_child[3]==1)
+	{
+		Row_Rank_Index_Vec.push_back(10);
+		Row_Rank_Index_Vec.push_back(11);
+	}
+	return Row_Rank_Index_Vec;
 }
 void Contact_Force_Proj(dlib::matrix<double> &StateNDot_Traj, dlib::matrix<double> &Contact_Force_Traj, std::vector<double> &Normal_Force_vec, std::vector<double> &Tange_Force_vec, int Grid_Index)
 {
@@ -1512,9 +1578,18 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 		xddot_init = Acc_Front(i);						xddot_end = Acc_Back(i);
 		CubicSpline_Coeff = CubicSpline_Coeff_fn(T, xdot_init, xdot_end, xddot_init, xddot_end);
 
-		double Pos_Max_Change = 1/4 * CubicSpline_Coeff[0] + 1/3 * CubicSpline_Coeff[1] + 1/2 * CubicSpline_Coeff[2];
-		double Pos_VelInte_Offset = Pos_Max_Change * Pos_Max_Change - (Robotstate_Vec_Back[i] - Robotstate_Vec_Front[i]) * (Robotstate_Vec_Back[i] - Robotstate_Vec_Front[i]);
-		ObjNConstraint_Val.push_back(Pos_VelInte_Offset);
+		double xdot_max = max(xdot_init, xdot_end);
+		double xdot_min = min(xdot_init, xdot_end);
+
+		// double Pos_Max_Change = 1/4 * CubicSpline_Coeff[0] + 1/3 * CubicSpline_Coeff[1] + 1/2 * CubicSpline_Coeff[2];
+		double Pos_Real_Change = Robotstate_Vec_Back[i] - Robotstate_Vec_Front[i];
+		// double Pos_VelInte_Offset = Pos_Max_Change * Pos_Max_Change - Pos_Real_Change * Pos_Real_Change;
+		// double Pos_VelInte_Offset = (Pos_Max_Change - Pos_Real_Change) * (Pos_Max_Change - Pos_Real_Change);
+
+
+		ObjNConstraint_Val.push_back(xdot_max*T - Pos_Real_Change);
+		ObjNConstraint_Type.push_back(1);
+		ObjNConstraint_Val.push_back(Pos_Real_Change - xdot_min*T);
 		ObjNConstraint_Type.push_back(1);
 
 		Robotstate_Vec_Mid[i+13] = CubicSpline_Evaluation_fn(CubicSpline_Coeff, 0.5);
@@ -1630,7 +1705,7 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 	// However, the constraint will be set to use the direct collocation method
 	int Opt_Flag = 0;
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
-	double Time_Interval = 0.05;		int Total_Num = 15;
+	double Time_Interval = 0.025;		int Total_Num = 31;
 	std::vector<double> Time_Queue = Time_Seed_Queue_fn(Time_Interval, Total_Num);
 	std::vector<double> Opt_Soln, Opt_Soln_Tot;
 	int Feasible_Num = 0;
@@ -1768,19 +1843,19 @@ void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<d
 std::vector<double> Time_Seed_Queue_fn(double Time_Interval, int Total_Num)
 {
 	// This function is used to generate the Time_Seed_Queue
-	double Time_Center = 0.05;
-	// int One_Side_Num = (Total_Num - 1)/2;
-	// std::vector<double> Time_Seed_Queue;
-	// Time_Seed_Queue.push_back(Time_Center);
-	// for (int i = 1; i < One_Side_Num; i++) {
-	// 	Time_Seed_Queue.push_back(Time_Center + Time_Interval * i);
-	// 	Time_Seed_Queue.push_back(Time_Center - Time_Interval * i);
-	// }
+	double Time_Center = 0.5;
+	int One_Side_Num = (Total_Num - 1)/2;
 	std::vector<double> Time_Seed_Queue;
 	Time_Seed_Queue.push_back(Time_Center);
-	for (int i = 0; i < Total_Num; i++) {
-		Time_Seed_Queue.push_back(Time_Center + (i+1) * Time_Interval);
+	for (int i = 1; i < One_Side_Num; i++) {
+		Time_Seed_Queue.push_back(Time_Center + Time_Interval * i);
+		Time_Seed_Queue.push_back(Time_Center - Time_Interval * i);
 	}
+	// std::vector<double> Time_Seed_Queue;
+	// Time_Seed_Queue.push_back(Time_Center);
+	// for (int i = 0; i < Total_Num; i++) {
+	// 	Time_Seed_Queue.push_back(Time_Center + (i+1) * Time_Interval);
+	// }
 	return Time_Seed_Queue;
 }
 double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type)
