@@ -44,6 +44,7 @@ int main( int argc, char **argv)
 	Node_UpdateNCon(Root_Node, StateNDot_Init_Opt, sigma_init);			// Node_UpdateNCon can only be used when the state and sigma at a given node is known
 	Tree_Node Node_i;
 	int Opt_Flag = 0;
+	int Iteration = 0;
 	while(Frontier_Nodes.size()>0)
 	{
 		/**
@@ -52,7 +53,10 @@ int main( int argc, char **argv)
 		*/
 		std::vector<double> Opt_Soln;
 		Node_i = Pop_Node();
-		// Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
+		// if(Iteration>0)
+		// {
+			Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
+		// }
 		if(Opt_Flag==1)
 		{
 			// Optimal solution has been found
@@ -67,7 +71,6 @@ int main( int argc, char **argv)
 			for (int i = 0; i < Adjacent_Number; i++)
 			{
 				Tree_Node Node_i_child;
-
 				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,0));
 				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,1));
 				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,2));
@@ -76,16 +79,16 @@ int main( int argc, char **argv)
 				if(Nodes_Opt_Flag==1)
 				{
 					std::vector<double> Robot_StateNDot_vec_i;
-					Robot_StateNDot_vec_i = End_RobotNDot_Extract(Opt_Soln);
+					Robot_StateNDot_vec_i = End_RobotNDot_Extract(Opt_Soln, Node_i.sigma, Node_i_child.sigma);
 					Robot_StateNDot Robot_StateNDot_Child_i(Robot_StateNDot_vec_i);
 					Node_UpdateNCon(Node_i_child, Robot_StateNDot_Child_i, Node_i_child.sigma);
 					Node_i_child.Parent_Node = &Node_i;
 					Node_i.Children_Nodes.push_back(&Node_i_child);
 					Opt_Soln_Write2Txt(Node_i, Node_i_child, Opt_Soln);
-
 				}
 			}
 		}
+		Iteration = Iteration + 1;
 	}
 	return 0;
 }

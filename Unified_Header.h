@@ -153,12 +153,12 @@ double CubicSpline_1stOrder_Evaluation_fn(const std::vector<double> &CubicSpline
 void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Front, const Robot_StateNDot &Robot_StateNDot_Back, const dlib::matrix<double> &Ctrl_Front, const dlib::matrix<double> &Ctrl_Back, const dlib::matrix<double> &Contact_Force_Front, const dlib::matrix<double> &Contact_Force_Back, Robot_StateNDot &Robot_StateNDot_Mid, dlib::matrix<double> &Robotstate_Mid_Acc,std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj);
 double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type);
-std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child);
+std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Opt_Seed);
 
 std::vector<double> Time_Seed_Queue_fn(double Time_Interval, int Total_Num);
 
 dlib::matrix<double> Node_Expansion_fn(const Tree_Node &Node_i, int &Adjacent_Number);
-std::vector<double> End_RobotNDot_Extract(std::vector<double> &Opt_Soln);
+std::vector<double> End_RobotNDot_Extract(std::vector<double> &Opt_Soln, std::vector<double> &sigma, std::vector<double>&sigma_i_child);
 
 void Opt_Soln_Write2Txt(Tree_Node &Node_i,Tree_Node &Node_i_child, std::vector<double> &Opt_Soln);
 
@@ -168,9 +168,14 @@ std::vector<double> Default_Init_Opt(std::vector<double> &Robot_State_Init);
 
 void End_Effector_Upper_Vel(Robot_StateNDot &StateNDot_Init_i, dlib::matrix<double> &End_Effector_Upper_Normal_Speed);
 
-void Contact_Force_Proj(dlib::matrix<double> &StateNDot_Traj, dlib::matrix<double> &Contact_Force_Traj, std::vector<double> &Normal_Force_vec, std::vector<double> &Tange_Force_vec, int Grid_Index);
+void Contact_Force_Proj(dlib::matrix<double> &StateNDot_Traj, dlib::matrix<double> &Contact_Force_Traj, std::vector<double> &Normal_Force_vec, std::vector<double> &Tange_Force_vec, int Grid_Index, std::vector<double> &Full_Normal);
+
 double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag, std::vector<double> &sigma_i_child);
+
 Robot_StateNDot Impact_Mapping_fn(dlib::matrix<double> &StateNDot_Traj, double &Impulse_Mag, std::vector<double> &sigma_i_child);
 
 std::vector<double> Full_Row_Rank_Index(std::vector<double> &sigma_i_child);
 void Integration_Consistent(dlib::matrix<double> &Robostate_Dlib_Front, dlib::matrix<double> &Robostate_Dlib_Back, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
+
+double Kinetic_Energy_End_Frame(dlib::matrix<double> &StateNDot_Traj);
+double Velocity_Projection(std::vector<double> &Pos_A, std::vector<double> &Pos_B, std::vector<double> &Vel_B);
