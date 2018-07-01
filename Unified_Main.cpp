@@ -11,6 +11,7 @@
 
 using namespace std;
 Unified_Structure_P Structure_P;
+extern int Variable_Num;
 
 int main( int argc, char **argv)
 {
@@ -51,11 +52,11 @@ int main( int argc, char **argv)
 		* For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
 		* if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
 		*/
-		std::vector<double> Opt_Soln;
+		std::vector<double> Opt_Soln(Variable_Num);
 		Node_i = Pop_Node();
 		// if(Iteration>0)
 		// {
-			Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
+		Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
 		// }
 		if(Opt_Flag==1)
 		{

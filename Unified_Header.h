@@ -19,7 +19,7 @@ using namespace std;
 
 #include "snoptProblem.hh"
 #ifdef __cplusplus
-extern "C" {
+extern "C" { 
 #endif
     int Default_Init_Pr_( integer    *Status, integer *n,    doublereal x[],
         integer    *needF,  integer *neF,  doublereal F[],
@@ -153,7 +153,7 @@ double CubicSpline_1stOrder_Evaluation_fn(const std::vector<double> &CubicSpline
 void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Front, const Robot_StateNDot &Robot_StateNDot_Back, const dlib::matrix<double> &Ctrl_Front, const dlib::matrix<double> &Ctrl_Back, const dlib::matrix<double> &Contact_Force_Front, const dlib::matrix<double> &Contact_Force_Back, Robot_StateNDot &Robot_StateNDot_Mid, dlib::matrix<double> &Robotstate_Mid_Acc,std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj);
 double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, const std::vector<double> &ObjNConstraint_Type);
-std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Opt_Seed);
+std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child);
 
 std::vector<double> Time_Seed_Queue_fn(double Time_Interval, int Total_Num);
 

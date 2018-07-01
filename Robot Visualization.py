@@ -9,6 +9,7 @@ from klampt import WorldModel
 from klampt import vis
 from klampt.math import vectorops
 from klampt.model.trajectory import Trajectory
+import ipdb
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,6 +20,8 @@ Aux_Link_Ind = [1, 3, 5, 6, 7, 11, 12, 13, 17, 18, 19, 20, 21, 23, 24, 26, 27, 2
 Act_Link_Ind = [0, 2, 4, 8, 9, 10, 14, 15, 16, 22, 25, 29, 32]                                          # This is the active joints to be considered
 Ctrl_Link_Ind = Act_Link_Ind[3:]
 Tot_Link_No = len(Aux_Link_Ind) + len(Act_Link_Ind)
+Local_Extremeties = [0.1, 0, -0.1, -0.15 , 0, -0.1, 0.1, 0, -0.1, -0.15 , 0, -0.1, 0, 0, -0.22, 0, 0, -0.205]         # This 6 * 3 vector describes the local coordinate of the contact extremeties in their local coordinate
+End_Effector_Ind = [11, 11, 17, 17, 27, 34]                       # The link index of the end effectors
 
 class MyGLPlugin(vis.GLPluginInterface):
     def __init__(self, world):
@@ -107,7 +110,7 @@ def Dimension_Recovery(low_dim_obj):
 def main():
     #creates a world and loads all the items on the command line
     world = WorldModel()
-    res = world.readFile("/home/shihao/Multi-contat Push Recovery-Python/HRP2_Robot.xml")
+    res = world.readFile("./HRP2_Robot.xml")
     if not res:
         raise RuntimeError("Unable to load model")
     robot = world.robot(0)
@@ -118,31 +121,82 @@ def main():
     vis.add("world", world)
     vis.add("robot",world.robot(0))
     vis.show()
-    while vis.shown() and not plugin.quit:
+    # ipdb.set_trace()
+
+    Robotstate_Traj, Contact_Force_Traj = Traj_Loader()
+    h = 0.02
+    playspeed = 2.5
+    norm = 500
+    while vis.shown():
         # This is the main plot program
-        Traj_Loader()
+        for i in range(0, Robotstate_Traj.shape[1]):
+            vis.lock()
+            Robotstate_Traj_i = Robotstate_Traj[:,i]
+            Robotstate_Traj_Full_i = Dimension_Recovery(Robotstate_Traj_i)
+            # Now it is the plot of the contact force at the contact extremities
+            robot.setConfig(Robotstate_Traj_Full_i)
+            Contact_Force_Traj_i = Contact_Force_Traj[:,i]
+            left_ft, rght_ft, left_hd, rght_hd, left_ft_end, rght_ft_end, left_hd_end, rght_hd_end = Contact_Force_vec(robot, Contact_Force_Traj_i, norm)
+            vis.add("left foot force", Trajectory([0, 1], [left_ft, left_ft_end]))
+            vis.add("right foot force", Trajectory([0, 1], [rght_ft, rght_ft_end]))
+            vis.add("left hand force", Trajectory([0, 1], [left_hd, left_hd_end]))
+            vis.add("right hand force", Trajectory([0, 1], [rght_hd, rght_hd_end]))
+            # ipdb.set_trace()
+
+            vis.unlock()
+            time.sleep(h * playspeed)
+            # vis.hide('left_ft force')
+            # vis.hide('rght_ft force')
+            # vis.hide('left_hd force')
+            # vis.hide('rght_hd force')
+def Contact_Force_vec(robot, Contact_Force_Traj_i, norm):
+    length = 0.5
+    End_Effector_Pos = get_End_Effector_Pos(robot)          # 18 by 1
+    left_ft_x = 0.5 * End_Effector_Pos[0] + 0.5 * End_Effector_Pos[3]
+    left_ft_y = 0.5 * End_Effector_Pos[1] + 0.5 * End_Effector_Pos[4]
+    left_ft_z = 0.5 * End_Effector_Pos[2] + 0.5 * End_Effector_Pos[5]
+    rght_ft_x = 0.5 * End_Effector_Pos[6] + 0.5 * End_Effector_Pos[9]
+    rght_ft_y = 0.5 * End_Effector_Pos[7] + 0.5 * End_Effector_Pos[10]
+    rght_ft_z = 0.5 * End_Effector_Pos[8] + 0.5 * End_Effector_Pos[11]
+    left_hd_x = End_Effector_Pos[12]
+    left_hd_y = End_Effector_Pos[13]
+    left_hd_z = End_Effector_Pos[14]
+    rght_hd_x = End_Effector_Pos[15]
+    rght_hd_y = End_Effector_Pos[16]
+    rght_hd_z = End_Effector_Pos[17]
+
+    left_ft = [left_ft_x, left_ft_y, left_ft_z]
+    rght_ft = [rght_ft_x, rght_ft_y, rght_ft_z]
+    left_hd = [left_hd_x, left_hd_y, left_hd_z]
+    rght_hd = [rght_hd_x, rght_hd_y, rght_hd_z]
+
+    left_ft_x_off = Contact_Force_Traj_i[0]/norm * length
+    left_ft_z_off = Contact_Force_Traj_i[1]/norm * length
+    rght_ft_x_off = Contact_Force_Traj_i[2]/norm * length
+    rght_ft_z_off = Contact_Force_Traj_i[3]/norm * length
+    left_hd_x_off = Contact_Force_Traj_i[4]/norm * length
+    left_hd_z_off = Contact_Force_Traj_i[5]/norm * length
+    rght_hd_x_off = Contact_Force_Traj_i[6]/norm * length
+    rght_hd_z_off = Contact_Force_Traj_i[7]/norm * length
+
+    left_ft_end = [left_ft_x + left_ft_x_off, left_ft_y, left_ft_z + left_ft_z_off]
+    rght_ft_end = [rght_ft_x + rght_ft_x_off, rght_ft_y, rght_ft_z + rght_ft_z_off]
+    left_hd_end = [left_hd_x + left_hd_x_off, left_hd_y, left_hd_z + left_hd_z_off]
+    rght_hd_end = [rght_hd_x + rght_hd_x_off, rght_hd_y, rght_hd_z + rght_hd_z_off]
+
+    return left_ft, rght_ft, left_hd, rght_hd, left_ft_end, rght_ft_end, left_hd_end, rght_hd_end
 
 
-
-
-
-
-
-
-
-    # Kinetic_Energy = []  # This list is used to save the value of the kinetic energy
-    # T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj = Path_Loader()
-    # Time = np.linspace(0, T_tot, num=StateNDot_Traj.shape[1])
-    # for i in range(0, StateNDot_Traj.shape[1]):
-    #     StateNDot_Traj_i = StateNDot_Traj[:,i]
-    #     KE_i = KE_fn(robot, StateNDot_Traj_i)
-    #     Kinetic_Energy.append(KE_i)
-    # fig, ax = plt.subplots()
-    # ax.plot(Time, Kinetic_Energy)
-    # ax.set(xlabel='time (s)', ylabel='voltage (mV)',title='About as simple as it gets, folks')
-    # ax.grid()
-    # fig.savefig("test.png")
-    # plt.show()
+def get_End_Effector_Pos(hrp2_robot):
+    End_Effector_Pos_Array = np.array([0, 0, 0])
+    End_Link_No_Index = -1
+    for End_Effector_Link_Index in End_Effector_Ind:
+        End_Link_No_Index = End_Link_No_Index + 1
+        End_Link_i = hrp2_robot.link(End_Effector_Link_Index)
+        End_Link_i_Extre_Loc = Local_Extremeties[End_Link_No_Index*3:End_Link_No_Index*3+3]
+        End_Link_i_Extre_Pos = End_Link_i.getWorldPosition(End_Link_i_Extre_Loc)
+        End_Effector_Pos_Array = np.append(End_Effector_Pos_Array, End_Link_i_Extre_Pos)
+    return End_Effector_Pos_Array[3:]
 
 def Robot_ConfigNVel_Update(robot, x):
     OptConfig_Low = x[0:len(x)/2]
@@ -165,15 +219,26 @@ def KE_fn(robot, dataArray):
 
 def Traj_Loader():
     # This function will load the robotstate and contact force trajectories
-    with open("State_6_22_13_28.txt",'r') as robot_soln_file:
-        robot_state_traj = robot_soln_file.readlines()
-        robot_state_traj = [x.replace("\r\n","") for x in robot_state_traj]
-        robot_state_traj = np.array(robot_state_traj, dtype = float)
     Robotstate_Traj = np.array([])
-    ipdb.set_trace()
-    for i in range(0, len(robot_state_traj)):
-        Robotstate_Traj = np.append(Robotstate_Traj, robot_state_traj[i])
-    return Robotstate_Traj
+    with open("State_14_45.txt",'r') as robot_soln_file:
+        for line in robot_soln_file:
+            currentline = line.split(",")
+            currentline = [x.replace("\r\n","") for x in currentline]
+            currentline = map(float, currentline)
+            currentline = np.array([currentline])
+            Robotstate_Traj = np.append(Robotstate_Traj, currentline)
+    Robotstate_Traj = np.reshape(Robotstate_Traj, (13, Robotstate_Traj.shape[0]/13))
+
+    Contact_Force_Traj = np.array([])
+    with open("Contact_Force_14_45.txt",'r') as robot_soln_file:
+        for line in robot_soln_file:
+            currentline = line.split(",")
+            currentline = [x.replace("\r\n","") for x in currentline]
+            currentline = map(float, currentline)
+            currentline = np.array([currentline])
+            Contact_Force_Traj = np.append(Contact_Force_Traj, currentline)
+    Contact_Force_Traj = np.reshape(Contact_Force_Traj, (8, Contact_Force_Traj.shape[0]/8))
+    return Robotstate_Traj, Contact_Force_Traj
 def Path_Loader():
     # This function is used to read the Opt_Soln txt file
     global Grids

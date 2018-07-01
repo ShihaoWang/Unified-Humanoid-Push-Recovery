@@ -19,7 +19,7 @@ double q2low = 0.0;                    double q2upp = 2.618;				double q3low = -
 double q4low = -2.1817;                double q4upp = 0.733;				double q5low = 0.0;                    double q5upp = 2.618;
 double q6low = -1.3;                   double q6upp = 0.733;				double q7low = -3.14;                  double q7upp = 1.047;
 double q8low = -2.391;                 double q8upp = 0.0;					double q9low = -3.14;                  double q9upp = 1.047;
-double q10low = -2.391;                double q10upp = 0.0;					double AngRateLow = -3.0;              double AngRateHgh = 3.0;
+double q10low = -2.391;                double q10upp = 0.0;					double AngRateLow = -3.0;              double AngRateHgh = 5.0;
 
 double rIxdotlow = -Inf;               double rIxdotupp = Inf;				double rIydotlow = -Inf;               double rIydotupp = Inf;
 double thetadotlow = -Inf;             double thetadotupp = Inf;			double q1dotlow = AngRateLow;          double q1dotupp = AngRateHgh;
@@ -40,7 +40,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.025;			int Grids = 10;			double mu = 0.35;
+double mini = 0.1;			int Grids = 10;			double mu = 0.35;
 int Variable_Num = 48 * Grids + 1;
 double Time_Seed; 									// This value will be adaptively changed to formulate an optimal solution
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
@@ -378,7 +378,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	std::vector<double> Robostate_ref = StateNDot2StateVec(Structure_P.Node_i.Node_StateNDot);
 	std::vector<double> Robostate_offset = Vec_Minus(Opt_Seed, Robostate_ref);
 	double Robostate_offset_val = 0.0;
-	for (int i = 0; i < Robostate_offset.size(); i++){
+	for (int i = 0; i < Robostate_offset.size()/2; i++){
 		Robostate_offset_val = Robostate_offset_val + Robostate_offset[i] * Robostate_offset[i];
 	}
 	std::vector<double> sigma = Structure_P.Node_i.sigma;
@@ -413,10 +413,10 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
-	// 3. Middle joints have to be strictly away from the obs
-	temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
-	Matrix_result = temp_matrix - ones_vector * mini;
-	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+	// // 3. Middle joints have to be strictly away from the obs
+	// temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
+	// Matrix_result = temp_matrix - ones_vector * mini;
+	// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 	return;
 }
 dlib::matrix<double> Middle_Joint_Obs_Dist_Fn(Robot_StateNDot &StateNDot_Init_i){
@@ -1132,7 +1132,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	std::vector<double> sigma, sigma_i, sigma_i_child;		sigma_i = Node_i.sigma;								sigma_i_child = Node_i_child.sigma;
 	Sigma_TransNGoal(sigma_i, sigma_i_child, Opt_Type_Flag, Critial_Grid_Index);
 
-	double KE_ref = 0.01;			// A sufficiently trivial value
+	double KE_ref = 0.001;			// A sufficiently trivial value
 
 	// Objective function initialization
 	ObjNConstraint_Val.push_back(0);
@@ -1140,10 +1140,17 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 	// 1. The first constraint is to make sure that the initial condition matches the given initial condition
 	dlib::matrix<double> StateNDot_Traj_1st_colm, Robotstate_Initial_VecDlib, Matrix_result;
-	StateNDot_Traj_1st_colm = dlib::colm(StateNDot_Traj, 0);			Robotstate_Initial_VecDlib = StateVec2DlibMatrix_fn(Robotstate_Initial_Vec);
+	StateNDot_Traj_1st_colm = dlib::colm(StateNDot_Traj, 0);
+
+	// Robotstate_Initial_VecDlib = StateVec2DlibMatrix_fn(Robotstate_Initial_Vec);
 	// cout<<StateNDot_Traj_1st_colm<<endl;								cout<<Robotstate_Initial_VecDlib<<endl;
-	Matrix_result = Quadratic_Minus(StateNDot_Traj_1st_colm, Robotstate_Initial_VecDlib);
-	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+	// Matrix_result = Quadratic_Minus(StateNDot_Traj_1st_colm, Robotstate_Initial_VecDlib);
+	// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+	for (int i = 0; i < 26; i++)
+	{
+		ObjNConstraint_Val.push_back(StateNDot_Traj_1st_colm(i));
+		ObjNConstraint_Type.push_back(1);
+	}
 
 	// THe constraint will be added term by term
 	dlib::matrix<double> Robostate_Dlib_Front, Robostate_Dlib_Back, Ctrl_Front, Ctrl_Back, Contact_Force_Front, Contact_Force_Back, Robotstate_Mid_Acc;
@@ -1161,8 +1168,6 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Ctrl_Front = dlib::colm(Ctrl_Traj,i);										Ctrl_Back = dlib::colm(Ctrl_Traj,i+1);
 		Contact_Force_Front = dlib::colm(Contact_Force_Traj,i);						Contact_Force_Back = dlib::colm(Contact_Force_Traj,i+1);
 
-		// Integration_Consistent(Robostate_Dlib_Front, Robostate_Dlib_Back, ObjNConstraint_Val, ObjNConstraint_Type);
-
 		// Compute the Dynamics matrices at Front and Back
 		Robot_StateNDot_Front = DlibRobotstate2StateNDot(Robostate_Dlib_Front);		Dynamics_Matrices(Robot_StateNDot_Front, D_q_Front, B_q_Front, C_q_qdot_Front, Jac_Full_Front);
 		Robot_StateNDot_Back = DlibRobotstate2StateNDot(Robostate_Dlib_Back);		Dynamics_Matrices(Robot_StateNDot_Back, D_q_Back, B_q_Back, C_q_qdot_Back, Jac_Full_Back);
@@ -1175,12 +1180,35 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 	}
 
-	// 3. Complementarity constraints: Distance!
+	// 3. Complementarity constraints: Distance and Maintenance!
+	//								   3.1 The previous unchanged active constraint have to be satisfied
+	//								   3.2 Active constraints have to remain vacant relative distance.
+
 	dlib::matrix<double,12,1> End_Effector_Pos, End_Effector_Vel;					dlib::matrix<double,6,1> End_Effector_Dist;
 	dlib::matrix<double> Robostate_Dlib_i;											Robot_StateNDot Robot_StateNDot_i;
 	std::vector<int> End_Effector_Obs(6);
-	dlib::matrix<double> Eqn_Pos_Matrix, Ineqn_Pos_Matrix, Eqn_Vel_Matrix;
-	std::vector<double> sigma_temp;
+	dlib::matrix<double> Eqn_Pos_Matrix, Ineqn_Pos_Matrix, Eqn_Vel_Matrix;			std::vector<double> sigma_temp;
+	dlib::matrix<double> End_Effector_Pos_ref;										End_Effector_Pos_ref = Node_i.End_Effector_Pos;
+	std::vector<double> sigma_maint(12);											dlib::matrix<double> Matrix_Minus_result, End_Effector_PosDlib;
+
+	//	3.1 The previous unchanged active constraint have to be satisfied
+	for (int i = 0; i < Grids; i++)
+	{
+		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);										Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
+		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
+		sigma_maint[0] = sigma_i[0] * sigma_i_child[0];		sigma_maint[1] = sigma_i[0] * sigma_i_child[0];
+		sigma_maint[2] = sigma_i[0] * sigma_i_child[0];		sigma_maint[3] = sigma_i[0] * sigma_i_child[0];
+		sigma_maint[4] = sigma_i[1] * sigma_i_child[1];		sigma_maint[5] = sigma_i[1] * sigma_i_child[1];
+		sigma_maint[6] = sigma_i[1] * sigma_i_child[1];		sigma_maint[7] = sigma_i[1] * sigma_i_child[1];
+		sigma_maint[8] = sigma_i[2] * sigma_i_child[2];		sigma_maint[9] = sigma_i[2] * sigma_i_child[2];
+		sigma_maint[10] = sigma_i[3] * sigma_i_child[3];	sigma_maint[11] = sigma_i[3] * sigma_i_child[3];
+		dlib::matrix<double> Maint_Matrix = Diag_Matrix_fn(sigma_maint);
+		End_Effector_PosDlib = End_Effector_Pos;
+		Matrix_Minus_result = End_Effector_PosDlib - End_Effector_Pos_ref;
+		Matrix_result = Maint_Matrix * Matrix_Minus_result;
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+	}
+	//	3.2 Active constraints have to remain vacant relative distance.
 	for (int i = 0; i < Grids; i++) {
 		// 3. Complementarity constraints: Distance!
 		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);							Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
@@ -1188,83 +1216,83 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
 		if(i<Critial_Grid_Index){	sigma = sigma_i;}			else{			sigma = sigma_i_child;}
 
-		if((Opt_Type_Flag == -1)&&(i == Critial_Grid_Index))
-		{
-			// IN thsi case, the robot is going to retract contact from the environment
+		// if((Opt_Type_Flag == -1)&&(i == Critial_Grid_Index))
+		// {
+			// IN this case, the robot is going to retract contact from the environment
 			// This is the frame where the robot is reaching a critical configuration
-			sigma = sigma_i;
+			// sigma = sigma_i;
+			// sigma_temp = Sigma2Pos(sigma, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
+			// sigma_temp = Sigma2Pos(sigma, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
+			// sigma_temp = Sigma2Vel(sigma);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
+
+			// 3.1. Active constraints have to be satisfied: Position and Velocity
+			// Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
+			// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+			// Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+			// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+			// 3.2. Inactive constraints have to be strictly away from the obstacle
+			// dlib::matrix<double> ones_vector, temp_matrix;
+			// ones_vector = ONES_VECTOR_fn(6);
+			// Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
+			// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+
+			// // 3.3 The Upper end effector has to have an escape velocity
+			// dlib::matrix<double> Upper_Normal_Speed;
+			// End_Effector_Upper_Vel(Robot_StateNDot_i, Upper_Normal_Speed);
+			//
+			// ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * Robostate_Dlib_i(4));
+			// ObjNConstraint_Type.push_back(0);
+			// ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1]) * Robostate_Dlib_i(7));
+			// ObjNConstraint_Type.push_back(0);
+			// ObjNConstraint_Val.push_back(sigma_i[2] * (!sigma_i_child[2]) * Robostate_Dlib_i(10));
+			// ObjNConstraint_Type.push_back(0);
+			// ObjNConstraint_Val.push_back(sigma_i[3] * (!sigma_i_child[3]) * Robostate_Dlib_i(12));
+			// ObjNConstraint_Type.push_back(0);
+
+			// dlib::matrix<double> Robostate_Dlib_init = dlib::colm(StateNDot_Traj, 0);
+			// Robot_StateNDot Robot_StateNDot_init = DlibRobotstate2StateNDot(Robostate_Dlib_init);
+			// dlib::matrix<double> Upper_Normal_Speed_init;
+			// End_Effector_Upper_Vel(Robot_StateNDot_init, Upper_Normal_Speed_init);
+			// // cout<<Upper_Normal_Speed_init<<endl;
+			// // cout<<Upper_Normal_Speed<<endl;
+			// ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * (Upper_Normal_Speed(0) - abs(Upper_Normal_Speed_init(0))));
+			// ObjNConstraint_Type.push_back(1);
+			// ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1]) * (Upper_Normal_Speed(1) - abs(Upper_Normal_Speed_init(1))));
+			// ObjNConstraint_Type.push_back(1);
+			// ObjNConstraint_Val.push_back(sigma_i[2] * (!sigma_i_child[2]) * (Upper_Normal_Speed(2) - abs(Upper_Normal_Speed_init(2))));
+			// ObjNConstraint_Type.push_back(1);
+			// ObjNConstraint_Val.push_back(sigma_i[3] * (!sigma_i_child[3]) * (Upper_Normal_Speed(3) - abs(Upper_Normal_Speed_init(3))));
+			// ObjNConstraint_Type.push_back(1);
+		// }
+		// else
+		// {
 			sigma_temp = Sigma2Pos(sigma, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
 			sigma_temp = Sigma2Pos(sigma, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
 			sigma_temp = Sigma2Vel(sigma);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
 
-			// 3.1. Active constraints have to be satisfied: Position and Velocity
+			// 3.1. Active constraints have to be satisfied
 			Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
 			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 
-			Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-
+			// if((Opt_Type_Flag == 1)&&(i == Grids-1))
+			// {
+			// 	// In this case, the velocity constraint at the end frame does not have to satisfied
+			// 	// Because an impact mapping will exist to shape the post-impact state
+			// 	double Impact_Mapping_Val = 1;
+			// }
+			// else
+			// {
+			// 	Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+			// 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+			// }
 			// 3.2. Inactive constraints have to be strictly away from the obstacle
 			dlib::matrix<double> ones_vector, temp_matrix;
 			ones_vector = ONES_VECTOR_fn(6);
 			Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
 			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
-
-			// 3.3 The Upper end effector has to have an escape velocity
-			dlib::matrix<double> Upper_Normal_Speed;
-			End_Effector_Upper_Vel(Robot_StateNDot_i, Upper_Normal_Speed);
-
-			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * Robostate_Dlib_i(4));
-			ObjNConstraint_Type.push_back(0);
-			ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1]) * Robostate_Dlib_i(7));
-			ObjNConstraint_Type.push_back(0);
-			ObjNConstraint_Val.push_back(sigma_i[2] * (!sigma_i_child[2]) * Robostate_Dlib_i(10));
-			ObjNConstraint_Type.push_back(0);
-			ObjNConstraint_Val.push_back(sigma_i[3] * (!sigma_i_child[3]) * Robostate_Dlib_i(12));
-			ObjNConstraint_Type.push_back(0);
-
-			dlib::matrix<double> Robostate_Dlib_init = dlib::colm(StateNDot_Traj, 0);
-			Robot_StateNDot Robot_StateNDot_init = DlibRobotstate2StateNDot(Robostate_Dlib_init);
-			dlib::matrix<double> Upper_Normal_Speed_init;
-			End_Effector_Upper_Vel(Robot_StateNDot_init, Upper_Normal_Speed_init);
-			// cout<<Upper_Normal_Speed_init<<endl;
-			// cout<<Upper_Normal_Speed<<endl;
-			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * (Upper_Normal_Speed(0) - abs(Upper_Normal_Speed_init(0))));
-			ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1]) * (Upper_Normal_Speed(1) - abs(Upper_Normal_Speed_init(1))));
-			ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(sigma_i[2] * (!sigma_i_child[2]) * (Upper_Normal_Speed(2) - abs(Upper_Normal_Speed_init(2))));
-			ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(sigma_i[3] * (!sigma_i_child[3]) * (Upper_Normal_Speed(3) - abs(Upper_Normal_Speed_init(3))));
-			ObjNConstraint_Type.push_back(1);
-		}
-		else
-		{
-			sigma_temp = Sigma2Pos(sigma, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
-			sigma_temp = Sigma2Pos(sigma, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
-			sigma_temp = Sigma2Vel(sigma);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
-
-			// 3.1. Active constraints have to be satisfied: Position and Velocity
-			Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-
-			if((Opt_Type_Flag == 1)&&(i == Grids-1))
-			{
-				// In this case, the velocity constraint at the end frame does not have to satisfied
-				// Because an impact mapping will exist to shape the post-impact state
-				double Impact_Mapping_Val = 1;
-			}
-			else
-			{
-				Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-				ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-			}
-			// 3.2. Inactive constraints have to be strictly away from the obstacle
-			dlib::matrix<double> ones_vector, temp_matrix;
-			ones_vector = ONES_VECTOR_fn(6);
-			Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
-		}
+		// }
 	}
 
 	// 4. Complementarity constraints: Contact Force!
@@ -1317,25 +1345,6 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	{	ObjNConstraint_Val.push_back(Full_Normal_Back[mm]);
 		ObjNConstraint_Type.push_back(1);}
 
-	// 6. Contact maintenance constraint: the previous unchanged active constraint have to be satisfied
-	dlib::matrix<double> End_Effector_Pos_ref;													End_Effector_Pos_ref = Node_i.End_Effector_Pos;
-	std::vector<double> sigma_maint(12);														dlib::matrix<double> Matrix_Minus_result, End_Effector_PosDlib;
-	for (int i = 0; i < Grids; i++) {
-		// 6. Contact maintenance constraint: the previous unchanged active constraint have to be satisfied
-		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);										Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
-		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
-		sigma_maint[0] = sigma_i[0] * sigma_i_child[0];		sigma_maint[1] = sigma_i[0] * sigma_i_child[0];
-		sigma_maint[2] = sigma_i[0] * sigma_i_child[0];		sigma_maint[3] = sigma_i[0] * sigma_i_child[0];
-		sigma_maint[4] = sigma_i[1] * sigma_i_child[1];		sigma_maint[5] = sigma_i[1] * sigma_i_child[1];
-		sigma_maint[6] = sigma_i[1] * sigma_i_child[1];		sigma_maint[7] = sigma_i[1] * sigma_i_child[1];
-		sigma_maint[8] = sigma_i[2] * sigma_i_child[2];		sigma_maint[9] = sigma_i[2] * sigma_i_child[2];
-		sigma_maint[10] = sigma_i[3] * sigma_i_child[3];	sigma_maint[11] = sigma_i[3] * sigma_i_child[3];
-		dlib::matrix<double> Maint_Matrix = Diag_Matrix_fn(sigma_maint);
-		End_Effector_PosDlib = End_Effector_Pos;
-		Matrix_Minus_result = End_Effector_PosDlib - End_Effector_Pos_ref;
-		Matrix_result = Maint_Matrix * Matrix_Minus_result;
-		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-	}
 	if(Opt_Type_Flag == 0)
 	{	dlib::matrix<double> Robostate_Dlib_j = dlib::colm(StateNDot_Traj, Grids-1);
 		Robot_StateNDot Robot_StateNDot_j = DlibRobotstate2StateNDot(Robostate_Dlib_j);
@@ -1362,18 +1371,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
 	}
 }
-void Integration_Consistent(dlib::matrix<double> &Robostate_Dlib_Front, dlib::matrix<double> &Robostate_Dlib_Back, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
-{
-	// This function is used to gurantee the change of the pos is consistent with the vel
-	for (int i = 0; i < 13; i++) {
-		if(abs(Robostate_Dlib_Front(i+13))>mini)
-		{
-			double Integration_Consistent_val = (Robostate_Dlib_Back(i) - Robostate_Dlib_Front(i)) * Robostate_Dlib_Front(i+13);
-			ObjNConstraint_Val.push_back(Integration_Consistent_val);
-			ObjNConstraint_Type.push_back(1);
-		}
-	}
-}
+
 double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag, std::vector<double> &sigma_i_child)
 {
 	// 7. Objective function value: the first value is fixed
@@ -1385,20 +1383,19 @@ double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type
 	// // }
 	//
 	// for (int i = 0; i < Grids; i++) {
-	// 	// 7. Objective function value: the first value is fixed
+		// 7. Objective function value: the first value is fixed
 	// 	dlib::matrix<double> Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
 	// 	Robot_StateNDot Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
 	// 	KE_i = Kinetic_Energy_fn(Robot_StateNDot_i);
 	// 	KE_tot = KE_tot + KE_i;
 	// }
-	// if(Opt_Type_Flag == 1)
-	// {
-	// 	// In this case, there is impact mapping involved
-	// 	Robot_StateNDot Robot_StateNDot_End_Grid;
-	// 	Robot_StateNDot_End_Grid = Impact_Mapping_fn(StateNDot_Traj, Impulse_Mag, sigma_i_child);
-	// }
-
-	Obj_val = Kinetic_Energy_End_Frame(StateNDot_Traj);
+	if(Opt_Type_Flag == 1)
+	{
+		// In this case, there is impact mapping involved
+		Robot_StateNDot Robot_StateNDot_End_Grid;
+		Robot_StateNDot_End_Grid = Impact_Mapping_fn(StateNDot_Traj, Impulse_Mag, sigma_i_child);
+	}
+	Obj_val = Kinetic_Energy_End_Frame(StateNDot_Traj) + 10 * Impulse_Mag;
 	return Obj_val;
 }
 
@@ -1622,12 +1619,7 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 
 		double xdot_max = max(xdot_init, xdot_end);
 		double xdot_min = min(xdot_init, xdot_end);
-
-		// double Pos_Max_Change = 1/4 * CubicSpline_Coeff[0] + 1/3 * CubicSpline_Coeff[1] + 1/2 * CubicSpline_Coeff[2];
 		double Pos_Real_Change = Robotstate_Vec_Back[i] - Robotstate_Vec_Front[i];
-		// double Pos_VelInte_Offset = Pos_Max_Change * Pos_Max_Change - Pos_Real_Change * Pos_Real_Change;
-		// double Pos_VelInte_Offset = (Pos_Max_Change - Pos_Real_Change) * (Pos_Max_Change - Pos_Real_Change);
-
 		ObjNConstraint_Val.push_back(xdot_max*T - Pos_Real_Change);
 		ObjNConstraint_Type.push_back(1);
 		ObjNConstraint_Val.push_back(Pos_Real_Change - xdot_min*T);
@@ -1637,6 +1629,7 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 		Robotstate_Mid_Acc(i) = CubicSpline_1stOrder_Evaluation_fn(CubicSpline_Coeff, 0.5, T);
 	}
 	// cout<<Acc_Front<<endl;			cout<<Acc_Back<<endl;			cout<<Robotstate_Mid_Acc<<endl;
+	// The acceleration constraint is not of first priority
 	Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
 	for (int i = -1; i < 10; i++) {
 		ObjNConstraint_Val.push_back(Acc_Front(i+3));
@@ -1716,7 +1709,7 @@ void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma
 		{
 			// In this case, it is the retracting contact process: the whole process is divided into two subprocesses, energy accumulation, energy release
 			Opt_Type_Flag = -1;
-			Crit_Grid = Grids/2;
+			Crit_Grid = 1;
 		}
 	}
 }
@@ -1741,71 +1734,177 @@ void CtrlNContact_ForcefromCtrlNContact_Force_Coeff(dlib::matrix<double> &Ctrl_C
 		x_b = Contact_Force_Coeff(2*i+1, Grid_Ind);
 		Contact_Force_i(i) = x_a * s + x_b;}
 }
-int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Opt_Soln)
+int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Opt_Soln_Output)
 {	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	// However, the constraint will be set to use the direct collocation method
 	int Opt_Flag = 0;
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
-	double Time_Interval = 0.05;		int Total_Num = 17;
+	double Time_Interval = 0.02;		int Total_Num = 41;
 	std::vector<double> Time_Queue = Time_Seed_Queue_fn(Time_Interval, Total_Num);
+	std::vector<double> Opt_Soln_Tot;
+	int Feasible_Num = 0;
 
 	for (int j = 0; j < Time_Queue.size(); j++) {
-		std::vector<double> Opt_Soln_Seed, Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
+		std::vector<double> Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
 		Time_Seed = Time_Queue[j];
-		cout<<" --------------------------------- Time Guess Iteration: "<<j<<" --------------------------------- "<<endl;
+		cout<<"--------------------------------- Time Guess Iteration: "<<j<<" --------------------------------- "<<endl;
 		cout<<"The Guess for the time duaration is :" <<Time_Seed<<" s"<<endl;
-		Opt_Soln = Nodes_Optimization_Inner_Opt(Node_i, Node_i_child, Opt_Soln_Seed);
+		Opt_Soln = Nodes_Optimization_Inner_Opt(Node_i, Node_i_child);
 		Nodes_Optimization_ObjNConstraint(Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type);
-		// For the plot of the unsuccessful case
-		// Opt_Soln_Write2Txt(Node_i, Node_i, Opt_Soln);
 		double ObjNConstraint_Violation_Val = ObjNConstraint_Violation(ObjNConstraint_Val, ObjNConstraint_Type);
 		cout<<endl;
-		cout<<" ----------------------------- ObjNConstraint_Violation_Val: "<<ObjNConstraint_Violation_Val<<" ------------------------------- "<<endl;
+		cout<<"-----------------------------ObjNConstraint_Violation_Val: "<<ObjNConstraint_Violation_Val<<"-------------------------------"<<endl;
 		if(ObjNConstraint_Violation_Val<0.1)
 		{
 			Opt_Flag = 1;
-			time_t now = time(0);
-			// convert now to string form
-			char* dt = ctime(&now);
-			ofstream output_file;
-			std::string pre_filename = "Node_";
-			std::string Node_i_name = to_string(Node_i.Node_Index);
-			std::string mid_filename = "_Expansion_At_";
-			std::string post_filename = ".txt";
-
-			std::string filename = pre_filename + Node_i_name + mid_filename + dt + post_filename;
-			output_file.open(filename, std::ofstream::out);
-			for (int i = 0; i < Opt_Soln.size(); i++)
-			{	output_file<<Opt_Soln[i]<<endl;}
-			output_file.close();
-			break;
-		}
-		else
-		{	// The differentiation between the pure seed guess and the failure guess needs to be conducted
-			double Seed_offset = 0.0;
+			Feasible_Num = Feasible_Num + 1;
+			// However, due to the small constraint violation, the robot may not 100% satisfy the holonomic constraint so here we would like to check the robot final state
+			// Opt_Soln =  Final_State_Opt(Opt_Soln, Node_i, Node_i_child);
 			for (int i = 0; i < Opt_Soln.size(); i++) {
-				double state_minus = (Opt_Soln[i] - Opt_Soln_Seed[i]) * (Opt_Soln[i] - Opt_Soln_Seed[i]);
-				// cout<<"Opt_Soln[i]"<<Opt_Soln[i]<<endl;
-				Seed_offset = max(Seed_offset, state_minus);}
-			if(Seed_offset>0.1)
-			{	// Then this is a failure attempt
+				Opt_Soln_Tot.push_back(Opt_Soln[i]);}
 				time_t now = time(0);
 				// convert now to string form
 				char* dt = ctime(&now);
+
 				ofstream output_file;
-				std::string pre_filename = "Node_";
+				std::string pre_filename = "From_Node_";
 				std::string Node_i_name = to_string(Node_i.Node_Index);
-				std::string mid_filename = "_Expansion_Failure_At_";
+				std::string mid_filename = "_Expansion_At_Feasible_";
+				std::string Node_i_Child_name = to_string(Feasible_Num);
 				std::string post_filename = ".txt";
 
-				std::string filename = pre_filename + Node_i_name + mid_filename + dt + post_filename;
+				std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + dt + post_filename;
 				output_file.open(filename, std::ofstream::out);
 				for (int i = 0; i < Opt_Soln.size(); i++)
-				{	output_file<<Opt_Soln[i]<<endl;}
+				{
+					output_file<<Opt_Soln[i]<<endl;
+				}
 				output_file.close();
 			}
+			else
+			{	// The differentiation between the pure seed guess and the failure guess needs to be conducted
+				// Then this is a failure attempt
+				if(ObjNConstraint_Violation_Val<1)
+				{
+					time_t now = time(0);
+					// convert now to string form
+					char* dt = ctime(&now);
+					ofstream output_file;
+					std::string pre_filename = "Node_";
+					std::string Node_i_name = to_string(Node_i.Node_Index);
+					std::string mid_filename = "_Expansion_Quasi_Feasible_At_";
+					std::string post_filename = ".txt";
+
+					std::string filename = pre_filename + Node_i_name + mid_filename + dt + post_filename;
+					output_file.open(filename, std::ofstream::out);
+					for (int i = 0; i < Opt_Soln.size(); i++)
+					{	output_file<<Opt_Soln[i]<<endl;}
+					output_file.close();
+				}
+			}
 		}
+		if(Opt_Flag == 1)
+		{
+			// Now it is time to select the best one from all feasible solutions
+			time_t now = time(0);
+			// convert now to string form
+			char* dt = ctime(&now);
+
+			ofstream output_file;
+			std::string pre_filename = "From_Node_";
+			std::string Node_i_name = to_string(Node_i.Node_Index);
+			std::string mid_filename = "_Expansion_At_";
+			std::string Node_i_Child_name = dt;
+			std::string post_filename = "_Opt_Soln.txt";
+
+			std::string filename = pre_filename + Node_i_name + mid_filename + Node_i_Child_name + post_filename;
+			output_file.open(filename, std::ofstream::out);
+			for (int i = 0; i < Opt_Soln_Tot.size(); i++)
+			{
+				output_file<<Opt_Soln_Tot[i]<<endl;
+			}
+			output_file.close();
+			int Start_Ind;
+			std::vector<double> Kinetic_Energy_CMP;
+			for (int i = 0; i < Feasible_Num; i++)
+			{
+				std::vector<double> Opt_Soln_Temp;
+				Start_Ind = i * Variable_Num;
+				for (int k = Start_Ind; k < Start_Ind + Variable_Num; k++)
+				{
+					Opt_Soln_Temp.push_back(Opt_Soln_Tot[k]);
+				}
+				dlib::matrix<double> StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj; double T_tot;
+				Opt_Seed_Unzip(Opt_Soln_Temp, T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+				double KE_i = Kinetic_Energy_End_Frame(StateNDot_Traj);
+				Kinetic_Energy_CMP.push_back(KE_i);
+			}
+			int Min_Ind = Minimum_Index(Kinetic_Energy_CMP);
+			Start_Ind = Min_Ind *Variable_Num;
+			int Trivial_Index = 0;
+			for (int h = Start_Ind; h < Start_Ind + Variable_Num; h++)
+			{
+				Opt_Soln_Output[Trivial_Index] = Opt_Soln_Tot[h];
+				Trivial_Index = Trivial_Index + 1;
+			}
 	}
+
+	// for (int j = 0; j < Time_Queue.size(); j++) {
+	// 	std::vector<double> Opt_Soln_Seed, Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
+	// 	Time_Seed = Time_Queue[j];
+	// 	cout<<" --------------------------------- Time Guess Iteration: "<<j<<" --------------------------------- "<<endl;
+	// 	cout<<"The Guess for the time duaration is :" <<Time_Seed<<" s"<<endl;
+	// 	Opt_Soln = Nodes_Optimization_Inner_Opt(Node_i, Node_i_child, Opt_Soln_Seed);
+	// 	Nodes_Optimization_ObjNConstraint(Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type);
+	// 	// For the plot of the unsuccessful case
+	// 	// Opt_Soln_Write2Txt(Node_i, Node_i, Opt_Soln);
+	// 	double ObjNConstraint_Violation_Val = ObjNConstraint_Violation(ObjNConstraint_Val, ObjNConstraint_Type);
+	// 	cout<<endl;
+	// 	cout<<" ----------------------------- ObjNConstraint_Violation_Val: "<<ObjNConstraint_Violation_Val<<" ------------------------------- "<<endl;
+	// 	if(ObjNConstraint_Violation_Val<0.1)
+	// 	{
+	// 		Opt_Flag = 1;
+	// 		time_t now = time(0);
+	// 		// convert now to string form
+	// 		char* dt = ctime(&now);
+	// 		ofstream output_file;
+	// 		std::string pre_filename = "Node_";
+	// 		std::string Node_i_name = to_string(Node_i.Node_Index);
+	// 		std::string mid_filename = "_Expansion_At_";
+	// 		std::string post_filename = ".txt";
+	//
+	// 		std::string filename = pre_filename + Node_i_name + mid_filename + dt + post_filename;
+	// 		output_file.open(filename, std::ofstream::out);
+	// 		for (int i = 0; i < Opt_Soln.size(); i++)
+	// 		{	output_file<<Opt_Soln[i]<<endl;}
+	// 		output_file.close();
+	// 	}
+	// 	else
+	// 	{	// The differentiation between the pure seed guess and the failure guess needs to be conducted
+	// 		double Seed_offset = 0.0;
+	// 		for (int i = 0; i < Opt_Soln.size(); i++) {
+	// 			double state_minus = (Opt_Soln[i] - Opt_Soln_Seed[i]) * (Opt_Soln[i] - Opt_Soln_Seed[i]);
+	// 			// cout<<"Opt_Soln[i]"<<Opt_Soln[i]<<endl;
+	// 			Seed_offset = max(Seed_offset, state_minus);}
+	// 		// if(Seed_offset>0.1)
+	// 		// {	// Then this is a failure attempt
+	// 		// 	time_t now = time(0);
+	// 		// 	// convert now to string form
+	// 		// 	char* dt = ctime(&now);
+	// 		// 	ofstream output_file;
+	// 		// 	std::string pre_filename = "Node_";
+	// 		// 	std::string Node_i_name = to_string(Node_i.Node_Index);
+	// 		// 	std::string mid_filename = "_Expansion_Failure_At_";
+	// 		// 	std::string post_filename = ".txt";
+	// 		//
+	// 		// 	std::string filename = pre_filename + Node_i_name + mid_filename + dt + post_filename;
+	// 		// 	output_file.open(filename, std::ofstream::out);
+	// 		// 	for (int i = 0; i < Opt_Soln.size(); i++)
+	// 		// 	{	output_file<<Opt_Soln[i]<<endl;}
+	// 		// 	output_file.close();
+	// 		// }
+	// 	}
+	// }
 	return Opt_Flag;
 }
 
@@ -1890,9 +1989,9 @@ double ObjNConstraint_Violation(const std::vector<double> &ObjNConstraint_Val, c
 	}
 	return ObjNConstraint_Violation_Val;
 }
-std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> & Opt_Seed)
+std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {
-	Opt_Seed = Seed_Guess_Gene(Node_i, Node_i_child);
+	std::vector<double> Opt_Seed = Seed_Guess_Gene(Node_i, Node_i_child);
 	std::vector<double> ObjNConstraint_Val, ObjNConstraint_Type;
 	Nodes_Optimization_ObjNConstraint(Opt_Seed, ObjNConstraint_Val, ObjNConstraint_Type);
 	snoptProblem Nodes_Optimization_Pr;                     // This is the name of the Optimization problem for the robot configuration
@@ -1958,6 +2057,16 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 			}
 		}
 	}
+
+	// Here the linear initial condition matching is conducted as bounds
+	std::vector<double> Init_Config = StateNDot2StateVec(Node_i.Node_StateNDot);
+
+	for (int i = 0; i < 26; i++)
+	{
+		Flow[i+1] = Init_Config[i];
+		Fupp[i+1] = Init_Config[i];
+	}
+
 	// Load the data for ToyProb ...
 	Nodes_Optimization_Pr.setPrintFile  ( "Nodes_Optimization_Pr.out" );
 	Nodes_Optimization_Pr.setProblemSize( n, neF );
@@ -1975,11 +2084,13 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
 	Nodes_Optimization_Pr.computeJac    ();
 	Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
-	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 350);
+	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 250);
 	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 35000);
 	Nodes_Optimization_Pr.setIntParameter("Iterations limit", 2000000);
-	Nodes_Optimization_Pr.setIntParameter("setFeaTol", 1e-4);
-	Nodes_Optimization_Pr.setIntParameter("setOptTol", 1e-3);
+	// Nodes_Optimization_Pr.setIntParameter("Minor print level", 0);
+	// string QPsolver_opt = "QN";
+	// Nodes_Optimization_Pr.setRealParameter("QPsolver", QPsolver_opt);
+
 
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Nodes_Optimization_Pr.solve( Cold );
@@ -2421,6 +2532,9 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	End_Effector_Pos_ref = Structure_P.Node_i.End_Effector_Pos;
 	End_Effector_Vel_ref = Structure_P.Node_i.End_Effector_Vel;
 
+	Robot_StateNDot StateNDot_Init_ref = Structure_P.Node_i.Node_StateNDot;
+	std::vector<double> StateVec_Init_ref = StateNDot2StateVec(StateNDot_Init_ref);
+
 	std::vector<double> sigma_i = Structure_P.Node_i.sigma;
 	std::vector<double> sigma_i_child = Structure_P.Node_i_child.sigma;
 
@@ -2429,9 +2543,18 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 		sigma_diff = sigma_diff + abs(sigma_i_child[i] - sigma_i[i]);
 	}
 	if(sigma_diff>0)
-	{Obj_val = 0.0;}
+	{
+		Obj_val = 0.0;
+		// Obj_val = (Opt_Seed[2] - 0.785) * (Opt_Seed[2] - 0.785) ;
+		// Obj_val = -(Opt_Seed[1]) ;
+		for (int i = 0; i < StateVec_Init_ref.size(); i++) {
+			Obj_val = Obj_val + (StateVec_Init_ref[i] - Opt_Seed[i]) * (StateVec_Init_ref[i] - Opt_Seed[i]);
+		}
+	}
 	else
-	{Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);}
+	{
+		Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);
+	}
 
 	ObjNConstraint_Val.push_back(Obj_val);
 	ObjNConstraint_Type.push_back(1);
@@ -2461,10 +2584,10 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
-	// 3. Middle joints have to be strictly away from the obs
-	temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
-	Matrix_result = temp_matrix - ones_vector * mini;
-	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+	// // 3. Middle joints have to be strictly away from the obs
+	// temp_matrix = Middle_Joint_Obs_Dist_Fn(StateNDot_Init_i);
+	// Matrix_result = temp_matrix - ones_vector * mini;
+	// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
 	// 4. One more constraint to be added is to maintain the active unchanged constraint
 	Eqn_Maint_Matrix = Eqn_Maint_Matrix_fn(sigma_i, sigma_i_child);
