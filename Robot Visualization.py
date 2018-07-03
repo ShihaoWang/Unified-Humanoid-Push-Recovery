@@ -141,6 +141,11 @@ def main():
             vis.add("right foot force", Trajectory([0, 1], [rght_ft, rght_ft_end]))
             vis.add("left hand force", Trajectory([0, 1], [left_hd, left_hd_end]))
             vis.add("right hand force", Trajectory([0, 1], [rght_hd, rght_hd_end]))
+            COMPos_start = robot.getCom()
+            COMPos_end = COMPos_start
+            COMPos_end[2] = COMPos_end[2] + 100
+            vis.add("Center of Mass",  Trajectory([0, 1], [COMPos_start, COMPos_end]))
+
             # ipdb.set_trace()
 
             vis.unlock()
@@ -220,7 +225,7 @@ def KE_fn(robot, dataArray):
 def Traj_Loader():
     # This function will load the robotstate and contact force trajectories
     Robotstate_Traj = np.array([])
-    with open("State_14_45.txt",'r') as robot_soln_file:
+    with open("State_23_8.txt",'r') as robot_soln_file:
         for line in robot_soln_file:
             currentline = line.split(",")
             currentline = [x.replace("\r\n","") for x in currentline]
@@ -230,7 +235,7 @@ def Traj_Loader():
     Robotstate_Traj = np.reshape(Robotstate_Traj, (13, Robotstate_Traj.shape[0]/13))
 
     Contact_Force_Traj = np.array([])
-    with open("Contact_Force_14_45.txt",'r') as robot_soln_file:
+    with open("Contact_Force_23_8.txt",'r') as robot_soln_file:
         for line in robot_soln_file:
             currentline = line.split(",")
             currentline = [x.replace("\r\n","") for x in currentline]

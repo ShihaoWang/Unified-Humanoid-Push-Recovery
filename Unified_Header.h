@@ -19,7 +19,7 @@ using namespace std;
 
 #include "snoptProblem.hh"
 #ifdef __cplusplus
-extern "C" { 
+extern "C" {
 #endif
     int Default_Init_Pr_( integer    *Status, integer *n,    doublereal x[],
         integer    *needF,  integer *neF,  doublereal F[],
@@ -179,3 +179,4 @@ void Integration_Consistent(dlib::matrix<double> &Robostate_Dlib_Front, dlib::ma
 
 double Kinetic_Energy_End_Frame(dlib::matrix<double> &StateNDot_Traj);
 double Velocity_Projection(std::vector<double> &Pos_A, std::vector<double> &Pos_B, std::vector<double> &Vel_B);
+double Variation_Cal(dlib::matrix<double> &Dlib_Matrix);
