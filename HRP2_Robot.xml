@@ -2,7 +2,7 @@
 <world>
   <robot name="hrp2" file="/home/shihao/Klampt/data/robots/hrp2.rob" config="36	-1.5031e-17 0 0 0 -0.09 0 0 0 0.070716 0.20619 -0.18691 0 0 0 -1.0094 0.14816 0.27369 0 0 0 0 0 -0.66 0 0 -0.6251 1.6057 0 0 0.69 0 0 -0.2951 -1.6057 0 0"/>
   <terrain file="/home/shihao/Klampt/data/terrains/plane.off" scale="0.998 1 1" translation= "0.0 0.0 0.72"/>
-  <terrain file="/home/shihao/Klampt/data/terrains/cube.off" scale="1 1 2" translation="4.99 -0.5 0.0">
+  <terrain file="/home/shihao/Klampt/data/terrains/cube.off" scale="1 1 2" translation="5 -0.5 0.0">
      <display color="0.4 0.3 0.2"/>
   </terrain>
 <!-- </terrain> -->

@@ -44,7 +44,7 @@ int main( int argc, char **argv)
 	// After the robot state initialization, the next job is to conduct the multi-contact staiblization strategy: the root node initialization
 	Tree_Node Root_Node;
 	Node_UpdateNCon(Root_Node, StateNDot_Init_Opt, sigma_init);			// Node_UpdateNCon can only be used when the state and sigma at a given node is known
-	Tree_Node Node_i; 
+	Tree_Node Node_i;
 	int Opt_Flag = 0;
 	int Iteration = 0;
 	while(Frontier_Nodes.size()>0)
@@ -55,10 +55,10 @@ int main( int argc, char **argv)
 		*/
 		std::vector<double> Opt_Soln(Variable_Num);
 		Node_i = Pop_Node();
-		// if(Iteration>0)
-		// {
+		if(Iteration>0)
+		{
 			Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
-		// }
+		}
 		if(Opt_Flag==1)
 		{
 			// Optimal solution has been found
