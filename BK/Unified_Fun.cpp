@@ -59,8 +59,8 @@ void Envi_Map_Defi()
 	// This map is defined in a polyline manner with the first value denoting
 	// the line length and the second value denoting the relative angle
 	Envi_Map = dlib::ones_matrix<double>(2,4);
-	Envi_Map(0,0) = -5.0;				Envi_Map(0,1) = 0.0;				Envi_Map(0,2) = 5;				Envi_Map(0,3) = 0.0;
-	Envi_Map(1,0) = 5;					Envi_Map(1,1) = 0.0;				Envi_Map(1,2) = 5;				Envi_Map(1,3) = 3.0;
+	Envi_Map(0,0) = -5.0;				Envi_Map(0,1) = 0.0;				Envi_Map(0,2) = 4.95;				Envi_Map(0,3) = 0.0;
+	Envi_Map(1,0) = 4.95;				Envi_Map(1,1) = 0.0;				Envi_Map(1,2) = 4.95;				Envi_Map(1,3) = 3.0;
 }
 void Envi_Map_Normal_Cal(dlib::matrix<double> &Envi_Map)
 {
@@ -420,20 +420,40 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	double rEx = End_Effector_Pos(8);			double rEy = End_Effector_Pos(9);
 	double rFx = End_Effector_Pos(10);			double rFy = End_Effector_Pos(11);
 	//
-	ObjNConstraint_Val.push_back((-rAx + rDx - 0.2) * (-rAx + rDx - 0.2));										ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back((StateNDot_Init_i.rIx - 4.3) * (StateNDot_Init_i.rIx - 4.3));					ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q5 - 0.75) * (StateNDot_Init_i.q5 - 0.75));					ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q2 - 0.75) * (StateNDot_Init_i.q2 - 0.75));					ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back((StateNDot_Init_i.rIxdot - 1) * (StateNDot_Init_i.rIxdot - 1));			ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back((StateNDot_Init_i.thetadot - 0.5) * (StateNDot_Init_i.thetadot - 0.5));			ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.theta - 0.1) * (StateNDot_Init_i.theta - 0.1));				ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((rBx + 0.1137) * (rBx + 0.1137));				ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((rCx - 0.8105) * (rCx - 0.8105));				ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((rDx - 0.5855) * (rDx - 0.5855));				ObjNConstraint_Type.push_back(0);
-	// // ObjNConstraint_Val.push_back((rEx - 0.7897) * (rEx - 0.7897));				ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((-rAx + rDx - 0.2) * (-rAx + rDx - 0.2));										ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIx - 4.3) * (StateNDot_Init_i.rIx - 4.3));					ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((StateNDot_Init_i.q5 - 0.75) * (StateNDot_Init_i.q5 - 0.75));					ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((StateNDot_Init_i.q2 - 0.75) * (StateNDot_Init_i.q2 - 0.75));					ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIxdot - 0.35) * (StateNDot_Init_i.rIxdot - 0.35));			ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((StateNDot_Init_i.theta - 0.1) * (StateNDot_Init_i.theta - 0.1));				ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((rBx + 0.1137) * (rBx + 0.1137));				ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((rCx - 0.8105) * (rCx - 0.8105));				ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((rDx - 0.5855) * (rDx - 0.5855));				ObjNConstraint_Type.push_back(0);
+	// // // ObjNConstraint_Val.push_back((rEx - 0.7897) * (rEx - 0.7897));				ObjNConstraint_Type.push_back(0);
+	// // ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
+
+	ObjNConstraint_Val.push_back((rDx - rAx - 0.25) * (rDx - rAx - 0.25));	ObjNConstraint_Type.push_back(0);
+
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back((KE_init - 40) * (KE_init - 40));	ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back((KE_init - 200) * (KE_init - 200));	ObjNConstraint_Type.push_back(0);
+
+	ObjNConstraint_Val.push_back(StateNDot_Init_i.theta);	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.rIxdot - 1.5);	ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(2 - StateNDot_Init_i.thetadot);	ObjNConstraint_Type.push_back(1);
+	//
+	// std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
+	// std::vector<double> vI_init = Ang_Vel_fn(StateNDot_Init_i, "vI");
+	// ObjNConstraint_Val.push_back(vCOM_init[0] - mini);	ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(Opt_Seed[14] - 0.5);	ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(Opt_Seed[14] - Opt_Seed[15]);	ObjNConstraint_Type.push_back(1);
+
+	// std::vector<double> vCOM_ref = Ang_Vel_fn(Structure_P.Node_i.Node_StateNDot, "vCOM");
+	// ObjNConstraint_Val.push_back((rBx - 3.988) * (rBx - 3.988));	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((rDx - 4.418) * (rDx - 4.418));	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((rEx - 4.966) * (rEx - 4.966));	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((rEy - 0.6164) * (rEy - 0.6164));	ObjNConstraint_Type.push_back(0);
+
+	// ObjNConstraint_Val.push_back((vCOM_init[0] - 0.1369)*(vCOM_init[0] - 0.1369));	ObjNConstraint_Type.push_back(0);
 
 	// std::vector<double> sigma_i = sigma;
 	// std::vector<double> sigma_i_child = sigma;
@@ -465,6 +485,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	//
 	// ObjNConstraint_Val.push_back(Opt_Seed[13] - 0.35);
 	// ObjNConstraint_Type.push_back(1);
+
 	return;
 }
 dlib::matrix<double> Middle_Joint_Obs_Dist_Fn(Robot_StateNDot &StateNDot_Init_i){
@@ -483,7 +504,7 @@ dlib::matrix<double> Middle_Joint_Obs_Dist_Fn(Robot_StateNDot &StateNDot_Init_i)
 	Obs_Dist_Fn(rM, rM_Obs, Obs_Dist_Index, "None");
 	Obs_Dist_Fn(rN, rN_Obs, Obs_Dist_Index, "None");
 	Obs_Dist_Fn(rI, rI_Obs, Obs_Dist_Index, "None");
-	Obs_Dist_Fn(rT, rT_Obs, Obs_Dist_Index, "wall");
+	Obs_Dist_Fn(rT, rT_Obs, Obs_Dist_Index, "None");
 
 	Middle_Joint_Obs_Dist_Matrix(0) = rH_Obs;
 	Middle_Joint_Obs_Dist_Matrix(1) = rK_Obs;
@@ -518,7 +539,7 @@ void Obs_Dist_Fn(std::vector<double> &r_Pos, double &Obs_Dist, int &Obs_Dist_Ind
 		Temp_offset_y = r_Pos[1] - Temp_Edge_y;
 		Normal_vector_i_x = Envi_Map_Normal(i,0);
 		Normal_vector_i_y = Envi_Map_Normal(i,1);
-		Obs_Dist_vec.push_back(Temp_offset_x * Normal_vector_i_x +Temp_offset_y * Normal_vector_i_y);
+		Obs_Dist_vec.push_back(Temp_offset_x * Normal_vector_i_x + Temp_offset_y * Normal_vector_i_y);
 		if(strcmp(name,"floor")==0)
 		{
 			// In this case, we are talking about the robot foot, it can only make contact with the floor
@@ -1070,6 +1091,11 @@ std::vector<double> Ang_Vel_fn(const Robot_StateNDot &Robot_StateNDot_i, const c
 		T[0] = rIxdot-thetadot*sin(theta-3.141592653589793*(1.0/2.0))*(1.1E1/2.0E1);
 		T[1] = rIydot-thetadot*cos(theta-3.141592653589793*(1.0/2.0))*(1.1E1/2.0E1);
 	}
+	if(strcmp(s,"vCOM")==0)
+	{
+		T[0] = rIxdot-q1dot*cos(q1+q2+q3+theta)*1.415929203539823E-3-q2dot*cos(q1+q2+q3+theta)*1.415929203539823E-3-q3dot*cos(q1+q2+q3+theta)*1.415929203539823E-3-q4dot*cos(q4+q5+q6+theta)*1.415929203539823E-3-q5dot*cos(q4+q5+q6+theta)*1.415929203539823E-3-q6dot*cos(q4+q5+q6+theta)*1.415929203539823E-3-thetadot*cos(q1+q2+q3+theta)*1.415929203539823E-3-thetadot*cos(q4+q5+q6+theta)*1.415929203539823E-3+q1dot*sin(q1+q2+q3+theta)*1.415929203539823E-3+q2dot*sin(q1+q2+q3+theta)*1.415929203539823E-3+q3dot*sin(q1+q2+q3+theta)*1.415929203539823E-3+q4dot*sin(q4+q5+q6+theta)*1.415929203539823E-3+q5dot*sin(q4+q5+q6+theta)*1.415929203539823E-3+q6dot*sin(q4+q5+q6+theta)*1.415929203539823E-3+thetadot*sin(q1+q2+q3+theta)*1.415929203539823E-3+thetadot*sin(q4+q5+q6+theta)*1.415929203539823E-3-q1dot*cos(q1+theta)*3.451327433628319E-2-q4dot*cos(q4+theta)*3.451327433628319E-2-q7dot*cos(q7+theta)*(1.9E1/9.04E2)-q9dot*cos(q9+theta)*(1.9E1/9.04E2)-thetadot*cos(q1+theta)*3.451327433628319E-2-thetadot*cos(q4+theta)*3.451327433628319E-2-thetadot*cos(q7+theta)*(1.9E1/9.04E2)-thetadot*cos(q9+theta)*(1.9E1/9.04E2)+thetadot*cos(theta)*2.628318584070796E-1-q10dot*cos(q9+q10+theta)*1.095132743362832E-2-q1dot*cos(q1+q2+theta)*1.610619469026549E-2-q2dot*cos(q1+q2+theta)*1.610619469026549E-2-q4dot*cos(q4+q5+theta)*1.610619469026549E-2-q5dot*cos(q4+q5+theta)*1.610619469026549E-2-q7dot*cos(q7+q8+theta)*1.095132743362832E-2-q8dot*cos(q7+q8+theta)*1.095132743362832E-2-q9dot*cos(q9+q10+theta)*1.095132743362832E-2-thetadot*cos(q1+q2+theta)*1.610619469026549E-2-thetadot*cos(q4+q5+theta)*1.610619469026549E-2-thetadot*cos(q7+q8+theta)*1.095132743362832E-2-thetadot*cos(q9+q10+theta)*1.095132743362832E-2-sqrt(4.1E1)*q1dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*q2dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*q3dot*cos(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*q4dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*q5dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*q6dot*cos(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*thetadot*cos(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4-sqrt(4.1E1)*thetadot*cos(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4;
+		T[1] = rIydot+q1dot*cos(q1+q2+q3+theta)*1.415929203539823E-3+q2dot*cos(q1+q2+q3+theta)*1.415929203539823E-3+q3dot*cos(q1+q2+q3+theta)*1.415929203539823E-3+q4dot*cos(q4+q5+q6+theta)*1.415929203539823E-3+q5dot*cos(q4+q5+q6+theta)*1.415929203539823E-3+q6dot*cos(q4+q5+q6+theta)*1.415929203539823E-3+thetadot*cos(q1+q2+q3+theta)*1.415929203539823E-3+thetadot*cos(q4+q5+q6+theta)*1.415929203539823E-3+q1dot*sin(q1+q2+q3+theta)*1.415929203539823E-3+q2dot*sin(q1+q2+q3+theta)*1.415929203539823E-3+q3dot*sin(q1+q2+q3+theta)*1.415929203539823E-3+q4dot*sin(q4+q5+q6+theta)*1.415929203539823E-3+q5dot*sin(q4+q5+q6+theta)*1.415929203539823E-3+q6dot*sin(q4+q5+q6+theta)*1.415929203539823E-3+thetadot*sin(q1+q2+q3+theta)*1.415929203539823E-3+thetadot*sin(q4+q5+q6+theta)*1.415929203539823E-3+q1dot*sin(q1+theta)*3.451327433628319E-2+q4dot*sin(q4+theta)*3.451327433628319E-2+q7dot*sin(q7+theta)*(1.9E1/9.04E2)+q9dot*sin(q9+theta)*(1.9E1/9.04E2)+thetadot*sin(q1+theta)*3.451327433628319E-2+thetadot*sin(q4+theta)*3.451327433628319E-2+thetadot*sin(q7+theta)*(1.9E1/9.04E2)+thetadot*sin(q9+theta)*(1.9E1/9.04E2)-thetadot*sin(theta)*2.628318584070796E-1+q10dot*sin(q9+q10+theta)*1.095132743362832E-2+q1dot*sin(q1+q2+theta)*1.610619469026549E-2+q2dot*sin(q1+q2+theta)*1.610619469026549E-2+q4dot*sin(q4+q5+theta)*1.610619469026549E-2+q5dot*sin(q4+q5+theta)*1.610619469026549E-2+q7dot*sin(q7+q8+theta)*1.095132743362832E-2+q8dot*sin(q7+q8+theta)*1.095132743362832E-2+q9dot*sin(q9+q10+theta)*1.095132743362832E-2+thetadot*sin(q1+q2+theta)*1.610619469026549E-2+thetadot*sin(q4+q5+theta)*1.610619469026549E-2+thetadot*sin(q7+q8+theta)*1.095132743362832E-2+thetadot*sin(q9+q10+theta)*1.095132743362832E-2+sqrt(4.1E1)*q1dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*q2dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*q3dot*sin(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*q4dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*q5dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*q6dot*sin(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*thetadot*sin(q1+q2+q3+theta-8.960553845713439E-1)*3.539823008849558E-4+sqrt(4.1E1)*thetadot*sin(q4+q5+q6+theta-8.960553845713439E-1)*3.539823008849558E-4;
+	}
 	return T;
 }
 double Kinetic_Energy_fn(Robot_StateNDot &Robot_StateNDot_i)
@@ -1109,7 +1135,8 @@ void End_Effector_Obs_Dist_Fn(dlib::matrix<double,12,1> &End_Effector_Pos, dlib:
 		else
 		{
 			// Obs_Dist_Fn(r_Pos, Obs_Dist_i, Obs_Dist_Index, "None");
-			Obs_Dist_Fn(r_Pos, Obs_Dist_i, Obs_Dist_Index, "wall");
+			Obs_Dist_Fn(r_Pos, Obs_Dist_i, Obs_Dist_Index, "floor");
+			// Obs_Dist_Fn(r_Pos, Obs_Dist_i, Obs_Dist_Index, "wall");
 		}
 		End_Effector_Dist(i) = Obs_Dist_i;
 		End_Effector_Obs[i] = Obs_Dist_Index;}
@@ -1178,7 +1205,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	double T_tot, T;										dlib::matrix<double> StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj;
 	// Opt_Seed = Opt_Soln_Load();
 	Opt_Seed_Unzip(Opt_Seed, T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
-	T = T_tot/(Grids - 1) * 1.0;
+	T = T_tot/(Grids - 1)*1.0;
 	Tree_Node Node_i, Node_i_child;							Node_i = Structure_P.Node_i;						Node_i_child = Structure_P.Node_i_child;
 	std::vector<double> Robotstate_Initial_Vec = StateNDot2StateVec(Node_i.Node_StateNDot);
 	int Opt_Type_Flag;										int Critical_Grid_Index;
@@ -1269,7 +1296,6 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Matrix_Minus_result = End_Effector_PosDlib - End_Effector_Pos_ref;
 		Matrix_result = Maint_Matrix * Matrix_Minus_result;
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-		// cout<<Matrix_result<<endl;
 	}
 	//	3.2 Active constraints have to remain vacant relative distance.
 	for (int i = 0; i < Grids; i++)
@@ -1281,32 +1307,34 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 		if((Opt_Type_Flag == -1)&&(i == Critical_Grid_Index-1))
 		{
-			// 3.3 The Upper end effector has to have an escape velocity
 			dlib::matrix<double> Upper_Normal_Speed;
 			End_Effector_Upper_Vel(Robot_StateNDot_i, Upper_Normal_Speed);
 
-			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * Robostate_Dlib_i(4));
+			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * Robot_StateNDot_i.q2);
 			ObjNConstraint_Type.push_back(0);
-			ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1]) * Robostate_Dlib_i(7));
+			ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1]) * Robot_StateNDot_i.q5);
 			ObjNConstraint_Type.push_back(0);
-			ObjNConstraint_Val.push_back(sigma_i[2] * (!sigma_i_child[2]) * Robostate_Dlib_i(10));
+			ObjNConstraint_Val.push_back(sigma_i[2] * (!sigma_i_child[2]) * Robot_StateNDot_i.q8);
 			ObjNConstraint_Type.push_back(0);
-			ObjNConstraint_Val.push_back(sigma_i[3] * (!sigma_i_child[3]) * Robostate_Dlib_i(12));
+			ObjNConstraint_Val.push_back(sigma_i[3] * (!sigma_i_child[3]) * Robot_StateNDot_i.q10);
 			ObjNConstraint_Type.push_back(0);
 
-			std::vector<double> rCOM = Ang_Pos_fn(Robot_StateNDot_i,"rCOM");
-			std::vector<double> rA = Ang_Pos_fn(Robot_StateNDot_i,"rA");
-			std::vector<double> rB = Ang_Pos_fn(Robot_StateNDot_i,"rB");
-			std::vector<double> rC = Ang_Pos_fn(Robot_StateNDot_i,"rC");
-			std::vector<double> rD = Ang_Pos_fn(Robot_StateNDot_i,"rD");
+			// Maintain the COM to be within the SP
+			std::vector<double> rCOM_i = Ang_Pos_fn(Robot_StateNDot_i, "rCOM");
+			std::vector<double> rA_i = Ang_Pos_fn(Robot_StateNDot_i, "rA");
+			std::vector<double> rB_i = Ang_Pos_fn(Robot_StateNDot_i, "rB");
+			std::vector<double> rC_i = Ang_Pos_fn(Robot_StateNDot_i, "rC");
+			std::vector<double> rD_i = Ang_Pos_fn(Robot_StateNDot_i, "rD");
 
-			ObjNConstraint_Val.push_back(rCOM[0] - rC[0]);
+			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0])*(rCOM_i[0] - rC_i[0]));
 			ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(rD[0] - rCOM[0]);
+			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0])*(rD_i[0] - rCOM_i[0]));
 			ObjNConstraint_Type.push_back(1);
 
-			ObjNConstraint_Val.push_back(Robostate_Dlib_i(2));
-			ObjNConstraint_Type.push_back(0);
+			ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1])*(rCOM_i[0] - rB_i[0]));
+			ObjNConstraint_Type.push_back(1);
+			ObjNConstraint_Val.push_back(sigma_i[1] * (!sigma_i_child[1])*(rA_i[0] - rCOM_i[0]));
+			ObjNConstraint_Type.push_back(1);
 		}
 		else
 		{
@@ -1319,12 +1347,12 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 			// cout<<Matrix_result<<endl;
 
-			if((Opt_Type_Flag == 1)&&(i == Grids-1))
+			if((Opt_Type_Flag == 1)&&(i == Critical_Grid_Index))
 			{
 				// In this case, the velocity constraint at the end frame does not have to satisfied
 				// Because an impact mapping will exist to shape the post-impact state
 				double Impact_Mapping_Val = 1;
-				// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q2);
+				// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q5);
 				// ObjNConstraint_Type.push_back(0);
 			}
 			else
@@ -1332,18 +1360,40 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 				Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
 				ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 			}
-			// 3.2. Inactive constraints have to be strictly away from the obstacle
-			dlib::matrix<double> ones_vector, temp_matrix;
-			ones_vector = ONES_VECTOR_fn(6);
-			Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+
+			if((Opt_Type_Flag == -1)&&(i == Critical_Grid_Index))
+			{
+				// Just take this case more seriously which is to confine the distance to be nominal
+				// 3.2. Inactive constraints have to be strictly away from the obstacle
+				dlib::matrix<double> ones_vector, temp_matrix;
+				ones_vector = ONES_VECTOR_fn(6);
+				int Contact_Index = Sigma_Cmp(sigma_i, sigma_i_child);
+				Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - 1.5 * ones_vector * mini);
+				// cout<<Matrix_result<<endl;
+				std::vector<double> sigma_dis_vec =  Contact_Index2Type_vec(Contact_Index);
+				for (int ll = 0; ll < 6; ll++)
+				{
+					ObjNConstraint_Val.push_back(Matrix_result(ll));
+					ObjNConstraint_Type.push_back(sigma_dis_vec[ll]);
+					// cout<<sigma_dis_vec[ll]<<endl;
+				}
+			}
+			else
+			{
+				// 3.2. Inactive constraints have to be strictly away from the obstacle
+				dlib::matrix<double> ones_vector, temp_matrix;
+				ones_vector = ONES_VECTOR_fn(6);
+				Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
+				ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+			}
+
 			// cout<<Matrix_result<<endl;
 
-			// 3.3 Middle joints have to be strictly away from the obs
-			temp_matrix = Middle_Joint_Obs_Dist_Fn(Robot_StateNDot_i);
-			ones_vector(5) = 10;
-			Matrix_result = temp_matrix - ones_vector * mini;
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+			// // 3.3 Middle joints have to be strictly away from the obs
+			// temp_matrix = Middle_Joint_Obs_Dist_Fn(Robot_StateNDot_i);
+			// ones_vector(5) = 12;
+			// Matrix_result = temp_matrix - ones_vector * mini;
+			// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
 		}
 	}
@@ -1356,7 +1406,11 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);				sigma_temp.push_back(!sigma[0]);
 		sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);				sigma_temp.push_back(!sigma[1]);
 		sigma_temp.push_back(!sigma[2]);			sigma_temp.push_back(!sigma[2]);			sigma_temp.push_back(!sigma[3]);				sigma_temp.push_back(!sigma[3]);
-		Contact_Force_Complem_Matrix = Diag_Matrix_fn(sigma_temp);								Matrix_result = Contact_Force_Complem_Matrix * Contact_Force_i;
+		Contact_Force_Complem_Matrix = Diag_Matrix_fn(sigma_temp);
+		Matrix_result = Contact_Force_Complem_Matrix * Contact_Force_i;
+		// cout<<Contact_Force_Complem_Matrix<<endl;
+		// cout<<Contact_Force_i<<endl;
+		// cout<<Matrix_result<<endl;
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 	}
 
@@ -1398,8 +1452,11 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Robot_StateNDot Robot_StateNDot_j = DlibRobotstate2StateNDot(Robostate_Dlib_j);
 		double KE_j = Kinetic_Energy_fn(Robot_StateNDot_j);
 		// ObjNConstraint_Val[0] = KE_j;
-		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
+		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+		// ObjNConstraint_Val[0] = KE_Variation_fn(StateNDot_Traj);
+		// ObjNConstraint_Val[0] = 10 * Traj_Variation(StateNDot_Traj) + Variation_Cal(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
 
 
 		// One more constraint to be added is the acceleration to be trivial value
@@ -1415,16 +1472,53 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 		ObjNConstraint_Val.push_back(KE_ref - KE_j);
 		ObjNConstraint_Type.push_back(1);
+
+		// At the last frame
+		// ObjNConstraint_Val.push_back((Robot_StateNDot_i.q5 - mini) * (Robot_StateNDot_i.q5 - mini));
+		// ObjNConstraint_Type.push_back(0);
 	}
 	else
 	{
-		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		// ObjNConstraint_Val[0] = 5 * Traj_Variation(StateNDot_Traj);
-		ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
+		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
+		dlib::matrix<double> Robostate_Dlib_j = dlib::colm(StateNDot_Traj, Grids-1);
+		Robot_StateNDot Robot_StateNDot_j = DlibRobotstate2StateNDot(Robostate_Dlib_j);
+		double KE_j = Kinetic_Energy_fn(Robot_StateNDot_j);
+		ObjNConstraint_Val[0] = ( KE_j - 160 ) * ( KE_j - 160 );  
+		// ObjNConstraint_Type.push_back(0);
+
+		// ObjNConstraint_Val[0] = 10 * Traj_Variation(StateNDot_Traj) + Variation_Cal(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child) + 1 * Variation_Cal(Contact_Force_Traj);
+
 	}
 }
-
+std::vector<double> Contact_Index2Type_vec(int Contact_Index)
+{
+	std::vector<double> Sigma_vec(6);
+	for (int i = 0; i < 6; i++)
+	{
+		Sigma_vec[i] = 1;
+	}
+	if(Contact_Index == 0)
+	{
+		Sigma_vec[0] = 0;
+		Sigma_vec[1] = 0;
+	}
+	if(Contact_Index == 1)
+	{
+		Sigma_vec[2] = 0;
+		Sigma_vec[3] = 0;
+	}
+	if(Contact_Index == 2)
+	{
+		Sigma_vec[4] = 0;
+	}
+	if(Contact_Index == 2)
+	{
+		Sigma_vec[5] = 0;
+	}
+	return Sigma_vec;
+}
 double Objective_Function_Cal(dlib::matrix<double> &StateNDot_Traj, int Opt_Type_Flag, std::vector<double> &sigma_i_child)
 {
 	// 7. Objective function value: the first value is fixed
@@ -1732,7 +1826,7 @@ std::vector<double> Opt_Soln_Load()
 	// This function is used to load the computed optimal solution for data analysis
 	std::vector<double> Opt_Seed;
 	ifstream Opt_Soln_File;              // This is to read the initial angle and angular velocities
-	Opt_Soln_File.open("really.txt");
+	Opt_Soln_File.open("1.txt");
 	if(Opt_Soln_File.is_open())
 	{
 		double data_each_line = 0.0;
@@ -1745,8 +1839,16 @@ std::vector<double> Opt_Soln_Load()
 	}
 	return Opt_Seed;
 }
-double KE_Variation_fn(std::vector<double> &KE_tot, double T)
+double KE_Variation_fn(dlib::matrix<double> &StateNDot_Traj)
 {	double KE_Variation = 0.0;
+	std::vector<double> KE_tot;
+	dlib::matrix<double> Robostate_Dlib_i;
+	Robot_StateNDot Robot_StateNDot_i;
+	for (int i = 0; i < StateNDot_Traj.nc(); i++) {
+		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
+		Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
+		KE_tot.push_back(Kinetic_Energy_fn(Robot_StateNDot_i));
+	}
 	for (int i = 0; i < KE_tot.size(); i++)
 	{
 		KE_Variation = KE_Variation + KE_tot[i];
@@ -2612,47 +2714,90 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	std::vector<double> sigma_i = Structure_P.Node_i.sigma;
 	std::vector<double> sigma_i_child = Structure_P.Node_i_child.sigma;
 
-	std::vector<double> rCOM = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rCOM");
-	std::vector<double> rCOM_opt = Ang_Pos_fn(StateNDot_Init_i, "rCOM");
-	std::vector<double> rT = Ang_Pos_fn(StateNDot_Init_i, "rT");
+	std::vector<double> rCOM_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rCOM");
+	std::vector<double> rA_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rA");
+	std::vector<double> rB_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rB");
+	std::vector<double> rC_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rC");
+	std::vector<double> rD_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rD");
+	std::vector<double> rE_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rE");
+	std::vector<double> rF_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rF");
 
-	ObjNConstraint_Val.push_back(StateNDot_Init_i.q2);
-	ObjNConstraint_Type.push_back(0);
+	std::vector<double> rCOM_opt = Ang_Pos_fn(StateNDot_Init_i, "rCOM");
+	std::vector<double> rA_opt = Ang_Pos_fn(StateNDot_Init_i, "rA");
+	std::vector<double> rB_opt = Ang_Pos_fn(StateNDot_Init_i, "rB");
+	std::vector<double> rC_opt = Ang_Pos_fn(StateNDot_Init_i, "rC");
+	std::vector<double> rD_opt = Ang_Pos_fn(StateNDot_Init_i, "rD");
+	std::vector<double> rE_opt = Ang_Pos_fn(StateNDot_Init_i, "rE");
+	std::vector<double> rF_opt = Ang_Pos_fn(StateNDot_Init_i, "rF");
+	std::vector<double> rT_opt = Ang_Pos_fn(StateNDot_Init_i, "rT");
+
+	std::vector<double> vCOM_ref = Ang_Vel_fn(Structure_P.Node_i.Node_StateNDot, "vCOM");
 
 	int Opt_Type_Flag, Crit_Grid;
+
+	// Objective Function
+	ObjNConstraint_Val.push_back(0);
+	ObjNConstraint_Type.push_back(1);
 
 	Sigma_TransNGoal(sigma_i, sigma_i_child, Opt_Type_Flag, Crit_Grid);
 
 	double sigma_diff = 0.0; double Obj_val;
 	for (int i = 0; i < 4; i++) {
-		sigma_diff = sigma_diff + abs(sigma_i_child[i] - sigma_i[i]);
+		sigma_diff = sigma_diff + sigma_i_child[i] - sigma_i[i];
 	}
-	if(sigma_diff>0)
+	if(abs(sigma_diff)>0)
 	{
+		if(sigma_diff>0)
+		{
+			// In this case, the robot is making contact
+			// Then the problem is to tell which leg is going to making contact
+			int Contact_Index = Sigma_Cmp(sigma_i, sigma_i_child);
+			if(Contact_Index<2)
+			{
+				// Then the idea is to make the stepping position reasonable
+				if(vCOM_ref[0]>0)
+				{
+					double AB_val =  (sigma_i_child[0] - sigma_i[0]) * (rB_opt[0] - rC_opt[0] - mini);
+					double CD_val =  (sigma_i_child[1] - sigma_i[1]) * (rD_opt[0] - rA_opt[0] - mini);
+					ObjNConstraint_Val.push_back(AB_val);			ObjNConstraint_Type.push_back(1);
+					ObjNConstraint_Val.push_back(CD_val);			ObjNConstraint_Type.push_back(1);
+				}
+				else
+				{
+					double AB_val =  (sigma_i_child[0] - sigma_i[0]) * (rD_opt[0] - rA_opt[0] - mini);
+					double CD_val =  (sigma_i_child[1] - sigma_i[1]) * (rB_opt[0] - rC_opt[0] - mini);
+					ObjNConstraint_Val.push_back(AB_val);			ObjNConstraint_Type.push_back(1);
+					ObjNConstraint_Val.push_back(CD_val);			ObjNConstraint_Type.push_back(1);
+				}
+			}
+		}
 		Obj_val = 0.0;
 		for (int i = 0; i < StateVec_Init_ref.size(); i++)
 		{
 			Obj_val = Obj_val + (StateVec_Init_ref[i] - Opt_Seed[i]) * (StateVec_Init_ref[i] - Opt_Seed[i]);
 		}
 		// Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);
-		// Obj_val = (rCOM[0] - rCOM_opt[0]) * (rCOM[0] - rCOM_opt[0]) + (rCOM[1] - rCOM_opt[1]) * (rCOM[1] - rCOM_opt[1]);
-		//
+		// Obj_val = (rCOM_ref[0] - rCOM_opt[0]) * (rCOM_ref[0] - rCOM_opt[0]) + (rCOM_ref[1] - rCOM_opt[1]) * (rCOM_ref[1] - rCOM_opt[1]);
+
 	// 	if(Opt_Type_Flag==-1)
 	// 	{
 	// 		Obj_val = (Opt_Seed[2] - PI/2.0) * (Opt_Seed[2] - PI/2.0) ;
 	// 	}
+
+	// Another try is to find a configuration that satisfies the terminal constarint while has a small change of the vertical position of COM
+	// Obj_val = (rCOM_opt[1] - rCOM[1]) * (rCOM_opt[1] - rCOM[1]);
+		// Obj_val = (rA_ref[0] - rA_opt[0]) * (rA_ref[0] - rA_opt[0]) + (rB_ref[0] - rB_opt[0]) * (rB_ref[0] - rB_opt[0]) + (rC_ref[0] - rC_opt[0]) * (rC_ref[0] - rC_opt[0]) + (rD_ref[0] - rD_opt[0]) * (rD_ref[0] - rD_opt[0]);
+
 	}
 	else
 	{
-		Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);
+			// Objective Function = Kinetic_Energy_fn(StateNDot_Init_i);
 	}
 
-	ObjNConstraint_Val.push_back(Obj_val);
-	ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val[0] = Obj_val;
 
 	// ObjNConstraint_Val.push_back((Opt_Seed[2] - PI/2.0) * (Opt_Seed[2] - PI/2.0));
 	// ObjNConstraint_Type.push_back(0);
-
 
 	dlib::matrix<double,6,1> End_Effector_Dist;
 	std::vector<int> End_Effector_Obs(6);
@@ -2688,6 +2833,20 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	Matrix_result = Eqn_Maint_Matrix * (End_Effector_Pos_ref - End_Effector_Pos);
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 	return;
+}
+int Sigma_Cmp(std::vector<double> &sigma_i, std::vector<double> &sigma_i_child)
+{
+	// This function is used to tell which index changes its sign
+	int Index = 0;		double sigma_result;
+	for (int i = 0; i < sigma_i.size(); i++)
+	{
+		sigma_result = sigma_i_child[i] - sigma_i[i];
+		if(abs(sigma_result)>mini)
+		{
+			Index = i;
+		}
+	}
+	return Index;
 }
 dlib::matrix<double> Eqn_Maint_Matrix_fn(std::vector<double> &sigma_i, std::vector<double> &sigma_i_child)
 {

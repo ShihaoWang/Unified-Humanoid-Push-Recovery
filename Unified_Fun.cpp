@@ -378,7 +378,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	std::vector<double> Robostate_ref = StateNDot2StateVec(Structure_P.Node_i.Node_StateNDot);
 	std::vector<double> Robostate_offset = Vec_Minus(Opt_Seed, Robostate_ref);
 	double Robostate_offset_val = 0.0;
-	for (int i = 0; i < Robostate_offset.size(); i++){
+	for (int i = 0; i < Robostate_offset.size()/2; i++){
 		Robostate_offset_val = Robostate_offset_val + Robostate_offset[i] * Robostate_offset[i];
 	}
 	std::vector<double> sigma = Structure_P.Node_i.sigma;
@@ -413,26 +413,26 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
-	// double rAx = End_Effector_Pos(0);			double rAy = End_Effector_Pos(1);
-	// double rBx = End_Effector_Pos(2);			double rBy = End_Effector_Pos(3);
-	// double rCx = End_Effector_Pos(4);			double rCy = End_Effector_Pos(5);
-	// double rDx = End_Effector_Pos(6);			double rDy = End_Effector_Pos(7);
-	// double rEx = End_Effector_Pos(8);			double rEy = End_Effector_Pos(9);
-	// double rFx = End_Effector_Pos(10);			double rFy = End_Effector_Pos(11);
+	double rAx = End_Effector_Pos(0);			double rAy = End_Effector_Pos(1);
+	double rBx = End_Effector_Pos(2);			double rBy = End_Effector_Pos(3);
+	double rCx = End_Effector_Pos(4);			double rCy = End_Effector_Pos(5);
+	double rDx = End_Effector_Pos(6);			double rDy = End_Effector_Pos(7);
+	double rEx = End_Effector_Pos(8);			double rEy = End_Effector_Pos(9);
+	double rFx = End_Effector_Pos(10);			double rFy = End_Effector_Pos(11);
 	//
-	// ObjNConstraint_Val.push_back((-rAx + rDx - 0.2) * (-rAx + rDx - 0.2));										ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back((-rAx + rDx - 0.2) * (-rAx + rDx - 0.2));										ObjNConstraint_Type.push_back(0);
 	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIx - 4.3) * (StateNDot_Init_i.rIx - 4.3));					ObjNConstraint_Type.push_back(0);
 	// // ObjNConstraint_Val.push_back((StateNDot_Init_i.q5 - 0.75) * (StateNDot_Init_i.q5 - 0.75));					ObjNConstraint_Type.push_back(0);
 	// // ObjNConstraint_Val.push_back((StateNDot_Init_i.q2 - 0.75) * (StateNDot_Init_i.q2 - 0.75));					ObjNConstraint_Type.push_back(0);
 	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIxdot - 0.35) * (StateNDot_Init_i.rIxdot - 0.35));			ObjNConstraint_Type.push_back(0);
-	// // ObjNConstraint_Val.push_back((StateNDot_Init_i.theta - 0.1) * (StateNDot_Init_i.theta - 0.1));				ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back((StateNDot_Init_i.theta ) * (StateNDot_Init_i.theta));				ObjNConstraint_Type.push_back(0);
 	// // ObjNConstraint_Val.push_back((rBx + 0.1137) * (rBx + 0.1137));				ObjNConstraint_Type.push_back(0);
 	// // ObjNConstraint_Val.push_back((rCx - 0.8105) * (rCx - 0.8105));				ObjNConstraint_Type.push_back(0);
 	// // ObjNConstraint_Val.push_back((rDx - 0.5855) * (rDx - 0.5855));				ObjNConstraint_Type.push_back(0);
 	// // // ObjNConstraint_Val.push_back((rEx - 0.7897) * (rEx - 0.7897));				ObjNConstraint_Type.push_back(0);
 	// // ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back((KE_init - 60) * (KE_init - 60));	ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back((KE_init - 100) * (KE_init - 100));	ObjNConstraint_Type.push_back(0);
 	//
 	// std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
 	// std::vector<double> vI_init = Ang_Vel_fn(StateNDot_Init_i, "vI");
@@ -1822,8 +1822,8 @@ void Sigma_TransNGoal(std::vector<double> & sigma_i, std::vector<double> & sigma
 		{
 			// In this case, it is the retracting contact process: the whole process is divided into two subprocesses, energy accumulation, energy release
 			Opt_Type_Flag = -1;
-			// Crit_Grid = Grids-1;
-			Crit_Grid = 1;
+			Crit_Grid = Grids-1;
+			// Crit_Grid = 1;
 		}
 	}
 }
