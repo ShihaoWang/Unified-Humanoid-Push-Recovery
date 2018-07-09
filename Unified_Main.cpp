@@ -70,7 +70,7 @@ int main( int argc, char **argv)
 			// Here it is the node expansion
 			int Adjacent_Number;	int Nodes_Opt_Flag;
 			dlib::matrix<double> Nodes_Sigma_Matrix = Node_Expansion_fn(Node_i, Adjacent_Number);
-			for (int i = 0; i < Adjacent_Number; i++)
+			for (int i = 3; i < Adjacent_Number; i++)
 			{
 				Tree_Node Node_i_child;
 				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,0));

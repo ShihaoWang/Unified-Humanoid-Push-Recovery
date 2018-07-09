@@ -34,6 +34,8 @@ double tau1_max = 100;             		double tau2_max = 100;				double tau3_max =
 double tau5_max = 100;             		double tau6_max = 100;				double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
 
+double Acc_max = 5.0;
+
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
 dlib::matrix<double> ctrl_low_vec;					dlib::matrix<double> ctrl_upp_vec;
 dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_Map_Tange; // The Normal and tangential vector of the plane
@@ -1451,8 +1453,15 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	}
 	else
 	{
-		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + 0 * Variation_Cal(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = -T;
+		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
+		double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
+		ObjNConstraint_Val.push_back(KE_End - 85);
+		ObjNConstraint_Type.push_back(1);
+		// ObjNConstraint_Val[0] = (KE_End - 85) * (KE_End - 85);
+
+		ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + 0 * Variation_Cal(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + Quadratic_Sum(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child) + 1 * Variation_Cal(Contact_Force_Traj);
 
@@ -1659,6 +1668,20 @@ double Variation_Cal(dlib::matrix<double> &Dlib_Matrix)
 	}
 	// Traj_Variation_Val = Traj_Variation_Val * Traj_Variation_Val;
 	return Traj_Variation_Val;
+}
+
+double Quadratic_Sum(dlib::matrix<double> &Dlib_Matrix)
+{
+	// This function is used to calcualte the variation of the state trajectory
+	double Quadratic_Sum_Val = 0.0;
+	for (int i = 0; i < Dlib_Matrix.nc(); i++)
+	{
+		for (int j = 0; j < Dlib_Matrix.nr(); j++)
+		{
+			Quadratic_Sum_Val = Quadratic_Sum_Val + Dlib_Matrix(i,j) * Dlib_Matrix(i,j);
+		}
+	}
+	return Quadratic_Sum_Val;
 }
 
 double Traj_Variation(dlib::matrix<double> &StateNDot_Traj)
@@ -2155,8 +2178,8 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	{
 		if (ObjNConstraint_Type[i]>1.0)
 		{
-			Flow[i] = -3.0;
-			Fupp[i] = 3.0;
+			Flow[i] = -Acc_max;
+			Fupp[i] = Acc_max;
 		}
 		else
 		{
@@ -2705,11 +2728,19 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 		Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);
 	}
 
+	double Hand_max = max(rE_ref[0], rF_ref[0]);
+
 	ObjNConstraint_Val.push_back(Obj_val);
 	ObjNConstraint_Type.push_back(1);
 
-	// ObjNConstraint_Val.push_back((Opt_Seed[2] - PI/2.0) * (Opt_Seed[2] - PI/2.0));
-	// ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back((Opt_Seed[2] - PI/2.0) * (Opt_Seed[2] - PI/2.0));
+	ObjNConstraint_Type.push_back(0);
+
+	ObjNConstraint_Val.push_back((!sigma_i[2]) * (sigma_i_child[2]) * (rE_opt[0] - Hand_max) * (rE_opt[0] - Hand_max));
+	ObjNConstraint_Type.push_back(0);
+
+	ObjNConstraint_Val.push_back((!sigma_i[3]) * (sigma_i_child[3]) * (rF_opt[0] - Hand_max) * (rF_opt[0] - Hand_max));
+	ObjNConstraint_Type.push_back(0);
 
 	dlib::matrix<double,6,1> End_Effector_Dist;
 	std::vector<int> End_Effector_Obs(6);

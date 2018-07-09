@@ -178,5 +178,9 @@ std::vector<double> Full_Row_Rank_Index(std::vector<double> &sigma_i_child);
 void Integration_Consistent(dlib::matrix<double> &Robostate_Dlib_Front, dlib::matrix<double> &Robostate_Dlib_Back, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 
 double Kinetic_Energy_End_Frame(dlib::matrix<double> &StateNDot_Traj);
+
 double Velocity_Projection(std::vector<double> &Pos_A, std::vector<double> &Pos_B, std::vector<double> &Vel_B);
+
 double Variation_Cal(dlib::matrix<double> &Dlib_Matrix);
+
+double Quadratic_Sum(dlib::matrix<double> &Dlib_Matrix);
