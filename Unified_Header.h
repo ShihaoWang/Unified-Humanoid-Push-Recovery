@@ -184,3 +184,5 @@ double Velocity_Projection(std::vector<double> &Pos_A, std::vector<double> &Pos_
 double Variation_Cal(dlib::matrix<double> &Dlib_Matrix);
 
 double Quadratic_Sum(dlib::matrix<double> &Dlib_Matrix);
+
+int Sigma_Change(std::vector<double> &sigma_i, std::vector<double> &sigma_i_child);
