@@ -55,10 +55,10 @@ int main( int argc, char **argv)
 		*/
 		std::vector<double> Opt_Soln(Variable_Num);
 		Node_i = Pop_Node();
-		// if(Iteration>0)
-		// {
+		if(Iteration>0)
+		{
 			Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
-		// }
+		}
 		if(Opt_Flag==1)
 		{
 			// Optimal solution has been found
