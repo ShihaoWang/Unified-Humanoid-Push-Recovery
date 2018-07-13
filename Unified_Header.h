@@ -144,7 +144,7 @@ double KE_Variation_fn(dlib::matrix<double> &StateNDot_Traj);
 dlib::matrix<double> StateNDot_ref_fn(std::vector<double> &Robot_Config_i, std::vector<double> &Robot_Velocity_i);
 std::vector<double> Opt_Soln_Load();
 dlib::matrix<double> Quadratic_Minus(dlib::matrix<double> &Mat_A, dlib::matrix<double> &Mat_B);
-void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum); 
+void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum);
 
 Robot_StateNDot DlibRobotstate2StateNDot(dlib::matrix<double> &DlibRobotstate);
 double CubicSpline_Evaluation_fn(const std::vector<double> &CubicSpline_Coeff, double s);

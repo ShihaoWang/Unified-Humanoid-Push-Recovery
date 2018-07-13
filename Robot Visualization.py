@@ -155,7 +155,7 @@ def main():
             # vis.hide('left_hd force')
             # vis.hide('rght_hd force')
 def Contact_Force_vec(robot, Contact_Force_Traj_i, norm):
-    length = 0.5
+    length = 0.25
     End_Effector_Pos = get_End_Effector_Pos(robot)          # 18 by 1
     left_ft_x = 0.5 * End_Effector_Pos[0] + 0.5 * End_Effector_Pos[3]
     left_ft_y = 0.5 * End_Effector_Pos[1] + 0.5 * End_Effector_Pos[4]
@@ -225,7 +225,8 @@ def KE_fn(robot, dataArray):
 def Traj_Loader():
     # This function will load the robotstate and contact force trajectories
     Robotstate_Traj = np.array([])
-    with open("./Exp Data/Exp 4/State_step1_rf_gd_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Exp 4/State_Exp3_.txt",'r') as robot_soln_file:
+    with open("./Exp/Flat/State_Flat_step3_IS_.txt",'r') as robot_soln_file:
         for line in robot_soln_file:
             currentline = line.split(",")
             currentline = [x.replace("\r\n","") for x in currentline]
@@ -235,7 +236,8 @@ def Traj_Loader():
     Robotstate_Traj = np.reshape(Robotstate_Traj, (13, Robotstate_Traj.shape[0]/13))
 
     Contact_Force_Traj = np.array([])
-    with open("./Exp Data/Exp 4/Contact_Force_step1_rf_gd_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Exp 4/Contact_Force_Exp3_.txt",'r') as robot_soln_file:
+    with open("./Exp/Flat/Contact_Force_Flat_step3_IS_.txt",'r') as robot_soln_file:
         for line in robot_soln_file:
             currentline = line.split(",")
             currentline = [x.replace("\r\n","") for x in currentline]
