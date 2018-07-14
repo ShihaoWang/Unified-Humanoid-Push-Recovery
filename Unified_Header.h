@@ -139,7 +139,7 @@ void Distance_Velocity_Constraint(std::vector<double>& sigma, std::vector<double
 void Contact_Force_Complem_Constraint(dlib::matrix<double> &Contact_Force, std::vector<double> &sigma, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 void Contact_Force_Feasibility_Constraint(std::vector<double> &Pos, std::vector<double> &Vel, dlib::matrix<double> &Contact_Force, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
 void Contact_Maintenance_Constraint(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vector<double> &Pos, std::vector<double> &Vel, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type);
-double KE_Variation_fn(dlib::matrix<double> &StateNDot_Traj);
+double KE_Variation_fn(dlib::matrix<double> &StateNDot_Traj);  
 
 dlib::matrix<double> StateNDot_ref_fn(std::vector<double> &Robot_Config_i, std::vector<double> &Robot_Velocity_i);
 std::vector<double> Opt_Soln_Load();

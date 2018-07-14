@@ -20,7 +20,7 @@ double q2low = 0.0;                    double q2upp = 2.618;				double q3low = -
 double q4low = -2.3562;                double q4upp = 0.733;				double q5low = 0.0;                    double q5upp = 2.618;
 double q6low = -1.3;                   double q6upp = 0.733;				double q7low = -3.14;                  double q7upp = 1.047;
 double q8low = -2.391;                 double q8upp = 0.0;					double q9low = -3.14;                  double q9upp = 1.047;
-double q10low = -2.391;                double q10upp = 0.0;					double AngRateLow = -3.0;              double AngRateHgh = 5.0;
+double q10low = -2.391;                double q10upp = 0.0;					double AngRateLow = -3.0;              double AngRateHgh = 6.0;
 
 double rIxdotlow = -Inf;               double rIxdotupp = Inf;				double rIydotlow = -Inf;               double rIydotupp = Inf;
 double thetadotlow = -Inf;             double thetadotupp = Inf;			double q1dotlow = AngRateLow;          double q1dotupp = AngRateHgh;
@@ -34,7 +34,7 @@ double tau1_max = 100;             		double tau2_max = 100;				double tau3_max =
 double tau5_max = 100;             		double tau6_max = 100;				double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
 
-double Acc_max = 3;
+double Acc_max = 5;
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
 dlib::matrix<double> ctrl_low_vec;					dlib::matrix<double> ctrl_upp_vec;
@@ -406,8 +406,12 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 
+	// cout<<Matrix_result<<endl;
+
 	Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+
+	// cout<<Matrix_result<<endl;
 
 	// 2. Inactive constraints have to be strictly away from the obstacle
 	dlib::matrix<double> ones_vector, temp_matrix;
@@ -435,8 +439,9 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
 
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back(KE_init - 35);			ObjNConstraint_Type.push_back(1);
-	ObjNConstraint_Val.push_back(35  - KE_init);			ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(KE_init - 35);			ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(35  - KE_init);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back((55  - KE_init) * (55  - KE_init));			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
@@ -451,8 +456,12 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rEx - 4.966) * (rEx - 4.966));	ObjNConstraint_Type.push_back(0);
 	// ObjNConstraint_Val.push_back((rEy - 0.6164) * (rEy - 0.6164));	ObjNConstraint_Type.push_back(0);
 
-	ObjNConstraint_Val.push_back(vCOM_init[0] - 0.8);
+	ObjNConstraint_Val.push_back(vCOM_init[0] - 1.5);
 	ObjNConstraint_Type.push_back(1);
+
+	ObjNConstraint_Val.push_back((StateNDot_Init_i.thetadot - 0.6)*(StateNDot_Init_i.thetadot - 0.6));
+	ObjNConstraint_Type.push_back(0);
+
 
 	// std::vector<double> sigma_i = sigma;
 	// std::vector<double> sigma_i_child = sigma;
@@ -1513,10 +1522,10 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	{
 		// ObjNConstraint_Val[0] = -T;
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		// double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
-		// ObjNConstraint_Val.push_back(55 - KE_End);
+		double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
+		// ObjNConstraint_Val.push_back(65 - KE_End);
 		// ObjNConstraint_Type.push_back(1);
-		// ObjNConstraint_Val.push_back(-70 + KE_End);
+		// ObjNConstraint_Val.push_back(KE_End - 200);
 		// ObjNConstraint_Type.push_back(1);
 
 		// ObjNConstraint_Val.push_back(-40 + KE_End);
@@ -2422,7 +2431,7 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 		}
 	}
 	// cout<<StateNDot_Traj<<endl;
-	//
+
 	// dlib::matrix<double> Robot_State_Interpol_i;
 	// for (int i = 0; i < StateNDot_len; i++){
 	// 	Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
@@ -2870,8 +2879,11 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 				{
 					if(vCOM_sign>0)
 					{
-						ObjNConstraint_Val.push_back(rD_opt[0] - rA_opt[0] - mini);
-						ObjNConstraint_Type.push_back(1);
+						// ObjNConstraint_Val.push_back(rD_opt[0] - rA_opt[0] - mini);
+						// ObjNConstraint_Type.push_back(1);
+						ObjNConstraint_Val.push_back(rD_opt[0] - rD_ref[0] - mini);
+						ObjNConstraint_Type.push_back(0);
+
 					}
 					else
 					{
@@ -2969,18 +2981,23 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	// ObjNConstraint_Type.push_back(0);
 
 	double Hand_max = max(rE_ref[0], rF_ref[0]);
-	Hand_max = max(Hand_max, rT_opt[0]);
+	Hand_max = max(Hand_max, rT_ref[0]);
+	Hand_max = max(Hand_max, rC_ref[0]);
+	Hand_max = max(Hand_max, rA_ref[0]);
 
 	ObjNConstraint_Val[0] = Obj_val;
 
-	ObjNConstraint_Val.push_back((Opt_Seed[2] - PI/2.0) * (Opt_Seed[2] - PI/2.0));
+	ObjNConstraint_Val.push_back((Opt_Seed[2]) * (Opt_Seed[2]));
 	ObjNConstraint_Type.push_back(0);
 
-	ObjNConstraint_Val.push_back((!sigma_i[2]) * (sigma_i_child[2]) * (rE_opt[0] - Hand_max) * (rE_opt[0] - Hand_max));
-	ObjNConstraint_Type.push_back(0);
-
-	ObjNConstraint_Val.push_back((!sigma_i[3]) * (sigma_i_child[3]) * (rF_opt[0] - Hand_max) * (rF_opt[0] - Hand_max));
-	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((Opt_Seed[2] - PI/2.5) * (Opt_Seed[2] - PI/2.5));
+	// ObjNConstraint_Type.push_back(0);
+	//
+	// ObjNConstraint_Val.push_back((!sigma_i[2]) * (sigma_i_child[2]) * (rE_opt[0] - Hand_max) * (rE_opt[0] - Hand_max));
+	// ObjNConstraint_Type.push_back(0);
+	//
+	// ObjNConstraint_Val.push_back((!sigma_i[3]) * (sigma_i_child[3]) * (rF_opt[0] - Hand_max) * (rF_opt[0] - Hand_max));
+	// ObjNConstraint_Type.push_back(0);
 
 	dlib::matrix<double,6,1> End_Effector_Dist;
 	std::vector<int> End_Effector_Obs(6);
