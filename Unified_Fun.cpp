@@ -43,7 +43,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0.025;			int Grids = 8;			double mu = 0.35;
+double mini = 0*0.025;			int Grids = 8;			double mu = 0.35;
 int Variable_Num = 48 * Grids + 1;
 double Time_Seed; 									// This value will be adaptively changed to formulate an optimal solution
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
@@ -439,9 +439,9 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
 
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back(-KE_init + 70);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(15.15 - KE_init);			ObjNConstraint_Type.push_back(1);
 
-	ObjNConstraint_Val.push_back(KE_init - 68.5);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(KE_init - 12.15);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(55  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
 
@@ -1261,7 +1261,14 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Dynamics_LHS = D_q_Mid * Robotstate_Mid_Acc + C_q_qdot_Mid;
 		Dynamics_RHS = Jac_Full_Trans_Mid * (0.5 * Contact_Force_Front + 0.5 * Contact_Force_Back) + B_q_Mid * (0.5 * Ctrl_Front + 0.5 * Ctrl_Back);
 		Matrix_result = Dynamics_LHS - Dynamics_RHS;
-		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+		// if((Opt_Type_Flag == -1)&&(i == Grids-2))
+		// {
+		// 	// In this case, the dynamics does not have to be satisfied
+		// }
+		// else
+		// {
+			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+		// }
 	}
 
 	// 3. Complementarity constraints: Distance and Maintenance!
@@ -1306,17 +1313,20 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		Matrix_result = Maint_Matrix * Matrix_Minus_result;
 		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 	}
-	//	3.2 Active constraints have to remain vacant relative distance.
+
+	//	3.2 Active constraints have to remain vacant relative distance. However, when the motion type is to retract the contact, we have to deal with that differently.
+	// The critical for the making/retracting contact is the same: the last grid (grids -1)
+
 	for (int i = 0; i < Grids; i++)
 	{
 		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);							Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
 		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
 		End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
 		if(i<Critical_Grid_Index){	sigma = sigma_i;}			else{			sigma = sigma_i_child;}
+		if(Opt_Type_Flag == -1)	{	sigma = sigma_i;}
 
 		if((Opt_Type_Flag == -1)&&(i == Critical_Grid_Index-1))
 		{
-			// 3.3 The Upper end effector has to have an escape velocity
 			dlib::matrix<double> Upper_Normal_Speed;
 			End_Effector_Upper_Vel(Robot_StateNDot_i, Upper_Normal_Speed);
 
@@ -1374,8 +1384,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 				{
 					// ObjNConstraint_Val.push_back( Robot_StateNDot_i.q2);
 					// ObjNConstraint_Type.push_back(0);
-					ObjNConstraint_Val.push_back((Robot_StateNDot_i.theta - PI/2.0) * (Robot_StateNDot_i.theta - PI/2.0));
-					ObjNConstraint_Type.push_back(0);
+					// ObjNConstraint_Val.push_back((Robot_StateNDot_i.theta - PI/2.0) * (Robot_StateNDot_i.theta - PI/2.0));
+					// ObjNConstraint_Type.push_back(0);
 					// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q8);
 					// ObjNConstraint_Type.push_back(0);
 					// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q10);
@@ -1383,8 +1393,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 				}
 				else
 				{
-					// Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-					// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+					Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+					ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 				}
 			}
 			// 3.2. Inactive constraints have to be strictly away from the obstacle
@@ -2429,31 +2439,31 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// The only step that needs to be changed with the new idea is the following code
 	// Now we have the Init_Config and the Seed_Config so how to interpolate the intermediate trajectories
 	//
-	double T_tot = T * (Grids - 1);
-	std::vector<double> State_Traj_Coeff_i;
-	double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
-	for (int i = 0; i < 13; i++)
-	{
-		Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
-		Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
-		State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
-		// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
-		double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
-		for (int j = 0; j < Grids; j++)
-		{
-			s_j = ds * (j);
-			// cout<<s_j<<endl;
-			StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
-			StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
-		}
-	}
+	// double T_tot = T * (Grids - 1);
+	// std::vector<double> State_Traj_Coeff_i;
+	// double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
+	// for (int i = 0; i < 13; i++)
+	// {
+	// 	Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
+	// 	Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
+	// 	State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
+	// 	// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
+	// 	double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
+	// 	for (int j = 0; j < Grids; j++)
+	// 	{
+	// 		s_j = ds * (j);
+	// 		// cout<<s_j<<endl;
+	// 		StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
+	// 		StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
+	// 	}
+	// }
 	// cout<<StateNDot_Traj<<endl;
-	//
-	// dlib::matrix<double> Robot_State_Interpol_i;
-	// for (int i = 0; i < StateNDot_len; i++){
-	// 	Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
-	// 	for (int j = 0; j < Grids; j++){
-	// 		StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
+
+	dlib::matrix<double> Robot_State_Interpol_i;
+	for (int i = 0; i < StateNDot_len; i++){
+		Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
+		for (int j = 0; j < Grids; j++){
+			StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
 
 	// Here is the initialization of the spline coefficients for the stateNdot, control and contact force
 	// First is to initialize: StateNDot
@@ -2879,7 +2889,28 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 		if(sigma_diff<0)
 		{
 			// Contact break/retract this part is a little tough to handle. However, in our problem, we only consider the foot contact retract
-
+			int Contact_Index = Sigma_Change(sigma_i, sigma_i_child);
+			// double vCOM_sign = vCOM_ref[0]/abs(vCOM_ref[0]);
+			if(Contact_Index<2)
+			{
+				// In this case, the robot will lift up left/right foot
+				if(Contact_Index == 0)
+				{
+					// In this case, the robot will lift AB foot so we would like to move the COM to CD
+					ObjNConstraint_Val.push_back(rCOM_opt[0] - rD_ref[0] - mini);
+					ObjNConstraint_Type.push_back(1);
+					ObjNConstraint_Val.push_back(rC_ref[0] - rCOM_opt[0] - mini);
+					ObjNConstraint_Type.push_back(1);
+				}
+				else
+				{
+					// In this case, the robot will lift CD foot so we would like to move the COM to AB
+					ObjNConstraint_Val.push_back(rCOM_opt[0] - rB_ref[0] - mini);
+					ObjNConstraint_Type.push_back(1);
+					ObjNConstraint_Val.push_back(rA_ref[0] - rCOM_opt[0] - mini);
+					ObjNConstraint_Type.push_back(1);
+				}
+			}
 		}
 		else
 		{
@@ -3032,10 +3063,20 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
 
 	dlib::matrix<double> Eqn_Pos_Matrix, Ineqn_Pos_Matrix, Eqn_Vel_Matrix, Eqn_Maint_Matrix, Matrix_result;
-	std::vector<double> sigma_temp;
-	sigma_temp = Sigma2Pos(sigma_i_child, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
-	sigma_temp = Sigma2Pos(sigma_i_child, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
-	sigma_temp = Sigma2Vel(sigma_i_child);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
+	std::vector<double> sigma_temp, sigma_real;
+	if(Opt_Type_Flag == -1)
+	{
+		// In this case, sigma_i has to be maintained.
+		sigma_real = sigma_i;
+	}
+	else
+	{
+		// In other cases, sigma_i_child has to be maintained.
+		sigma_real = sigma_i_child;
+	}
+	sigma_temp = Sigma2Pos(sigma_real, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
+	sigma_temp = Sigma2Pos(sigma_real, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
+	sigma_temp = Sigma2Vel(sigma_real);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
 
 	// 1. Active constraints have to be satisfied: Position and Velocity
 	Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
@@ -3056,11 +3097,19 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
 	// 4. One more constraint to be added is to maintain the active unchanged constraint
-	Eqn_Maint_Matrix = Eqn_Maint_Matrix_fn(sigma_i, sigma_i_child);
+	if(Opt_Type_Flag == -1)
+	{
+		Eqn_Maint_Matrix = Eqn_Maint_Matrix_fn(sigma_i, sigma_i);
+	}
+	else
+	{
+		Eqn_Maint_Matrix = Eqn_Maint_Matrix_fn(sigma_i, sigma_i_child);
+	}
 	Matrix_result = Eqn_Maint_Matrix * (End_Effector_Pos_ref - End_Effector_Pos);
 	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 	return;
 }
+
 int Sigma_Change(std::vector<double> &sigma_i, std::vector<double> &sigma_i_child)
 {
 	// This function is only used when a contact change is made for sure
