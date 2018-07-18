@@ -21,7 +21,7 @@ double q4low = -2.3562;                	double q4upp = 0.733;					double q5low =
 double q6low = -1.3;                   	double q6upp = 0.733;					double q7low = -3.14;                  	double q7upp = 1.047;
 double q8low = -2.391;                 	double q8upp = 0.0;						double q9low = -3.14;                  	double q9upp = 1.047;
 double q10low = -2.391;                	double q10upp = 0.0;
-double AngRateMag = 5.0;			   	double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
+double AngRateMag = 4.5;			   	double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
 
 double rIxdotlow = -Inf;               	double rIxdotupp = Inf;					double rIydotlow = -Inf;               	double rIydotupp = Inf;
 double thetadotlow = -Inf;             	double thetadotupp = Inf;				double q1dotlow = AngRateLow;          	double q1dotupp = AngRateHgh;
@@ -34,7 +34,7 @@ double q10dotlow = AngRateLow;         	double q10dotupp = AngRateHgh;
 double tau1_max = 100;             		double tau2_max = 100;					double tau3_max = 100;					double tau4_max = 100;
 double tau5_max = 100;             		double tau6_max = 100;					double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
-double Acc_max = 5;
+double Acc_max = 25;
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
 dlib::matrix<double> ctrl_low_vec;					dlib::matrix<double> ctrl_upp_vec;
@@ -43,7 +43,7 @@ dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_
  * Some global values are defined
  * Description
  */
-double mini = 0*0.025;			int Grids = 8;			double mu = 0.35;
+double mini = 0.025;			int Grids = 8;			double mu = 0.35;
 int Variable_Num = 48 * Grids + 1;
 double Time_Seed; 									// This value will be adaptively changed to formulate an optimal solution
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
@@ -439,9 +439,9 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
 
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back(60.11 - KE_init);			ObjNConstraint_Type.push_back(1);
-	ObjNConstraint_Val.push_back(KE_init - 58.18);			ObjNConstraint_Type.push_back(1);
-	// ObjNConstraint_Val.push_back(55  - KE_init);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(48.30 - KE_init);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(KE_init - 45.56);			ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
 
 	//
@@ -460,7 +460,9 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back(vCOM_init[0] - 1.5);
 	// ObjNConstraint_Type.push_back(1);
 	//
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIxdot - 0.5)*(StateNDot_Init_i.rIxdot - 0.5));
+	ObjNConstraint_Val.push_back((StateNDot_Init_i.q10dot - 3.0)*(StateNDot_Init_i.q10dot - 3.0));
+	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q5dot-4)*(StateNDot_Init_i.q5dot-4));
 	// ObjNConstraint_Type.push_back(0);
 
 	// std::vector<double> sigma_i = sigma;
@@ -1546,7 +1548,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	{
 		// ObjNConstraint_Val[0] = -T;
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
+		// double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
 		// ObjNConstraint_Val.push_back(80.06 - KE_End);
 		// ObjNConstraint_Type.push_back(1);
 		// ObjNConstraint_Val.push_back(KE_End - 75.66);
@@ -1575,13 +1577,15 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		// std::vector<double> vCOM_opt = Ang_Vel_fn(Robot_StateNDot_End, "vCOM");
 
 		// ObjNConstraint_Val[0] = Robot_StateNDot_End.thetadot * Robot_StateNDot_End.thetadot;
-		// ObjNConstraint_Val.push_back(-Robot_StateNDot_End.q1 + Robot_StateNDot_End.q4 - mini);
+		// ObjNConstraint_Val.push_back(-Robot_StateNDot_End.q9 - mini);
 		// ObjNConstraint_Type.push_back(1);
 		// ObjNConstraint_Val.push_back(rD_opt[0] - rA_opt[0] - 0.10);
 		// ObjNConstraint_Type.push_back(1);
 		// ObjNConstraint_Val.push_back(0.2 - (rD_opt[0] - rA_opt[0]));
 		// ObjNConstraint_Type.push_back(1);
 
+		// ObjNConstraint_Val.push_back((Robot_StateNDot_End.q10 + PI/2.0) * (Robot_StateNDot_End.q10 + PI/2.0));
+		// ObjNConstraint_Type.push_back(0);
 		//
 		// ObjNConstraint_Val.push_back((Robot_StateNDot_End.q2-Robot_StateNDot_End.q5) * (Robot_StateNDot_End.q2-Robot_StateNDot_End.q5));
 		// ObjNConstraint_Type.push_back(0);
@@ -2440,31 +2444,31 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// The only step that needs to be changed with the new idea is the following code
 	// Now we have the Init_Config and the Seed_Config so how to interpolate the intermediate trajectories
 	//
-	double T_tot = T * (Grids - 1);
-	std::vector<double> State_Traj_Coeff_i;
-	double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
-	for (int i = 0; i < 13; i++)
-	{
-		Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
-		Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
-		State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
-		// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
-		double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
-		for (int j = 0; j < Grids; j++)
-		{
-			s_j = ds * (j);
-			// cout<<s_j<<endl;
-			StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
-			StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
-		}
-	}
+	// double T_tot = T * (Grids - 1);
+	// std::vector<double> State_Traj_Coeff_i;
+	// double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
+	// for (int i = 0; i < 13; i++)
+	// {
+	// 	Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
+	// 	Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
+	// 	State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
+	// 	// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
+	// 	double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
+	// 	for (int j = 0; j < Grids; j++)
+	// 	{
+	// 		s_j = ds * (j);
+	// 		// cout<<s_j<<endl;
+	// 		StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
+	// 		StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
+	// 	}
+	// }
 	// cout<<StateNDot_Traj<<endl;
 
-	// dlib::matrix<double> Robot_State_Interpol_i;
-	// for (int i = 0; i < StateNDot_len; i++){
-	// 	Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
-	// 	for (int j = 0; j < Grids; j++){
-	// 		StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
+	dlib::matrix<double> Robot_State_Interpol_i;
+	for (int i = 0; i < StateNDot_len; i++){
+		Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
+		for (int j = 0; j < Grids; j++){
+			StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
 
 	// Here is the initialization of the spline coefficients for the stateNdot, control and contact force
 	// First is to initialize: StateNDot
@@ -3054,11 +3058,23 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q2);
 	// ObjNConstraint_Type.push_back(0);
 
+	ObjNConstraint_Val.push_back((rF_ref[0] - rF_opt[0])*(rF_ref[0] - rF_opt[0]));
+	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q8- 0*PI/2.0) * (StateNDot_Init_i.q8 - 0*PI/2.0));
+	// ObjNConstraint_Type.push_back(0);
+
 	// ObjNConstraint_Val.push_back((!sigma_i[2]) * (sigma_i_child[2]) * (rE_opt[0] - Hand_max) * (rE_opt[0] - Hand_max));
 	// ObjNConstraint_Type.push_back(0);
 	//
 	// ObjNConstraint_Val.push_back((!sigma_i[3]) * (sigma_i_child[3]) * (rF_opt[0] - Hand_max) * (rF_opt[0] - Hand_max));
 	// ObjNConstraint_Type.push_back(0);
+
+	// ObjNConstraint_Val.push_back((rE_opt[0] - Hand_max) * (rE_opt[0] - Hand_max));
+	// ObjNConstraint_Type.push_back(0);
+	//
+	// ObjNConstraint_Val.push_back((rF_opt[0] - Hand_max) * (rF_opt[0] - Hand_max));
+	// ObjNConstraint_Type.push_back(0);
+
 
 	dlib::matrix<double,6,1> End_Effector_Dist;
 	std::vector<int> End_Effector_Obs(6);

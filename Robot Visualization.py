@@ -125,7 +125,7 @@ def main():
 
     Robotstate_Traj, Contact_Force_Traj = Traj_Loader()
     h = 0.0033
-    playspeed = 5
+    playspeed = 2.5
     norm = 500
     while vis.shown():
         # This is the main plot program
