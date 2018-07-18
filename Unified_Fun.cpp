@@ -14,26 +14,26 @@
 // Pre-define of the bounds
 double Inf = 1.1e20;					double PI = 3.1415926535897932384626;									   double pi = PI;
 // There are three types of variables in this optimization problem: robot state, control torques and contact forces
-double rIxlow = -Inf;                  double rIxupp = Inf;					double rIylow = -Inf;                  double rIyupp = Inf;
-double thetalow = -pi;                 double thetaupp = pi;				double q1low = -2.3562;                double q1upp = 0.733;
-double q2low = 0.0;                    double q2upp = 2.618;				double q3low = -1.3;                   double q3upp = 0.733;
-double q4low = -2.3562;                double q4upp = 0.733;				double q5low = 0.0;                    double q5upp = 2.618;
-double q6low = -1.3;                   double q6upp = 0.733;				double q7low = -3.14;                  double q7upp = 1.047;
-double q8low = -2.391;                 double q8upp = 0.0;					double q9low = -3.14;                  double q9upp = 1.047;
-double q10low = -2.391;                double q10upp = 0.0;					double AngRateLow = -3.0;              double AngRateHgh = 3.0;
+double rIxlow = -Inf;                  	double rIxupp = Inf;					double rIylow = -Inf;                  	double rIyupp = Inf;
+double thetalow = -pi;                 	double thetaupp = pi;					double q1low = -2.3562;                	double q1upp = 0.733;
+double q2low = 0.0;                    	double q2upp = 2.618;					double q3low = -1.3;                   	double q3upp = 0.733;
+double q4low = -2.3562;                	double q4upp = 0.733;					double q5low = 0.0;                    	double q5upp = 2.618;
+double q6low = -1.3;                   	double q6upp = 0.733;					double q7low = -3.14;                  	double q7upp = 1.047;
+double q8low = -2.391;                 	double q8upp = 0.0;						double q9low = -3.14;                  	double q9upp = 1.047;
+double q10low = -2.391;                	double q10upp = 0.0;
+double AngRateMag = 5.0;			   	double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
 
-double rIxdotlow = -Inf;               double rIxdotupp = Inf;				double rIydotlow = -Inf;               double rIydotupp = Inf;
-double thetadotlow = -Inf;             double thetadotupp = Inf;			double q1dotlow = AngRateLow;          double q1dotupp = AngRateHgh;
-double q2dotlow = AngRateLow;          double q2dotupp = AngRateHgh;		double q3dotlow = AngRateLow;          double q3dotupp = AngRateHgh;
-double q4dotlow = AngRateLow;          double q4dotupp = AngRateHgh;		double q5dotlow = AngRateLow;          double q5dotupp = AngRateHgh;
-double q6dotlow = AngRateLow;          double q6dotupp = AngRateHgh;		double q7dotlow = AngRateLow;          double q7dotupp = AngRateHgh;
-double q8dotlow = AngRateLow;          double q8dotupp = AngRateHgh;		double q9dotlow = AngRateLow;          double q9dotupp = AngRateHgh;
-double q10dotlow = AngRateLow;         double q10dotupp = AngRateHgh;
+double rIxdotlow = -Inf;               	double rIxdotupp = Inf;					double rIydotlow = -Inf;               	double rIydotupp = Inf;
+double thetadotlow = -Inf;             	double thetadotupp = Inf;				double q1dotlow = AngRateLow;          	double q1dotupp = AngRateHgh;
+double q2dotlow = AngRateLow;          	double q2dotupp = AngRateHgh;			double q3dotlow = AngRateLow;          	double q3dotupp = AngRateHgh;
+double q4dotlow = AngRateLow;          	double q4dotupp = AngRateHgh;			double q5dotlow = AngRateLow;          	double q5dotupp = AngRateHgh;
+double q6dotlow = AngRateLow;          	double q6dotupp = AngRateHgh;			double q7dotlow = AngRateLow;          	double q7dotupp = AngRateHgh;
+double q8dotlow = AngRateLow;          	double q8dotupp = AngRateHgh;			double q9dotlow = AngRateLow;          	double q9dotupp = AngRateHgh;
+double q10dotlow = AngRateLow;         	double q10dotupp = AngRateHgh;
 
-double tau1_max = 100;             		double tau2_max = 100;				double tau3_max = 100;					double tau4_max = 100;
-double tau5_max = 100;             		double tau6_max = 100;				double tau7_max = 60;              		double tau8_max = 50;
+double tau1_max = 100;             		double tau2_max = 100;					double tau3_max = 100;					double tau4_max = 100;
+double tau5_max = 100;             		double tau6_max = 100;					double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
-
 double Acc_max = 5;
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
@@ -439,9 +439,8 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
 
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back(15.15 - KE_init);			ObjNConstraint_Type.push_back(1);
-
-	ObjNConstraint_Val.push_back(KE_init - 12.15);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(60.11 - KE_init);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(KE_init - 58.18);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(55  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
 
@@ -460,8 +459,8 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 
 	// ObjNConstraint_Val.push_back(vCOM_init[0] - 1.5);
 	// ObjNConstraint_Type.push_back(1);
-
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.thetadot - 0.5)*(StateNDot_Init_i.thetadot - 0.5));
+	//
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIxdot - 0.5)*(StateNDot_Init_i.rIxdot - 0.5));
 	// ObjNConstraint_Type.push_back(0);
 
 	// std::vector<double> sigma_i = sigma;
@@ -1393,8 +1392,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 				}
 				else
 				{
-					Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-					ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+					// Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+					// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 				}
 			}
 			// 3.2. Inactive constraints have to be strictly away from the obstacle
@@ -1546,15 +1545,16 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	else
 	{
 		// ObjNConstraint_Val[0] = -T;
-		ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		// double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
-		// ObjNConstraint_Val.push_back(80 - KE_End);
+		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
+		double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
+		// ObjNConstraint_Val.push_back(80.06 - KE_End);
 		// ObjNConstraint_Type.push_back(1);
-		// ObjNConstraint_Val.push_back(KE_End - 75);
+		// ObjNConstraint_Val.push_back(KE_End - 75.66);
 		// ObjNConstraint_Type.push_back(1);
 
-		// ObjNConstraint_Val.push_back(-40 + KE_End);
+		// ObjNConstraint_Val.push_back(35.16 - KE_End);
 		// ObjNConstraint_Type.push_back(1);
+		// ObjNConstraint_Val[0] = KE_End;
 
 		// ObjNConstraint_Val[0] = (KE_End - 90) * (KE_End - 90);
 
@@ -1589,9 +1589,10 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		// ObjNConstraint_Type.push_back(1);
 
 		// ObjNConstraint_Val[0] = 0*Traj_Variation(StateNDot_Traj) + 0.0 * Variation_Cal(Contact_Force_Traj);
-		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + 0 * Quadratic_Sum(Contact_Force_Traj);
+		ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + 0 * Quadratic_Sum(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = KE_Variation_fn(StateNDot_Traj);
 		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
-		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child) + 1 * Variation_Cal(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child) + 0 * Variation_Cal(Contact_Force_Traj);
 	}
 }
 
@@ -2439,31 +2440,31 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// The only step that needs to be changed with the new idea is the following code
 	// Now we have the Init_Config and the Seed_Config so how to interpolate the intermediate trajectories
 	//
-	// double T_tot = T * (Grids - 1);
-	// std::vector<double> State_Traj_Coeff_i;
-	// double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
-	// for (int i = 0; i < 13; i++)
-	// {
-	// 	Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
-	// 	Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
-	// 	State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
-	// 	// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
-	// 	double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
-	// 	for (int j = 0; j < Grids; j++)
-	// 	{
-	// 		s_j = ds * (j);
-	// 		// cout<<s_j<<endl;
-	// 		StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
-	// 		StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
-	// 	}
-	// }
+	double T_tot = T * (Grids - 1);
+	std::vector<double> State_Traj_Coeff_i;
+	double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
+	for (int i = 0; i < 13; i++)
+	{
+		Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
+		Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
+		State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
+		// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
+		double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
+		for (int j = 0; j < Grids; j++)
+		{
+			s_j = ds * (j);
+			// cout<<s_j<<endl;
+			StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
+			StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
+		}
+	}
 	// cout<<StateNDot_Traj<<endl;
 
-	dlib::matrix<double> Robot_State_Interpol_i;
-	for (int i = 0; i < StateNDot_len; i++){
-		Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
-		for (int j = 0; j < Grids; j++){
-			StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
+	// dlib::matrix<double> Robot_State_Interpol_i;
+	// for (int i = 0; i < StateNDot_len; i++){
+	// 	Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
+	// 	for (int j = 0; j < Grids; j++){
+	// 		StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
 
 	// Here is the initialization of the spline coefficients for the stateNdot, control and contact force
 	// First is to initialize: StateNDot
@@ -3022,30 +3023,32 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	//
 	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q2 -PI/4)*(StateNDot_Init_i.q2 -PI/6)) ;
 	// ObjNConstraint_Type.push_back(0);
-	//
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q4 + PI/4)*(StateNDot_Init_i.q4 + PI/6)) ;
+
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q4 + PI/2)*(StateNDot_Init_i.q4 + PI/2)) ;
 	// ObjNConstraint_Type.push_back(0);
 	//
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.theta)*(StateNDot_Init_i.theta)) ;
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.theta - PI/2.0)*(StateNDot_Init_i.theta - PI/2.0)) ;
 	// ObjNConstraint_Type.push_back(0);
 
-	// double Hand_max = max(0*rE_ref[0], 0*rF_ref[0]);
-	// Hand_max = max(Hand_max, rD_ref[0]);
-	// Hand_max = max(Hand_max, rC_ref[0]);
-	// Hand_max = max(Hand_max, rA_ref[0]);
-	// Hand_max = max(Hand_max, rT_opt[0]);
+	double Hand_max = max(rE_ref[0], rF_ref[0]);
+	Hand_max = max(Hand_max, rD_ref[0]);
+	Hand_max = max(Hand_max, rC_ref[0]);
+	Hand_max = max(Hand_max, rA_ref[0]);
+	Hand_max = max(Hand_max, rT_opt[0]);
 
 	ObjNConstraint_Val[0] = Obj_val;
 	//
 	// ObjNConstraint_Val.push_back((Opt_Seed[2]) * (Opt_Seed[2]));
 	// ObjNConstraint_Type.push_back(0);
-
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q5 - PI/1.5) * (StateNDot_Init_i.q5 - PI/1.5));
-	// ObjNConstraint_Type.push_back(0);
 	//
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q7- PI/2.0) * (StateNDot_Init_i.q7 - PI/2.0));
+	// ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q8- 0*PI/2.0) * (StateNDot_Init_i.q8 - 0*PI/2.0));
+	// ObjNConstraint_Type.push_back(0);
+	// //
 	// ObjNConstraint_Val.push_back((Opt_Seed[2] - PI/2) * (Opt_Seed[2] - PI/2));
 	// ObjNConstraint_Type.push_back(0);
-	//
+
 	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q5);
 	// ObjNConstraint_Type.push_back(0);
 	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q2);
