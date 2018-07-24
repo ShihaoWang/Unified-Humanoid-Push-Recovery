@@ -55,10 +55,10 @@ int main( int argc, char **argv)
 		*/
 		std::vector<double> Opt_Soln(Variable_Num);
 		Node_i = Pop_Node();
-		if(Iteration>0)
-		{
+		// if(Iteration>0)
+		// {
 			Opt_Flag = Nodes_Optimization_fn(Node_i, Node_i, Opt_Soln);
-		}
+		// }
 		if(Opt_Flag==1)
 		{
 			// Optimal solution has been found
@@ -71,7 +71,7 @@ int main( int argc, char **argv)
 			int Adjacent_Number;	int Nodes_Opt_Flag;
 			dlib::matrix<double> Nodes_Sigma_Matrix = Node_Expansion_fn(Node_i, Adjacent_Number);
 			cout<<Nodes_Sigma_Matrix<<endl;
-			for (int i = 3; i < Adjacent_Number; i++)
+			for (int i = 0; i < Adjacent_Number; i++)
 			{
 				Tree_Node Node_i_child;
 				Node_i_child.sigma.push_back(Nodes_Sigma_Matrix(i,0));

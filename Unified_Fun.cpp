@@ -21,7 +21,7 @@ double q4low = -2.3562;                	double q4upp = 0.733;					double q5low =
 double q6low = -1.3;                   	double q6upp = 0.733;					double q7low = -3.14;                  	double q7upp = 1.047;
 double q8low = -2.391;                 	double q8upp = 0.0;						double q9low = -3.14;                  	double q9upp = 1.047;
 double q10low = -2.391;                	double q10upp = 0.0;
-double AngRateMag = 4.5;			   	double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
+double AngRateMag = 3.0;			   	double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
 
 double rIxdotlow = -Inf;               	double rIxdotupp = Inf;					double rIydotlow = -Inf;               	double rIydotupp = Inf;
 double thetadotlow = -Inf;             	double thetadotupp = Inf;				double q1dotlow = AngRateLow;          	double q1dotupp = AngRateHgh;
@@ -34,7 +34,8 @@ double q10dotlow = AngRateLow;         	double q10dotupp = AngRateHgh;
 double tau1_max = 100;             		double tau2_max = 100;					double tau3_max = 100;					double tau4_max = 100;
 double tau5_max = 100;             		double tau6_max = 100;					double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             		double tau10_max = 50;
-double Acc_max = 25;
+double Acc_max = 10;					// This value is for the depth 3 left hand contact
+// double Acc_max = 10;
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
 dlib::matrix<double> ctrl_low_vec;					dlib::matrix<double> ctrl_upp_vec;
@@ -61,8 +62,8 @@ void Envi_Map_Defi()
 	// This map is defined in a polyline manner with the first value denoting
 	// the line length and the second value denoting the relative angle
 	Envi_Map = dlib::ones_matrix<double>(2,4);
-	Envi_Map(0,0) = -5.0;				Envi_Map(0,1) = 0.0;				Envi_Map(0,2) = 4.95;				Envi_Map(0,3) = 0.0;
-	Envi_Map(1,0) = 4.95;				Envi_Map(1,1) = 0.0;				Envi_Map(1,2) = 4.95;				Envi_Map(1,3) = 3.0;
+	Envi_Map(0,0) = -5.0;				Envi_Map(0,1) = 0.0;				Envi_Map(0,2) = 4.975;				Envi_Map(0,3) = 0.0;
+	Envi_Map(1,0) = 4.975;				Envi_Map(1,1) = 0.0;				Envi_Map(1,2) = 4.975;				Envi_Map(1,3) = 3.0;
 }
 void Envi_Map_Normal_Cal(dlib::matrix<double> &Envi_Map)
 {
@@ -413,11 +414,11 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 
 	// cout<<Matrix_result<<endl;
 
-	// 2. Inactive constraints have to be strictly away from the obstacle
-	dlib::matrix<double> ones_vector, temp_matrix;
-	ones_vector = ONES_VECTOR_fn(6);
-	Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
-	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+	// // 2. Inactive constraints have to be strictly away from the obstacle
+	// dlib::matrix<double> ones_vector, temp_matrix;
+	// ones_vector = ONES_VECTOR_fn(6);
+	// Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
+	// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
 	double rAx = End_Effector_Pos(0);			double rAy = End_Effector_Pos(1);
 	double rBx = End_Effector_Pos(2);			double rBy = End_Effector_Pos(3);
@@ -439,10 +440,12 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rFx - 0.9188) * (rFx - 0.9188));				ObjNConstraint_Type.push_back(0);
 
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
-	ObjNConstraint_Val.push_back(48.30 - KE_init);			ObjNConstraint_Type.push_back(1);
-	ObjNConstraint_Val.push_back(KE_init - 45.56);			ObjNConstraint_Type.push_back(1);
+
+	ObjNConstraint_Val.push_back(150 - KE_init);			ObjNConstraint_Type.push_back(1);
+	ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(32 - KE_init);			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
@@ -458,12 +461,23 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back((rEy - 0.6164) * (rEy - 0.6164));	ObjNConstraint_Type.push_back(0);
 
 	// ObjNConstraint_Val.push_back(vCOM_init[0] - 1.5);
-	// ObjNConstraint_Type.push_back(1);
-	//
-	ObjNConstraint_Val.push_back((StateNDot_Init_i.q10dot - 3.0)*(StateNDot_Init_i.q10dot - 3.0));
-	ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q5dot-4)*(StateNDot_Init_i.q5dot-4));
 	// ObjNConstraint_Type.push_back(0);
+	//
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.rIx - 0.25)*(StateNDot_Init_i.q10dot - 0.25));
+	// ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q10dot - 3.0)*(StateNDot_Init_i.q10dot - 3.0));
+	// ObjNConstraint_Type.push_back(0);
+
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q1dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q2dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q3dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q4dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q5dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q6dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q7dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q8dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q9dot);				ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q10dot);				ObjNConstraint_Type.push_back(0);
 
 	// std::vector<double> sigma_i = sigma;
 	// std::vector<double> sigma_i_child = sigma;
@@ -1409,7 +1423,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 			// 3.3 Middle joints have to be strictly away from the obs
 			temp_matrix = Middle_Joint_Obs_Dist_Fn(Robot_StateNDot_i);
-			ones_vector(5) = 1;
+			ones_vector(5) = 10;
 			Matrix_result = temp_matrix - ones_vector * mini;
 			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 		}
@@ -1548,14 +1562,18 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	{
 		// ObjNConstraint_Val[0] = -T;
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
-		// double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
-		// ObjNConstraint_Val.push_back(80.06 - KE_End);
+		double KE_End = Kinetic_Energy_End_Frame(StateNDot_Traj);
+		// ObjNConstraint_Val.push_back(60 - KE_End);
 		// ObjNConstraint_Type.push_back(1);
-		// ObjNConstraint_Val.push_back(KE_End - 75.66);
+		// ObjNConstraint_Val.push_back(KE_End - 90.66);
+		// ObjNConstraint_Type.push_back(1);
+		//
+		// ObjNConstraint_Val.push_back(35.09 - KE_End);
+		// ObjNConstraint_Type.push_back(1);
+		// ObjNConstraint_Val.push_back(KE_End - 30.08);
 		// ObjNConstraint_Type.push_back(1);
 
-		// ObjNConstraint_Val.push_back(35.16 - KE_End);
-		// ObjNConstraint_Type.push_back(1);
+
 		// ObjNConstraint_Val[0] = KE_End;
 
 		// ObjNConstraint_Val[0] = (KE_End - 90) * (KE_End - 90);
@@ -3058,8 +3076,8 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	// ObjNConstraint_Val.push_back(StateNDot_Init_i.q2);
 	// ObjNConstraint_Type.push_back(0);
 
-	ObjNConstraint_Val.push_back((rF_ref[0] - rF_opt[0])*(rF_ref[0] - rF_opt[0]));
-	ObjNConstraint_Type.push_back(0);
+	// ObjNConstraint_Val.push_back((rF_ref[0] - rF_opt[0])*(rF_ref[0] - rF_opt[0]));
+	// ObjNConstraint_Type.push_back(0);
 	// ObjNConstraint_Val.push_back((StateNDot_Init_i.q8- 0*PI/2.0) * (StateNDot_Init_i.q8 - 0*PI/2.0));
 	// ObjNConstraint_Type.push_back(0);
 
@@ -3067,6 +3085,12 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	// ObjNConstraint_Type.push_back(0);
 	//
 	// ObjNConstraint_Val.push_back((!sigma_i[3]) * (sigma_i_child[3]) * (rF_opt[0] - Hand_max) * (rF_opt[0] - Hand_max));
+	// ObjNConstraint_Type.push_back(0);
+
+	// ObjNConstraint_Val.push_back((!sigma_i[2]) * (sigma_i_child[2]) * (rE_opt[1] - rT_opt[1]) * (rE_opt[1] - rT_opt[1]));
+	// ObjNConstraint_Type.push_back(0);
+	//
+	// ObjNConstraint_Val.push_back((!sigma_i[3]) * (sigma_i_child[3]) * (rF_opt[1] - rT_opt[1]) * (rF_opt[1] - rT_opt[1]));
 	// ObjNConstraint_Type.push_back(0);
 
 	// ObjNConstraint_Val.push_back((rE_opt[0] - Hand_max) * (rE_opt[0] - Hand_max));

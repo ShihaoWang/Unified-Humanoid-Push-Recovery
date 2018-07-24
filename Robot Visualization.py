@@ -124,7 +124,8 @@ def main():
     # ipdb.set_trace()
 
     Robotstate_Traj, Contact_Force_Traj = Traj_Loader()
-    h = 0.0033
+    h = 0.0068               # 0.0043: vert
+                            # 0.0033: flat
     playspeed = 2.5
     norm = 500
     while vis.shown():
@@ -226,8 +227,9 @@ def Traj_Loader():
     # This function will load the robotstate and contact force trajectories
     Robotstate_Traj = np.array([])
     # with open("./Exp Data/Exp 4/State_Exp3_.txt",'r') as robot_soln_file:
-    with open("./Exp Data/Flat/KE 85/State_Flat_Exp 1_KE 85_.txt",'r') as robot_soln_file:
-    # with open("./Exp Data/Flat/KE 80/State_test_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Vert_Wall/State_Vert_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Flat_Gnd/State_flat_.txt",'r') as robot_soln_file:
+    with open("./Exp Data/Evenly/State_Flat_150_.txt",'r') as robot_soln_file:
         for line in robot_soln_file:
             currentline = line.split(",")
             currentline = [x.replace("\r\n","") for x in currentline]
@@ -238,8 +240,9 @@ def Traj_Loader():
 
     Contact_Force_Traj = np.array([])
     # with open("./Exp Data/Exp 4/Contact_Force_Exp3_.txt",'r') as robot_soln_file:
-    with open("./Exp Data/Flat/KE 85/Contact_Force_Flat_Exp 1_KE 85_.txt",'r') as robot_soln_file:
-    # with open("./Exp Data/Flat/KE 80/Contact_Force_test_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Vert_Wall/Contact_Force_Vert_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Flat_Gnd/Contact_Force_flat_.txt",'r') as robot_soln_file:
+    with open("./Exp Data/Evenly/Contact_Force_Flat_150_.txt",'r') as robot_soln_file:
         for line in robot_soln_file:
             currentline = line.split(",")
             currentline = [x.replace("\r\n","") for x in currentline]
