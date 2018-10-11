@@ -21,32 +21,35 @@ double q4low = -2.3562;                	double q4upp = 0.733;					double q5low =
 double q6low = -1.3;                   	double q6upp = 0.733;					double q7low = -3.14;                  	double q7upp = 1.047;
 double q8low = -2.391;                 	double q8upp = 0.0;						double q9low = -3.14;                  	double q9upp = 1.047;
 double q10low = -2.391;                	double q10upp = 0.0;
-double AngRateMag = 3.0;			   	double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
+double AngRateMag = 3.0;			   				double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
 
-double rIxdotlow = -Inf;               	double rIxdotupp = Inf;					double rIydotlow = -Inf;               	double rIydotupp = Inf;
-double thetadotlow = -Inf;             	double thetadotupp = Inf;				double q1dotlow = AngRateLow;          	double q1dotupp = AngRateHgh;
+double rIxdotlow = -Inf;               	double rIxdotupp = Inf;						double rIydotlow = -Inf;               	double rIydotupp = Inf;
+double thetadotlow = -Inf;             	double thetadotupp = Inf;					double q1dotlow = AngRateLow;          	double q1dotupp = AngRateHgh;
 double q2dotlow = AngRateLow;          	double q2dotupp = AngRateHgh;			double q3dotlow = AngRateLow;          	double q3dotupp = AngRateHgh;
 double q4dotlow = AngRateLow;          	double q4dotupp = AngRateHgh;			double q5dotlow = AngRateLow;          	double q5dotupp = AngRateHgh;
 double q6dotlow = AngRateLow;          	double q6dotupp = AngRateHgh;			double q7dotlow = AngRateLow;          	double q7dotupp = AngRateHgh;
 double q8dotlow = AngRateLow;          	double q8dotupp = AngRateHgh;			double q9dotlow = AngRateLow;          	double q9dotupp = AngRateHgh;
 double q10dotlow = AngRateLow;         	double q10dotupp = AngRateHgh;
 
-double tau1_max = 100;             		double tau2_max = 100;					double tau3_max = 100;					double tau4_max = 100;
-double tau5_max = 100;             		double tau6_max = 100;					double tau7_max = 60;              		double tau8_max = 50;
-double tau9_max = 60;             		double tau10_max = 50;
-double Acc_max = 10;					// This value is for the depth 3 left hand contact
-// double Acc_max = 10;
+double tau1_max = 100;             			double tau2_max = 100;						double tau3_max = 100;								double tau4_max = 100;
+double tau5_max = 100;             			double tau6_max = 100;						double tau7_max = 60;              		double tau8_max = 50;
+double tau9_max = 60;             			double tau10_max = 50;
+double Acc_max = 10;										// This value is for the depth 3 left hand contact
+// double Acc_max = 10;									// May not be so important up to now
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
-dlib::matrix<double> ctrl_low_vec;					dlib::matrix<double> ctrl_upp_vec;
+dlib::matrix<double> ctrl_low_vec;				dlib::matrix<double> ctrl_upp_vec;
 dlib::matrix<double>  Envi_Map;						dlib::matrix<double> Envi_Map_Normal, Envi_Map_Tange; // The Normal and tangential vector of the plane
 /**
  * Some global values are defined
  * Description
  */
 double mini = 0.025;			int Grids = 8;			double mu = 0.35;
+
 int Variable_Num = 48 * Grids + 1;
+
 double Time_Seed; 									// This value will be adaptively changed to formulate an optimal solution
+
 std::vector<Tree_Node_Ptr> All_Nodes;				// All nodes are here!
 std::vector<Tree_Node_Ptr> Children_Nodes;			// All children nodes!
 std::vector<Tree_Node_Ptr> Frontier_Nodes;			// Only Frontier ndoes!
@@ -120,8 +123,10 @@ std::vector<double> Default_Init(const std::vector<double> &sigma_i)
 	Envi_Map_Defi();
 	// Then it is to compute the normal and tangential vector of the map
 	Envi_Map_Normal_Cal(Envi_Map);
-	xlow_vec = dlib::zeros_matrix<double>(26,1);		xupp_vec = dlib::zeros_matrix<double>(26,1);
-	ctrl_low_vec = dlib::zeros_matrix<double>(10,1);	ctrl_upp_vec = dlib::matrix<double>(10,1) ;
+
+	xlow_vec = dlib::zeros_matrix<double>(26,1);			xupp_vec = dlib::zeros_matrix<double>(26,1);
+	ctrl_low_vec = dlib::zeros_matrix<double>(10,1);	ctrl_upp_vec = dlib::matrix<double>(10,1);
+
 	xlow_vec(0) = rIxlow; 					xupp_vec(0) = rIxupp;
 	xlow_vec(1) = rIylow; 					xupp_vec(1) = rIyupp;
 	xlow_vec(2) = thetalow; 				xupp_vec(2) = thetaupp;
@@ -229,17 +234,24 @@ std::vector<double> Default_Init_Opt(std::vector<double> &Robot_State_Init)
 		integer    ObjRow = 0;							doublereal ObjAdd = 0;
 
 		// Set the upper and lower bounds.
-		for (int i = 0; i < n; i++) {
-			xlow[i] = xlow_vec(i);						xupp[i] = xupp_vec(i);						xstate[i] = 0.0;					x[i] = Robot_State_Init[i];  	// Initial guess
+		for (int i = 0; i < n; i++)
+		{
+			xlow[i] = xlow_vec(i);						xupp[i] = xupp_vec(i);
+			xstate[i] = 0.0;									x[i] = Robot_State_Init[i];  	// Initial guess
 		}
 
-		for(int i = 0; i<neF; i++){
+		for(int i = 0; i<neF; i++)
+		{
 			// The lower bound is the same
 			Flow[i] = 0.0;
 			if(ObjNConstraint_Type[i]>0)	// Inequality constraint
-			{	Fupp[i] = Inf;}
-			else{
-				Fupp[i] = 0.0;}
+			{
+				Fupp[i] = Inf;
+			}
+			else
+			{
+				Fupp[i] = 0.0;
+			}
 		}
 
 		// Load the data for ToyProb ...
@@ -370,8 +382,10 @@ int Default_Init_Pr_(integer    *Status, integer *n,    doublereal x[],
 	}
 
 	Default_Init_Pr_ObjNConstraint(Robot_State_Opt, ObjNConstraint_Val,ObjNConstraint_Type);
-	for (int i = 0; i < ObjNConstraint_Val.size(); i++){
-		F[i] = ObjNConstraint_Val[i];}
+	for (int i = 0; i < ObjNConstraint_Val.size(); i++)
+	{
+		F[i] = ObjNConstraint_Val[i];
+	}
 	return 0;
 }
 void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<double> &ObjNConstraint_Val, std::vector<double> &ObjNConstraint_Type)
@@ -381,7 +395,8 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	std::vector<double> Robostate_ref = StateNDot2StateVec(Structure_P.Node_i.Node_StateNDot);
 	std::vector<double> Robostate_offset = Vec_Minus(Opt_Seed, Robostate_ref);
 	double Robostate_offset_val = 0.0;
-	for (int i = 0; i < Robostate_offset.size()/2; i++){
+	for (int i = 0; i < Robostate_offset.size()/2; i++)
+	{
 		Robostate_offset_val = Robostate_offset_val + Robostate_offset[i] * Robostate_offset[i];
 	}
 	std::vector<double> sigma = Structure_P.Node_i.sigma;
@@ -414,11 +429,11 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 
 	// cout<<Matrix_result<<endl;
 
-	// // 2. Inactive constraints have to be strictly away from the obstacle
-	// dlib::matrix<double> ones_vector, temp_matrix;
-	// ones_vector = ONES_VECTOR_fn(6);
-	// Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
-	// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
+	// 2. Inactive constraints have to be strictly away from the obstacle
+	dlib::matrix<double> ones_vector, temp_matrix;
+	ones_vector = ONES_VECTOR_fn(6);
+	Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
+	ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 
 	double rAx = End_Effector_Pos(0);			double rAy = End_Effector_Pos(1);
 	double rBx = End_Effector_Pos(2);			double rBy = End_Effector_Pos(3);
@@ -441,11 +456,11 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 
 	double KE_init = Kinetic_Energy_fn(StateNDot_Init_i);
 
-	ObjNConstraint_Val.push_back(150 - KE_init);			ObjNConstraint_Type.push_back(1);
-	ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(150 - KE_init);			ObjNConstraint_Type.push_back(1);
+	// ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
-	// ObjNConstraint_Val.push_back(32 - KE_init);			ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back(20 - KE_init);			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
