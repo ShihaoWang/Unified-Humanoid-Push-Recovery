@@ -1242,8 +1242,13 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 {
 	// This function is the main optimization constraint function
 	double T_tot, T;										dlib::matrix<double> StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj;
-	// Opt_Seed = Opt_Soln_Load();
+
 	Opt_Seed_Unzip(Opt_Seed, T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+
+	// cout<<StateNDot_Traj<<endl;
+	// cout<<Ctrl_Traj<<endl;
+	// cout<<Contact_Force_Traj<<endl;
+
 	T = T_tot/(Grids - 1)*1.0;
 	Tree_Node Node_i, Node_i_child;							Node_i = Structure_P.Node_i;						Node_i_child = Structure_P.Node_i_child;
 	std::vector<double> Robotstate_Initial_Vec = StateNDot2StateVec(Node_i.Node_StateNDot);
@@ -1266,6 +1271,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		ObjNConstraint_Val.push_back(StateNDot_Traj_1st_colm(i));
 		ObjNConstraint_Type.push_back(1);
 	}
+
 	// THe constraint will be added term by term
 	dlib::matrix<double> Robostate_Dlib_Front, Robostate_Dlib_Back, Ctrl_Front, Ctrl_Back, Contact_Force_Front, Contact_Force_Back, Robotstate_Mid_Acc;
 
@@ -1278,16 +1284,22 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	for (int i = 0; i < Grids-1; i++)
 	{
 		// Get the robot state, ctrl, and contact force at the front and end of each segment
-		Robostate_Dlib_Front = dlib::colm(StateNDot_Traj, i);						Robostate_Dlib_Back = dlib::colm(StateNDot_Traj, i+1);
-		Ctrl_Front = dlib::colm(Ctrl_Traj,i);										Ctrl_Back = dlib::colm(Ctrl_Traj,i+1);
-		Contact_Force_Front = dlib::colm(Contact_Force_Traj,i);						Contact_Force_Back = dlib::colm(Contact_Force_Traj,i+1);
+		Robostate_Dlib_Front = dlib::colm(StateNDot_Traj, i);
+		Robostate_Dlib_Back = dlib::colm(StateNDot_Traj, i+1);
+		Ctrl_Front = dlib::colm(Ctrl_Traj,i);
+		Ctrl_Back = dlib::colm(Ctrl_Traj,i+1);
+		Contact_Force_Front = dlib::colm(Contact_Force_Traj,i);
+		Contact_Force_Back = dlib::colm(Contact_Force_Traj,i+1);
 
 		// Compute the Dynamics matrices at Front and Back
-		Robot_StateNDot_Front = DlibRobotstate2StateNDot(Robostate_Dlib_Front);		Dynamics_Matrices(Robot_StateNDot_Front, D_q_Front, B_q_Front, C_q_qdot_Front, Jac_Full_Front);
-		Robot_StateNDot_Back = DlibRobotstate2StateNDot(Robostate_Dlib_Back);		Dynamics_Matrices(Robot_StateNDot_Back, D_q_Back, B_q_Back, C_q_qdot_Back, Jac_Full_Back);
+		Robot_StateNDot_Front = DlibRobotstate2StateNDot(Robostate_Dlib_Front);
+		Dynamics_Matrices(Robot_StateNDot_Front, D_q_Front, B_q_Front, C_q_qdot_Front, Jac_Full_Front);
+		Robot_StateNDot_Back = DlibRobotstate2StateNDot(Robostate_Dlib_Back);
+		Dynamics_Matrices(Robot_StateNDot_Back, D_q_Back, B_q_Back, C_q_qdot_Back, Jac_Full_Back);
 
 		Robot_StateNDot_MidNAcc(T, Robot_StateNDot_Front, Robot_StateNDot_Back, Ctrl_Front, Ctrl_Back, Contact_Force_Front, Contact_Force_Back, Robot_StateNDot_Mid, Robotstate_Mid_Acc, ObjNConstraint_Val, ObjNConstraint_Type);
-		Dynamics_Matrices(Robot_StateNDot_Mid, D_q_Mid, B_q_Mid, C_q_qdot_Mid, Jac_Full_Mid);		Jac_Full_Trans_Mid = dlib::trans(Jac_Full_Mid);
+		Dynamics_Matrices(Robot_StateNDot_Mid, D_q_Mid, B_q_Mid, C_q_qdot_Mid, Jac_Full_Mid);
+		Jac_Full_Trans_Mid = dlib::trans(Jac_Full_Mid);
 		Dynamics_LHS = D_q_Mid * Robotstate_Mid_Acc + C_q_qdot_Mid;
 		Dynamics_RHS = Jac_Full_Trans_Mid * (0.5 * Contact_Force_Front + 0.5 * Contact_Force_Back) + B_q_Mid * (0.5 * Ctrl_Front + 0.5 * Ctrl_Back);
 		Matrix_result = Dynamics_LHS - Dynamics_RHS;
@@ -1297,7 +1309,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		// }
 		// else
 		// {
-			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+		ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 		// }
 	}
 
@@ -1310,14 +1322,22 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	std::vector<int> End_Effector_Obs(6);
 	dlib::matrix<double> Eqn_Pos_Matrix, Ineqn_Pos_Matrix, Eqn_Vel_Matrix;			std::vector<double> sigma_temp;
 	dlib::matrix<double> End_Effector_Pos_ref;										End_Effector_Pos_ref = Node_i.End_Effector_Pos;
-	std::vector<double> sigma_maint(12);											dlib::matrix<double> Matrix_Minus_result, End_Effector_PosDlib;
+	std::vector<double> sigma_maint(12);													dlib::matrix<double> Matrix_Minus_result, End_Effector_PosDlib;
 
 	//	3.1 The previous unchanged active constraint have to be satisfied
 	for (int i = 0; i < Grids; i++)
 	{
-		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);										Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
+		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
+		Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
 		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
-		if(i<Critical_Grid_Index){	sigma = sigma_i;}			else{			sigma = sigma_i_child;}
+		if(i<Critical_Grid_Index)
+		{
+			sigma = sigma_i;
+		}
+		else
+		{
+			sigma = sigma_i_child;
+		}
 		if(Opt_Type_Flag == -1)
 		{
 			sigma_maint[0] = sigma[0];							sigma_maint[1] = sigma[0];
@@ -1349,15 +1369,27 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 	for (int i = 0; i < Grids; i++)
 	{
-		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);							Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
+		Robostate_Dlib_i = dlib::colm(StateNDot_Traj, i);
+		Robot_StateNDot_i = DlibRobotstate2StateNDot(Robostate_Dlib_i);
 		End_Effector_PosNVel(Robot_StateNDot_i, End_Effector_Pos, End_Effector_Vel);
 		End_Effector_Obs_Dist_Fn(End_Effector_Pos, End_Effector_Dist, End_Effector_Obs);
-		if(i<Critical_Grid_Index){	sigma = sigma_i;}			else{			sigma = sigma_i_child;}
-		if(Opt_Type_Flag == -1)	{	sigma = sigma_i;}
-
+		if(i<Critical_Grid_Index)
+		{
+			sigma = sigma_i;
+		}
+		else
+		{
+			sigma = sigma_i_child;
+		}
+		if(Opt_Type_Flag == -1)
+		{
+			sigma = sigma_i;
+		}
+		// The following code is for the contact retraction
 		if((Opt_Type_Flag == -1)&&(i == Critical_Grid_Index-1))
 		{
 			dlib::matrix<double> Upper_Normal_Speed;
+
 			End_Effector_Upper_Vel(Robot_StateNDot_i, Upper_Normal_Speed);
 
 			ObjNConstraint_Val.push_back(sigma_i[0] * (!sigma_i_child[0]) * Robot_StateNDot_i.q2);
@@ -1410,27 +1442,28 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 			}
 			else
 			{
-				if((Opt_Type_Flag == 1)&&(i == Critical_Grid_Index-1))
-				{
-					// ObjNConstraint_Val.push_back( Robot_StateNDot_i.q2);
-					// ObjNConstraint_Type.push_back(0);
-					// ObjNConstraint_Val.push_back((Robot_StateNDot_i.theta - PI/2.0) * (Robot_StateNDot_i.theta - PI/2.0));
-					// ObjNConstraint_Type.push_back(0);
-					// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q8);
-					// ObjNConstraint_Type.push_back(0);
-					// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q10);
-					// ObjNConstraint_Type.push_back(0);
-				}
-				else
-				{
-					// Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-					// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
-				}
+				// if((Opt_Type_Flag == 1)&&(i == Critical_Grid_Index-1))
+				// {
+				// 	// ObjNConstraint_Val.push_back( Robot_StateNDot_i.q2);
+				// 	// ObjNConstraint_Type.push_back(0);
+				// 	// ObjNConstraint_Val.push_back((Robot_StateNDot_i.theta - PI/2.0) * (Robot_StateNDot_i.theta - PI/2.0));
+				// 	// ObjNConstraint_Type.push_back(0);
+				// 	// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q8);
+				// 	// ObjNConstraint_Type.push_back(0);
+				// 	// ObjNConstraint_Val.push_back(Robot_StateNDot_i.q10);
+				// 	// ObjNConstraint_Type.push_back(0);
+				// }
+				// else
+				// {
+					Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+					ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+				// }
 			}
-			// 3.2. Inactive constraints have to be strictly away from the obstacle
+
+			// 3.2. Inactive constraints have to be nonnegatively away from the obstacle
 			dlib::matrix<double> ones_vector, temp_matrix;
 			ones_vector = ONES_VECTOR_fn(6);
-			Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - ones_vector * mini);
+			Matrix_result = Ineqn_Pos_Matrix * (End_Effector_Dist - 0*ones_vector * mini); // The constraint is so strong!
 			ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 1);
 			// cout<<End_Effector_Dist<<endl;
 			// cout<<Ineqn_Pos_Matrix<<endl;
@@ -1446,8 +1479,16 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 
 	// 4. Complementarity Constraints: Contact Force!
 	dlib::matrix<double> Contact_Force_Complem_Matrix, Contact_Force_i;
-	for (int i = 0; i < Grids; i++) {
-		if(i<Critical_Grid_Index){	sigma = sigma_i;}			else{			sigma = sigma_i_child;}
+	for (int i = 0; i < Grids; i++)
+	{
+		if(i<Critical_Grid_Index)
+		{
+			sigma = sigma_i;
+		}
+		else
+		{
+			sigma = sigma_i_child;
+		}
 		std::vector<double> sigma_temp;				Contact_Force_i = dlib::colm(Contact_Force_Traj,i);
 		sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);			sigma_temp.push_back(!sigma[0]);				sigma_temp.push_back(!sigma[0]);
 		sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);			sigma_temp.push_back(!sigma[1]);				sigma_temp.push_back(!sigma[1]);
@@ -1465,18 +1506,19 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 	std::vector<double> Normal_Force_Back_vec(4), 	Tange_Force_Back_vec(4);
 	std::vector<double> Full_Normal_Front(6), 		Full_Normal_Back(6);
 
-	for (int i = 0; i < Grids-1; i++) {
+	for (int i = 0; i < Grids-1; i++)
+	{
 		// 5. Contact force feasibility constraints: 1. Normal force should be positive and
 		//											 2. the friction cone constraint has to be satisfied
-		//											 3. the horizontal force has to lie on the same side to avoid oscilation
+													 // 3. the horizontal force has to lie on the same side to avoid oscilation
 		Contact_Force_Proj(StateNDot_Traj, Contact_Force_Traj, Normal_Force_Front_vec, Tange_Force_Front_vec, i, Full_Normal_Front);
 		Contact_Force_Proj(StateNDot_Traj, Contact_Force_Traj, Normal_Force_Back_vec, Tange_Force_Back_vec, i+1, Full_Normal_Back);
 		for (int k = 0; k < 4; k++)
 		{
 			ObjNConstraint_Val.push_back(Normal_Force_Front_vec[k] * Normal_Force_Front_vec[k] * mu * mu - Tange_Force_Front_vec[k] * Tange_Force_Front_vec[k]);
 			ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(Tange_Force_Front_vec[k] * Tange_Force_Back_vec[k]);
-			ObjNConstraint_Type.push_back(1);
+			// ObjNConstraint_Val.push_back(Tange_Force_Front_vec[k] * Tange_Force_Back_vec[k]);
+			// ObjNConstraint_Type.push_back(1);
 		}
 		for (int mm = 0; mm < 6; mm++)
 		{
@@ -1490,19 +1532,21 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		ObjNConstraint_Type.push_back(1);
 	}
 	for (int mm = 0; mm < 6; mm++)
-	{	ObjNConstraint_Val.push_back(Full_Normal_Back[mm]);
-		ObjNConstraint_Type.push_back(1);}
+	{
+		ObjNConstraint_Val.push_back(Full_Normal_Back[mm]);
+		ObjNConstraint_Type.push_back(1);
+	}
 
 	if(Opt_Type_Flag == 0)
 	{
 		dlib::matrix<double> Robostate_Dlib_j = dlib::colm(StateNDot_Traj, Grids-1);
 		Robot_StateNDot Robot_StateNDot_j = DlibRobotstate2StateNDot(Robostate_Dlib_j);
 		double KE_j = Kinetic_Energy_fn(Robot_StateNDot_j);
-		// ObjNConstraint_Val[0] = KE_j;
+		ObjNConstraint_Val[0] = KE_j;
 		// ObjNConstraint_Val[0] = Robot_StateNDot_End.theta * Robot_StateNDot_End.theta;
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
 		// ObjNConstraint_Val[0] = Robot_StateNDot_j.theta * Robot_StateNDot_j.theta;
-		ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
 		// ObjNConstraint_Val[0] = KE_Variation_fn(StateNDot_Traj);
 		// ObjNConstraint_Val[0] = 10 * Traj_Variation(StateNDot_Traj) + Variation_Cal(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
@@ -1589,7 +1633,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		// ObjNConstraint_Type.push_back(1);
 
 
-		// ObjNConstraint_Val[0] = KE_End;
+		ObjNConstraint_Val[0] = KE_End;
 
 		// ObjNConstraint_Val[0] = (KE_End - 90) * (KE_End - 90);
 
@@ -1626,7 +1670,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		// ObjNConstraint_Type.push_back(1);
 
 		// ObjNConstraint_Val[0] = 0*Traj_Variation(StateNDot_Traj) + 0.0 * Variation_Cal(Contact_Force_Traj);
-		ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + 0 * Quadratic_Sum(Contact_Force_Traj);
+		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj) + 0 * Quadratic_Sum(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = KE_Variation_fn(StateNDot_Traj);
 		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child) + 0 * Variation_Cal(Contact_Force_Traj);
@@ -1899,17 +1943,23 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 
 	// 1. Calculate the Robotstate_Mid_Acc Pos
 	for (int i = 0; i < 13; i++) {
-		x_init = Robotstate_Vec_Front[i];				x_end = Robotstate_Vec_Back[i];
-		xdot_init = Robotstate_Vec_Front[i+13];			xdot_end = Robotstate_Vec_Back[i+13];
+		x_init = Robotstate_Vec_Front[i];
+		x_end = Robotstate_Vec_Back[i];
+		xdot_init = Robotstate_Vec_Front[i+13];
+		xdot_end = Robotstate_Vec_Back[i+13];
 		CubicSpline_Coeff = CubicSpline_Coeff_fn(T, x_init, x_end, xdot_init, xdot_end);
 		Robotstate_Vec_Mid[i] = CubicSpline_Evaluation_fn(CubicSpline_Coeff, 0.5);
 	}
 	// 2. Calculate the Robotstate_Mid_Acc Vel and Acc
-	for (int i = 0; i < 13; i++) {
-		xdot_init = Robotstate_Vec_Front[i+13];			xdot_end = Robotstate_Vec_Back[i+13];
-		xddot_init = Acc_Front(i);						xddot_end = Acc_Back(i);
+	for (int i = 0; i < 13; i++)
+	{
+		xdot_init = Robotstate_Vec_Front[i+13];
+		xdot_end = Robotstate_Vec_Back[i+13];
+		xddot_init = Acc_Front(i);
+		xddot_end = Acc_Back(i);
 		CubicSpline_Coeff = CubicSpline_Coeff_fn(T, xdot_init, xdot_end, xddot_init, xddot_end);
 
+		// 2.a Bounds on the position
 		double xdot_max = max(xdot_init, xdot_end);
 		double xdot_min = min(xdot_init, xdot_end);
 		double Pos_Real_Change = Robotstate_Vec_Back[i] - Robotstate_Vec_Front[i];
@@ -1918,20 +1968,40 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 		ObjNConstraint_Val.push_back(Pos_Real_Change - xdot_min*T);
 		ObjNConstraint_Type.push_back(1);
 
+		// if(i>=3)
+		// {
+		// 	// 2.b Bounds on the velocity
+		// 	double xddot_max = max(xddot_init, xddot_end);
+		// 	double xddot_min = min(xddot_init, xddot_end);
+		//
+		// 	double xddot_max_mag_sq = max(xddot_init * xddot_init, xddot_end * xddot_end);
+		// 	ObjNConstraint_Val.push_back(Acc_max * Acc_max - xddot_max_mag_sq);
+		// 	ObjNConstraint_Type.push_back(1);
+		//
+		// 	// double Vel_Real_Change = Robotstate_Vec_Back[i+13] - Robotstate_Vec_Front[i+13];
+		// 	// ObjNConstraint_Val.push_back(xddot_max*T - Vel_Real_Change);
+		// 	// ObjNConstraint_Type.push_back(1);
+		// 	// ObjNConstraint_Val.push_back(Vel_Real_Change - xddot_min*T);
+		// 	// ObjNConstraint_Type.push_back(1);
+		// }
 		Robotstate_Vec_Mid[i+13] = CubicSpline_Evaluation_fn(CubicSpline_Coeff, 0.5);
 		Robotstate_Mid_Acc(i) = CubicSpline_1stOrder_Evaluation_fn(CubicSpline_Coeff, 0.5, T);
 	}
 	// cout<<Acc_Front<<endl;			cout<<Acc_Back<<endl;			cout<<Robotstate_Mid_Acc<<endl;
-	// The acceleration constraint is not of first priority
-	Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
-	for (int i = -1; i < 10; i++) {
-		ObjNConstraint_Val.push_back(Acc_Front(i+3));
-		ObjNConstraint_Type.push_back(2);
-		ObjNConstraint_Val.push_back(Robotstate_Mid_Acc(i+3));
-		ObjNConstraint_Type.push_back(2);
-		ObjNConstraint_Val.push_back(Acc_Back(i+3));
-		ObjNConstraint_Type.push_back(2);
-	}
+
+
+
+	// // The acceleration constraint is not of first priority
+	// Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
+	// for (int i = -1; i < 10; i++)
+	// {
+	// 	ObjNConstraint_Val.push_back(Acc_Front(i+3));
+	// 	ObjNConstraint_Type.push_back(2);
+	// 	ObjNConstraint_Val.push_back(Robotstate_Mid_Acc(i+3));
+	// 	ObjNConstraint_Type.push_back(2);
+	// 	ObjNConstraint_Val.push_back(Acc_Back(i+3));
+	// 	ObjNConstraint_Type.push_back(2);
+	// }
 }
 void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum)
 {
@@ -2040,13 +2110,19 @@ int Nodes_Optimization_fn(Tree_Node &Node_i, Tree_Node &Node_i_child, std::vecto
 {	// This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
 	// However, the constraint will be set to use the direct collocation method
 	int Opt_Flag = 0;
+
 	Structure_P.Node_i = Node_i;		Structure_P.Node_i_child = Node_i_child;
+
 	double Time_Interval = 0.02;		int Total_Num = 41;
-	std::vector<double> Time_Queue = Time_Seed_Queue_fn(Time_Interval, Total_Num);
+
+	std::vector<double> Time_Queue = Time_Seed_Queue_fn(Time_Interval, Total_Num);			// This is a brutal force method to figure out the final time
+
 	std::vector<double> Opt_Soln_Tot;
+
 	int Feasible_Num = 0;
 
-	for (int j = 0; j < Time_Queue.size(); j++) {
+	for (int j = 0; j < Time_Queue.size(); j++)
+	{
 		std::vector<double> Opt_Soln, ObjNConstraint_Val, ObjNConstraint_Type;
 		Time_Seed = Time_Queue[j];
 		cout<<"--------------------------------- Time Guess Iteration: "<<j<<" --------------------------------- "<<endl;
@@ -2403,7 +2479,6 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 
 	for (int i = 0; i < n; i++)
 	{
-		// cout<<"x[i]"<<x[i]<<endl;
 		Opt_Soln.push_back(x[i]);
 	}
 	delete []iAfun;  delete []jAvar;  delete []A;
@@ -2457,7 +2532,7 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {	// This function will generate the spline coefficients needed for the further optimization
 	// Here Time_Seed is a global variable whose value is changed in the outer loop
 
-	double T = Time_Seed;
+	double h_k = Time_Seed;
 
 	// The first step is to generate a feasible configuration that can satisfy the contact mode in the node i child
 	std::vector<double> Init_Config = StateNDot2StateVec(Node_i.Node_StateNDot);
@@ -2474,10 +2549,12 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	Ctrl_Coeff = dlib::zeros_matrix<double>(2*Control_len, Grids-1);
 	Contact_Force_Coeff = dlib::zeros_matrix<double>(2*Contact_Force_len, Grids-1);
 
+	// Method 1: Cubic spline interpolation
+
 	// The only step that needs to be changed with the new idea is the following code
 	// Now we have the Init_Config and the Seed_Config so how to interpolate the intermediate trajectories
 	//
-	// double T_tot = T * (Grids - 1);
+	// double T_tot = h_k * (Grids - 1);
 	// std::vector<double> State_Traj_Coeff_i;
 	// double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
 	// for (int i = 0; i < 13; i++)
@@ -2492,92 +2569,181 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// 		s_j = ds * (j);
 	// 		// cout<<s_j<<endl;
 	// 		StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
-	// 		StateNDot_Traj( i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
+	// 		StateNDot_Traj(i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
 	// 	}
 	// }
 	// cout<<StateNDot_Traj<<endl;
 
-	dlib::matrix<double> Robot_State_Interpol_i;
-	for (int i = 0; i < StateNDot_len; i++){
-		Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
-		for (int j = 0; j < Grids; j++){
-			StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);}}
+	// Method 2: Linear spline interpolation
 
-	// Here is the initialization of the spline coefficients for the stateNdot, control and contact force
-	// First is to initialize: StateNDot
-	double x_init, x_end, xdot_init, xdot_end;
-	std::vector<double> CubicSpline_Coeff_Pos_vec, CubicSpline_Coeff_Vel_vec, PVA_init, PVA_end;
-	for (int i = 0; i < Grids-1; i++)
-	{	for (int j = 0; j < StateNDot_len/2; j++){
-		    // Position first
-			x_init = StateNDot_Traj(j,i);
-			x_end = StateNDot_Traj(j,i+1);
-			xdot_init = StateNDot_Traj(j+StateNDot_len/2,i);
-			xdot_end = StateNDot_Traj(j+StateNDot_len/2,i+1);
-			CubicSpline_Coeff_Pos_vec = CubicSpline_Coeff_fn(T, x_init, x_end, xdot_init, xdot_end); // 4 by 1 vector: a, b, c, d
-			// Velocity second
-			PVA_init = CubicSpline_PosVelAcc4(T, CubicSpline_Coeff_Pos_vec[0], CubicSpline_Coeff_Pos_vec[1], CubicSpline_Coeff_Pos_vec[2], CubicSpline_Coeff_Pos_vec[3], 0);
-			PVA_end  = CubicSpline_PosVelAcc4(T, CubicSpline_Coeff_Pos_vec[0], CubicSpline_Coeff_Pos_vec[1], CubicSpline_Coeff_Pos_vec[2], CubicSpline_Coeff_Pos_vec[3], 1);
-			CubicSpline_Coeff_Vel_vec = CubicSpline_Coeff_fn(T, xdot_init,xdot_end, PVA_init[2], PVA_end[2]); // 4 by 1 vector: a, b, c, d
+	// dlib::matrix<double> Robot_State_Interpol_i;
+	// for (int i = 0; i < StateNDot_len; i++)
+	// {
+	// 	Robot_State_Interpol_i = dlib::linspace(Init_Config[i], Seed_Config[i], Grids);
+	// 	for (int j = 0; j < Grids; j++)
+	// 	{
+	// 		StateNDot_Traj(i,j) = Robot_State_Interpol_i(j);
+	// 	}
+	// }
+	// // cout<<StateNDot_Traj<<endl;
+	//
+	// // Here is the initialization of the spline coefficients for the stateNdot, control and contact force
+	// // First is to initialize: StateNDot
+	// double x_init, x_end, xdot_init, xdot_end;
+	// std::vector<double> CubicSpline_Coeff_Pos_vec, CubicSpline_Coeff_Vel_vec, PVA_init, PVA_end;
+	// for (int i = 0; i < Grids-1; i++)
+	// {	for (int j = 0; j < StateNDot_len/2; j++){
+	// 	    // Position first
+	// 		x_init = StateNDot_Traj(j,i);
+	// 		x_end = StateNDot_Traj(j,i+1);
+	// 		xdot_init = StateNDot_Traj(j+StateNDot_len/2,i);
+	// 		xdot_end = StateNDot_Traj(j+StateNDot_len/2,i+1);
+	// 		CubicSpline_Coeff_Pos_vec = CubicSpline_Coeff_fn(h_k, x_init, x_end, xdot_init, xdot_end); // 4 by 1 vector: a, b, c, d
+	// 		// Velocity second
+	// 		PVA_init = CubicSpline_PosVelAcc4(h_k, CubicSpline_Coeff_Pos_vec[0], CubicSpline_Coeff_Pos_vec[1], CubicSpline_Coeff_Pos_vec[2], CubicSpline_Coeff_Pos_vec[3], 0);
+	// 		PVA_end  = CubicSpline_PosVelAcc4(h_k, CubicSpline_Coeff_Pos_vec[0], CubicSpline_Coeff_Pos_vec[1], CubicSpline_Coeff_Pos_vec[2], CubicSpline_Coeff_Pos_vec[3], 1);
+	// 		CubicSpline_Coeff_Vel_vec = CubicSpline_Coeff_fn(h_k, xdot_init,xdot_end, PVA_init[2], PVA_end[2]); // 4 by 1 vector: a, b, c, d
+	//
+	// 		StateNDot_Coeff(8*j,i)   = CubicSpline_Coeff_Pos_vec[0];
+	// 		StateNDot_Coeff(8*j+1,i) = CubicSpline_Coeff_Pos_vec[1];
+	// 		StateNDot_Coeff(8*j+2,i) = CubicSpline_Coeff_Pos_vec[2];
+	// 		StateNDot_Coeff(8*j+3,i) = CubicSpline_Coeff_Pos_vec[3];
+	// 		StateNDot_Coeff(8*j+4,i) = CubicSpline_Coeff_Vel_vec[0];
+	// 		StateNDot_Coeff(8*j+5,i) = CubicSpline_Coeff_Vel_vec[1];
+	// 		StateNDot_Coeff(8*j+6,i) = CubicSpline_Coeff_Vel_vec[2];
+	// 		StateNDot_Coeff(8*j+7,i) = CubicSpline_Coeff_Vel_vec[3];
+	// 	}
+	// }
+	// // cout<<StateNDot_Coeff<<endl;
+	//
+	// // Second is to initialize: Control and Contact Force
+	// std::vector<double> Robot_Pos(13), Robot_Vel(13), Robot_VelfromPos(13), Robotstate_Vec_i;		dlib::matrix<double> Robot_Acc; Robot_Acc = dlib::zeros_matrix<double>(13,1);
+	// dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
+	// for (int i = 0; i < Grids-1; i++){
+	// 	Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(h_k, StateNDot_Coeff, i, 0, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
+	// 	Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
+	// 	Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
+	// 	Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
+	// 	Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
+	// 	Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
+	// 	Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
+	// 	for (int j = 0; j < Dynamics_RHS.nr(); j++)
+	// 	{
+	// 		if(j<Contact_Force_Traj.nr())
+	// 		{
+	// 			Contact_Force_Traj(j,i) = Dynamics_RHS(j);
+	// 		}
+	// 		else
+	// 		{
+	// 			Ctrl_Traj(j - Contact_Force_Traj.nr(),i) = Dynamics_RHS(j);
+	// 		}
+	// 	}
+	// }
+	// // cout<<StateNDot_Traj<<endl;			cout<<Contact_Force_Traj<<endl;			cout<<Ctrl_Traj<<endl;			cout<<StateNDot_Coeff<<endl;
+	// // THen the last column
+	// Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(h_k, StateNDot_Coeff, Grids-2, 1, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
+	// Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
+	// Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
+	// Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
+	// Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
+	// Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
+	// Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
+	// for (int j = 0; j < Dynamics_RHS.nr(); j++) {
+	// 	if(j<Contact_Force_Traj.nr())
+	// 	{
+	// 		Contact_Force_Traj(j,Grids-1) = Dynamics_RHS(j);
+	// 	}
+	// 	else
+	// 	{
+	// 		Ctrl_Traj(j - Contact_Force_Traj.nr(),Grids-1) = Dynamics_RHS(j);
+	// 	}
+	// }
 
-			StateNDot_Coeff(8*j,i)   = CubicSpline_Coeff_Pos_vec[0];
-			StateNDot_Coeff(8*j+1,i) = CubicSpline_Coeff_Pos_vec[1];
-			StateNDot_Coeff(8*j+2,i) = CubicSpline_Coeff_Pos_vec[2];
-			StateNDot_Coeff(8*j+3,i) = CubicSpline_Coeff_Pos_vec[3];
-			StateNDot_Coeff(8*j+4,i) = CubicSpline_Coeff_Vel_vec[0];
-			StateNDot_Coeff(8*j+5,i) = CubicSpline_Coeff_Vel_vec[1];
-			StateNDot_Coeff(8*j+6,i) = CubicSpline_Coeff_Vel_vec[2];
-			StateNDot_Coeff(8*j+7,i) = CubicSpline_Coeff_Vel_vec[3];
+	// cout<<StateNDot_Traj<<endl;			cout<<Ctrl_Traj<<endl;				cout<<Contact_Force_Traj<<endl;
+	// The calculation of the coefficients of the control and contact force is easier compared to the robot state due to the assumption of the linear equation
+	// Ctrl_Contact_Force_Coeff_fn(Ctrl_Traj, Contact_Force_Traj, Ctrl_Coeff, Contact_Force_Coeff);
+
+	// Method 3!
+	// The last method is the quadratic spline fitting method which is to formulate a parabola based on the initial state and the final state
+	// it is assumed that the state will decrease to a certain configuration
+	std::vector<double> Seed_Config_Parabola(26);
+	for (int abc = 0; abc < 13; abc++)
+	{
+		double acc_i = Init_Config[abc + 13]/h_k;			// The determined acceleration
+		double vel_i = Init_Config[abc + 13];			//
+		double pos_i = Init_Config[abc] + vel_i * h_k + 1/2 * acc_i * h_k * h_k;
+		Seed_Config_Parabola[abc] = pos_i;
+		Seed_Config_Parabola[abc + 13] = 0;
+	}
+	// To make sure taht Seed_Config_Parabola can be compared, the Node_i.Robot_StateNDot will be changed accordingly.
+	Robot_StateNDot Node_i_StateNDot_Temp;
+	Node_i_StateNDot_Temp = StateVec2StateNDot(Seed_Config_Parabola);;
+	Node_i.Node_StateNDot = Node_i_StateNDot_Temp;
+	Seed_Config_Parabola = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
+	// Change it back
+	Node_i_StateNDot_Temp = StateVec2StateNDot(Init_Config);;
+	Node_i.Node_StateNDot = Node_i_StateNDot_Temp;
+
+	// Then the job is to construct the state trajectories from this two points on the manifold.  y(s) = a * s ^ 2 + b * s + c
+	// The output from this manifold interpolation is the states at grids and acceleration at grids
+
+	dlib::matrix<double> Acc_Traj = dlib::ones_matrix<double>(13, 1);
+
+	double ds = 1.0/(Grids * 1.0 - 1.0), s_j, para_a, para_b, para_c;
+	for (int jjj = 0; jjj < 13; jjj++)
+	{
+		para_c = Init_Config[jjj];
+		para_b = Init_Config[jjj + 13] * h_k;
+		para_a = (Seed_Config_Parabola[jjj] - para_c - para_b);
+		Acc_Traj(jjj) = 2 * para_a/(h_k * h_k);
+
+		// Then the output should be the grid state and acceleration
+
+		for (int jjjj = 0; jjjj < Grids; jjjj++)
+		{
+			s_j = ds * (jjjj);
+			StateNDot_Traj(jjj,jjjj) = para_a * s_j * s_j + para_b * s_j + para_c;
+			StateNDot_Traj(jjj+ 13,jjjj) = (2 * para_a * s_j + para_b)/(h_k);
 		}
 	}
-	// cout<<StateNDot_Coeff<<endl;
 
-	// Second is to initialize: Control and Contact Force
-	std::vector<double> Robot_Pos(13), Robot_Vel(13), Robot_VelfromPos(13), Robotstate_Vec_i;		dlib::matrix<double> Robot_Acc; Robot_Acc = dlib::zeros_matrix<double>(13,1);
+	// Then the job is to compute the contact force and the control torque
+	std::vector<double> Robotstate_Vec_i(26);
 	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
-	for (int i = 0; i < Grids-1; i++){
-		Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, i, 0, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
-		Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
+
+	for (int i = 0; i < Grids; i++)
+	{
+		for (int m = 0; m < 26; m++)
+		{
+			Robotstate_Vec_i[m] = StateNDot_Traj(m,i);
+		}
 		Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
 		Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
-		Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
+		Dynamics_LHS = D_q * Acc_Traj + C_q_qdot;
 		Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
 		Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
 		for (int j = 0; j < Dynamics_RHS.nr(); j++) {
 			if(j<Contact_Force_Traj.nr())
-			{	Contact_Force_Traj(j,i) = Dynamics_RHS(j);}
+			{
+				Contact_Force_Traj(j,i) = Dynamics_RHS(j);
+			}
 			else
 			{
 				Ctrl_Traj(j - Contact_Force_Traj.nr(),i) = Dynamics_RHS(j);
 			}
 		}
 	}
-	// cout<<StateNDot_Traj<<endl;			cout<<Contact_Force_Traj<<endl;			cout<<Ctrl_Traj<<endl;			cout<<StateNDot_Coeff<<endl;
-	// THen the last column
-	Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(T, StateNDot_Coeff, Grids-2, 1, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
-	Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
-	Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
-	Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
-	Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
-	Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
-	Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
-	for (int j = 0; j < Dynamics_RHS.nr(); j++) {
-		if(j<Contact_Force_Traj.nr())
-		{	Contact_Force_Traj(j,Grids-1) = Dynamics_RHS(j);}
-		else
-		{
-			Ctrl_Traj(j - Contact_Force_Traj.nr(),Grids-1) = Dynamics_RHS(j);
-		}
-	}
-	// cout<<StateNDot_Traj<<endl;			cout<<Ctrl_Traj<<endl;				cout<<Contact_Force_Traj<<endl;
-	// The calculation of the coefficients of the control and contact force is easier compared to the robot state due to the assumption of the linear equation
-	// Ctrl_Contact_Force_Coeff_fn(Ctrl_Traj, Contact_Force_Traj, Ctrl_Coeff, Contact_Force_Coeff);
+
+	// cout<<Acc_Traj<<endl;
+	// cout<<StateNDot_Traj<<endl;
+	// cout<<Contact_Force_Traj<<endl;
+	// cout<<Ctrl_Traj<<endl;
 
 	// The final task is to pile them into a single vector
 	std::vector<double> Opt_Seed;
-	Opt_Seed.push_back(T * (Grids - 1));
+	Opt_Seed.push_back(h_k * (Grids - 1));
 	Opt_Seed_Zip(Opt_Seed, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
-	// cout<<StateNDot_Coeff<<endl;				cout<<Ctrl_Coeff<<endl;			cout<<Contact_Force_Coeff<<endl;
+
 	return Opt_Seed;
 }
 
@@ -2801,17 +2967,23 @@ std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Nod
 
 	integer    ObjRow = 0;							doublereal ObjAdd = 0;
 
-	for (int i = 0; i < n; i++) {
+	for (int i = 0; i < n; i++)
+	{
 		xlow[i] = xlow_vec(i);						xupp[i] = xupp_vec(i);				xstate[i] = 0.0;							x[i] = Robot_State_Seed[i];  	// Initial guess
 	}
 
-	for(int i = 0; i<neF; i++){
+	for(int i = 0; i<neF; i++)
+	{
 		// The lower bound is the same
 		Flow[i] = 0.0;
 		if(ObjNConstraint_Type[i]>0)	// Inequality constraint
-		{	Fupp[i] = Inf;}
-		else{
-			Fupp[i] = 0.0;}
+		{
+			Fupp[i] = Inf;
+		}
+		else
+		{
+			Fupp[i] = 0.0;
+		}
 	}
 
 	// Load the data for ToyProb ...
@@ -2837,10 +3009,13 @@ std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Nod
 
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Seed_Conf_Optimization_Pr.solve( Cold );
-	for (int i = 0; i < 26; i++){Robot_State_Seed[i] = x[i];}
-	Robot_StateNDot Robot_StateNDot_Seed(Robot_State_Seed);
-	std::string input_name = "Seed Configuration in Opt";
-	Robot_Plot_fn(Robot_StateNDot_Seed, input_name);
+	for (int i = 0; i < 26; i++)
+	{
+		Robot_State_Seed[i] = x[i];
+	}
+	// Robot_StateNDot Robot_StateNDot_Seed(Robot_State_Seed);
+	// std::string input_name = "Seed Configuration in Opt";
+	// Robot_Plot_fn(Robot_StateNDot_Seed, input_name);
 	delete []iAfun;  delete []jAvar;  delete []A;		delete []iGfun;  delete []jGvar;
 	delete []x;      delete []xlow;   delete []xupp;	delete []xmul;   delete []xstate;
 	delete []F;      delete []Flow;   delete []Fupp;	delete []Fmul;   delete []Fstate;
@@ -2884,13 +3059,6 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	std::vector<double> rF_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rF");
 	std::vector<double> rT_ref = Ang_Pos_fn(Structure_P.Node_i.Node_StateNDot, "rT");
 
-	// cout<<rA_ref[0]<<endl;
-	// cout<<rB_ref[0]<<endl;
-	// cout<<rC_ref[0]<<endl;
-	// cout<<rD_ref[0]<<endl;
-	// cout<<rE_ref[0]<<endl;
-	// cout<<rF_ref[0]<<endl;
-
 	std::vector<double> rCOM_opt = Ang_Pos_fn(StateNDot_Init_i, "rCOM");
 	std::vector<double> rA_opt = Ang_Pos_fn(StateNDot_Init_i, "rA");
 	std::vector<double> rB_opt = Ang_Pos_fn(StateNDot_Init_i, "rB");
@@ -2902,22 +3070,22 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 
 	std::vector<double> vCOM_ref = Ang_Vel_fn(StateNDot_Init_i,"vCOM");
 
-
 	ObjNConstraint_Val.push_back(0);
 	ObjNConstraint_Type.push_back(1);
 
-	int Opt_Type_Flag, Crit_Grid;
+	int Opt_Type_Flag, Crit_Grid;					// Crit_Grid is not very important
 
 	Sigma_TransNGoal(sigma_i, sigma_i_child, Opt_Type_Flag, Crit_Grid);
 
 	double sigma_diff = 0.0; double Obj_val = 0.0;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		sigma_diff = sigma_diff + (sigma_i_child[i] - sigma_i[i]);
 	}
 	if(abs(sigma_diff)>0)
 	{
+		// The contact has to be modified to address the contact change problem
 		Obj_val = 0.0;
-
 		// In this case, there must a contact modification during this whole process
 		for (int i = 0; i < StateVec_Init_ref.size(); i++)
 		{
@@ -2952,34 +3120,35 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 		}
 		else
 		{
-			// ObjNConstraint_Val.push_back((rCOM_opt[0] - rCOM_ref[0]) * (rCOM_opt[0] - rCOM_ref[0]));
-			// ObjNConstraint_Type.push_back(0);
-
 			// Making contact
 			int Contact_Index = Sigma_Change(sigma_i, sigma_i_child);
 			// cout<<Contact_Index<<endl;
 			// The next step is to figure out which foot to step and which direction to go
 			double vCOM_sign = vCOM_ref[0]/abs(vCOM_ref[0]);
+
 			if(Contact_Index<2)
 			{
 				if(Contact_Index > 0)
 				{
+					// The CD foot will make contact with the ground
 					if(vCOM_sign>0)
 					{
-						// ObjNConstraint_Val.push_back(rD_opt[0] - rA_opt[0] - mini);
-						// ObjNConstraint_Type.push_back(1);
-						ObjNConstraint_Val.push_back(rD_opt[0] - rD_ref[0] - mini);
-						ObjNConstraint_Type.push_back(0);
-
+						// To make sure that the robot can step its foot forward across the stance leg
+						ObjNConstraint_Val.push_back(rD_opt[0] - rA_opt[0] - mini);
+						ObjNConstraint_Type.push_back(1);
+						// ObjNConstraint_Val.push_back(rD_opt[0] - rD_ref[0] - mini);
+						// ObjNConstraint_Type.push_back(0);
 					}
 					else
 					{
+						// To make sure taht the robot can step its foot backward
 						ObjNConstraint_Val.push_back(rB_opt[0] - rC_opt[0] - mini);
 						ObjNConstraint_Type.push_back(1);
 					}
 				}
 				else
 				{
+					// The AB foot will make contact with the ground
 					if(vCOM_sign>0)
 					{
 						ObjNConstraint_Val.push_back(rB_opt[0] - rC_opt[0] - mini);
@@ -2991,13 +3160,11 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 						ObjNConstraint_Val.push_back(rD_opt[0] - rA_opt[0] - mini);
 						ObjNConstraint_Type.push_back(1);
 					}
-
-					ObjNConstraint_Val.push_back((rT_opt[0] - rT_ref[0]) * (rT_opt[0] - rT_ref[0]));
-					ObjNConstraint_Type.push_back(0);
+					// ObjNConstraint_Val.push_back((rT_opt[0] - rT_ref[0]) * (rT_opt[0] - rT_ref[0]));
+					// ObjNConstraint_Type.push_back(0);
 				}
 			}
 		}
-
 		// Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);
 		// Obj_val = (rCOM_ref[0] - rCOM_opt[0]) * (rCOM_ref[0] - rCOM_opt[0]) + (rCOM_ref[1] - rCOM_opt[1]) * (rCOM_ref[1] - rCOM_opt[1]);
 
@@ -3008,11 +3175,7 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	}
 	else
 	{
-		// This is used for the self-stasbilization process so kinetic energy is the only cost
-		// for (int i = 0; i < StateVec_Init_ref.size(); i++)
-		// {
-		// 	Obj_val = Obj_val + (StateVec_Init_ref[i] - Opt_Seed[i]) * (StateVec_Init_ref[i] - Opt_Seed[i]);
-		// }
+		// Inertial shaping method
 
 		Obj_val = Kinetic_Energy_fn(StateNDot_Init_i);
 		// double KE_End = Kinetic_Energy_fn(StateNDot_Init_i);
@@ -3067,11 +3230,11 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	// ObjNConstraint_Val.push_back((StateNDot_Init_i.theta - PI/2.0)*(StateNDot_Init_i.theta - PI/2.0)) ;
 	// ObjNConstraint_Type.push_back(0);
 
-	double Hand_max = max(rE_ref[0], rF_ref[0]);
-	Hand_max = max(Hand_max, rD_ref[0]);
-	Hand_max = max(Hand_max, rC_ref[0]);
-	Hand_max = max(Hand_max, rA_ref[0]);
-	Hand_max = max(Hand_max, rT_opt[0]);
+	// double Hand_max = max(rE_ref[0], rF_ref[0]);
+	// Hand_max = max(Hand_max, rD_ref[0]);
+	// Hand_max = max(Hand_max, rC_ref[0]);
+	// Hand_max = max(Hand_max, rA_ref[0]);
+	// Hand_max = max(Hand_max, rT_opt[0]);
 
 	ObjNConstraint_Val[0] = Obj_val;
 	//
@@ -3134,7 +3297,7 @@ void Seed_Conf_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::v
 	}
 	sigma_temp = Sigma2Pos(sigma_real, 0);			Eqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
 	sigma_temp = Sigma2Pos(sigma_real, 1);			Ineqn_Pos_Matrix = Diag_Matrix_fn(sigma_temp);
-	sigma_temp = Sigma2Vel(sigma_real);				Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
+	sigma_temp = Sigma2Vel(sigma_real);					Eqn_Vel_Matrix = Diag_Matrix_fn(sigma_temp);
 
 	// 1. Active constraints have to be satisfied: Position and Velocity
 	Matrix_result = Eqn_Pos_Matrix * End_Effector_Dist;
