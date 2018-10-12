@@ -12,7 +12,7 @@
 #include <algorithm>
 
 // Pre-define of the bounds
-double Inf = 1.1e20;					double PI = 3.1415926535897932384626;									   double pi = PI;
+double Inf = 1.1e20;										double PI = 3.1415926535897932384626;									   							double pi = PI;
 // There are three types of variables in this optimization problem: robot state, control torques and contact forces
 double rIxlow = -Inf;                  	double rIxupp = Inf;					double rIylow = -Inf;                  	double rIyupp = Inf;
 double thetalow = -pi;                 	double thetaupp = pi;					double q1low = -2.3562;                	double q1upp = 0.733;
@@ -460,7 +460,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back(20 - KE_init);			ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back(10 - KE_init);			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
@@ -1968,28 +1968,29 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 		ObjNConstraint_Val.push_back(Pos_Real_Change - xdot_min*T);
 		ObjNConstraint_Type.push_back(1);
 
-		// if(i>=3)
-		// {
-		// 	// 2.b Bounds on the velocity
-		// 	double xddot_max = max(xddot_init, xddot_end);
-		// 	double xddot_min = min(xddot_init, xddot_end);
-		//
-		// 	double xddot_max_mag_sq = max(xddot_init * xddot_init, xddot_end * xddot_end);
-		// 	ObjNConstraint_Val.push_back(Acc_max * Acc_max - xddot_max_mag_sq);
-		// 	ObjNConstraint_Type.push_back(1);
-		//
-		// 	// double Vel_Real_Change = Robotstate_Vec_Back[i+13] - Robotstate_Vec_Front[i+13];
-		// 	// ObjNConstraint_Val.push_back(xddot_max*T - Vel_Real_Change);
-		// 	// ObjNConstraint_Type.push_back(1);
-		// 	// ObjNConstraint_Val.push_back(Vel_Real_Change - xddot_min*T);
-		// 	// ObjNConstraint_Type.push_back(1);
-		// }
+		if(i>=3)
+		{
+			// 2.b Bounds on the velocity
+			// double xddot_max = max(xddot_init, xddot_end);
+			// double xddot_min = min(xddot_init, xddot_end);
+			//
+			// double xddot_max_mag_sq = max(xddot_init * xddot_init, xddot_end * xddot_end);
+			// ObjNConstraint_Val.push_back(Acc_max * Acc_max - xddot_max_mag_sq);
+			// ObjNConstraint_Type.push_back(1);
+
+			// double Vel_Real_Change = Robotstate_Vec_Back[i+13] - Robotstate_Vec_Front[i+13];
+			// ObjNConstraint_Val.push_back(xddot_max*T - Vel_Real_Change);
+			// ObjNConstraint_Type.push_back(1);
+			// ObjNConstraint_Val.push_back(Vel_Real_Change - xddot_min*T);
+			// ObjNConstraint_Type.push_back(1);
+			ObjNConstraint_Val.push_back(xddot_init);
+			ObjNConstraint_Type.push_back(2);
+
+		}
 		Robotstate_Vec_Mid[i+13] = CubicSpline_Evaluation_fn(CubicSpline_Coeff, 0.5);
 		Robotstate_Mid_Acc(i) = CubicSpline_1stOrder_Evaluation_fn(CubicSpline_Coeff, 0.5, T);
 	}
 	// cout<<Acc_Front<<endl;			cout<<Acc_Back<<endl;			cout<<Robotstate_Mid_Acc<<endl;
-
-
 
 	// // The acceleration constraint is not of first priority
 	// Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
@@ -3009,13 +3010,16 @@ std::vector<double> Seed_Guess_Gene_Robotstate(Tree_Node &Node_i, Tree_Node &Nod
 
 	integer Cold = 0, Basis = 1, Warm = 2;
 	Seed_Conf_Optimization_Pr.solve( Cold );
+
 	for (int i = 0; i < 26; i++)
 	{
 		Robot_State_Seed[i] = x[i];
 	}
-	// Robot_StateNDot Robot_StateNDot_Seed(Robot_State_Seed);
-	// std::string input_name = "Seed Configuration in Opt";
-	// Robot_Plot_fn(Robot_StateNDot_Seed, input_name);
+
+	Robot_StateNDot Robot_StateNDot_Seed(Robot_State_Seed);
+	std::string input_name = "Seed Configuration in Opt";
+	Robot_Plot_fn(Robot_StateNDot_Seed, input_name);
+
 	delete []iAfun;  delete []jAvar;  delete []A;		delete []iGfun;  delete []jGvar;
 	delete []x;      delete []xlow;   delete []xupp;	delete []xmul;   delete []xstate;
 	delete []F;      delete []Flow;   delete []Fupp;	delete []Fmul;   delete []Fstate;
