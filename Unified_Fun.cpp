@@ -21,7 +21,7 @@ double q4low = -2.3562;                	double q4upp = 0.733;					double q5low =
 double q6low = -1.3;                   	double q6upp = 0.733;					double q7low = -3.14;                  	double q7upp = 1.047;
 double q8low = -2.391;                 	double q8upp = 0.0;						double q9low = -3.14;                  	double q9upp = 1.047;
 double q10low = -2.391;                	double q10upp = 0.0;
-double AngRateMag = 3.0;			   				double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
+double AngRateMag = 5.0;			   				double AngRateLow = -AngRateMag;     	double AngRateHgh = AngRateMag;
 
 double rIxdotlow = -Inf;               	double rIxdotupp = Inf;						double rIydotlow = -Inf;               	double rIydotupp = Inf;
 double thetadotlow = -Inf;             	double thetadotupp = Inf;					double q1dotlow = AngRateLow;          	double q1dotupp = AngRateHgh;
@@ -34,7 +34,7 @@ double q10dotlow = AngRateLow;         	double q10dotupp = AngRateHgh;
 double tau1_max = 100;             			double tau2_max = 100;						double tau3_max = 100;								double tau4_max = 100;
 double tau5_max = 100;             			double tau6_max = 100;						double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             			double tau10_max = 50;
-double Acc_max = 10;										// This value is for the depth 3 left hand contact
+double Acc_max = 25;										// This value is for the depth 3 left hand contact
 // double Acc_max = 10;									// May not be so important up to now
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
@@ -460,7 +460,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back(20 - KE_init);			ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back(11.72 - KE_init);			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
@@ -1455,8 +1455,8 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 				// }
 				// else
 				// {
-					Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
-					ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
+					// Matrix_result = Eqn_Vel_Matrix * End_Effector_Vel;
+					// ObjNConstraint_ValNType_Update(Matrix_result, ObjNConstraint_Val, ObjNConstraint_Type, 0);
 				// }
 			}
 
@@ -1983,8 +1983,8 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 			// ObjNConstraint_Type.push_back(1);
 			// ObjNConstraint_Val.push_back(Vel_Real_Change - xddot_min*T);
 			// ObjNConstraint_Type.push_back(1);
-			ObjNConstraint_Val.push_back(xddot_init);
-			ObjNConstraint_Type.push_back(2);
+			// ObjNConstraint_Val.push_back(xddot_init);
+			// ObjNConstraint_Type.push_back(2);
 
 		}
 		Robotstate_Vec_Mid[i+13] = CubicSpline_Evaluation_fn(CubicSpline_Coeff, 0.5);
