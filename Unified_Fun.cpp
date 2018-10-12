@@ -460,7 +460,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back(10 - KE_init);			ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back(20 - KE_init);			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
