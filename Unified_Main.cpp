@@ -25,13 +25,13 @@ int main( int argc, char **argv)
 	{
 		double data_each_line = 0.0;
 
-		while(Sigma_Init_File>>data_each_line) 
+		while(Sigma_Init_File>>data_each_line)
 		{
 			sigma_init.push_back(data_each_line);
 		}
 		Sigma_Init_File.close();
 	}
-	else
+	else 
 	{
 		printf("Unable to open sigma_init.txt file!\n");
 	}

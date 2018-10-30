@@ -1,0 +1,429 @@
+#! /usr/bin/env python
+
+import sys, os, time
+import numpy as np
+import matplotlib.pyplot as plt
+import logging
+import pickle as pkl
+from klampt import WorldModel
+from klampt import vis
+from klampt.math import vectorops
+from klampt.model.trajectory import Trajectory
+import ipdb
+
+sys.path.insert(0, '/home/shihao/Desktop/Multi-contact-Humanoid-Fall-Mitigation')
+
+from OwnLib import *
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+Grids = 0
+pi = 3.1415926535897932384626
+Aux_Link_Ind = [1, 3, 5, 6, 7, 11, 12, 13, 17, 18, 19, 20, 21, 23, 24, 26, 27, 28, 30, 31, 33, 34, 35]  # This is the auxilliary joints causing lateral motion
+Act_Link_Ind = [0, 2, 4, 8, 9, 10, 14, 15, 16, 22, 25, 29, 32]                                          # This is the active joints to be considered
+Ctrl_Link_Ind = Act_Link_Ind[3:]
+Tot_Link_No = len(Aux_Link_Ind) + len(Act_Link_Ind)
+Local_Extremeties = [0.1, 0, -0.1, -0.15 , 0, -0.1, 0.1, 0, -0.1, -0.15 , 0, -0.1, 0, 0, -0.22, 0, 0, -0.205]         # This 6 * 3 vector describes the local coordinate of the contact extremeties in their local coordinate
+End_Effector_Ind = [11, 11, 17, 17, 27, 34]                       # The link index of the end effectors
+
+Motion_Duration = [2.66, 2.649, 2.637, 0.401, 0.599, 0.611, 0.614, 0.616, 0.625, 0.664, 0.694, 0.744, 0.828, 0.916, 0.979, 0.979, 0.988, 0.988, 0.988, 0.988, 0.988] # This list is used to save the time duration of each optimized motion there are in total 21 motion
+File_Name = ['Iter0', 'Iter1', 'Iter2', 'Iter5', 'Iter10', 'Iter20', 'Iter30', 'Iter40', 'Iter50', 'Iter60', 'Iter70', 'Iter80', 'Iter90', 'Iter100', 'Iter110', 'Iter120', 'Iter130', 'Iter140', 'Iter145', 'Iter146', 'Iter147']
+
+
+# The main purpose of this function is to allow the animation of all the input motion files and I would like to show them in the same perspective
+class MyGLPlugin(vis.GLPluginInterface):
+    def __init__(self, world):
+        vis.GLPluginInterface.__init__(self)
+        self.world = world
+        self.quit = False
+        self.starp = False
+
+    def mousefunc(self, button, state, x, y):
+        print("mouse",button,state,x,y)
+        if button==2:
+            if state==0:
+                print("Click list...",[o.getName() for o in self.click_world(x,y)])
+            return True
+        return False
+
+    def motionfunc(self, x, y, dx, dy):
+        return False
+
+    def keyboardfunc(self, c, x, y):
+        print("Pressed",c)
+        if c == 'q':
+            self.quit = True
+            return True
+        if c == 's':
+            self.starp = not self.starp
+            return True
+        return False
+
+    def click_world(self, x, y):
+        """Helper: returns a list of world objects sorted in order of
+        increasing distance."""
+        #get the viewport ray
+        (s, d) = self.click_ray(x, y)
+
+        #run the collision tests
+        collided = []
+        for g in self.collider.geomList:
+            (hit, pt) = g[1].rayCast(s, d)
+            if hit:
+                dist = vectorops.dot(vectorops.sub(pt, s), d)
+                collided.append((dist,g[0]))
+        return [g[1] for g in sorted(collided)]
+
+def Dimension_Recovery(low_dim_obj):
+    high_dim_obj = np.zeros(Tot_Link_No)
+    for i in range(0,len(Act_Link_Ind)):
+        high_dim_obj[Act_Link_Ind[i]] = low_dim_obj[i]
+    return high_dim_obj
+
+def main():
+    #creates a world and loads all the items on the command line
+    world = WorldModel()
+    res = world.readFile("./HRP2_Robot.xml")
+    if not res:
+        raise RuntimeError("Unable to load model")
+    robot = world.robot(0)
+    # coordinates.setWorldModel(world)
+    plugin = MyGLPlugin(world)
+    vis.pushPlugin(plugin)
+    #add the world to the visualizer
+    vis.add("world", world)
+    vis.show()
+
+    h = 0.0068
+    # ipdb.set_trace()
+    Opt_Iter_List = [0, 1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 145, 146, 147]
+    for Opt_Iter_List_i in Opt_Iter_List:
+        Opt_Iter_File = 'Iter' + str(Opt_Iter_List_i) + '_.txt'
+        Robotstate_Traj, Contact_Force_Traj = Traj_Loader_Local('/home/shihao/Desktop/Unified-Humanoid-Push-Recovery/Opt_Iter',Opt_Iter_File)
+        Traj_Plot(vis, robot, Robotstate_Traj, Contact_Force_Traj, h)
+        print "Current Opt Iter: " + str(Opt_Iter_List_i)
+
+def Traj_Plot(plugi_vis, robot, Robotstate_Traj, Contact_Force_Traj, Time_Duration):
+    # This function is introduced to plot the animation given the robot state trajectory
+    vis = plugi_vis
+    playspeed = 5
+    norm = 500
+    h = Time_Duration
+    count = 0
+    while vis.shown() and count<2:
+        # This is the main plot program
+        Left_Hand_Traj = Trajectory()
+        Right_Hand_Traj = Trajectory()
+        COM_Traj = Trajectory()
+        for i in range(0, Robotstate_Traj.shape[1]):
+            vis.lock()
+            Robotstate_Traj_i = Robotstate_Traj[:,i]
+            Robotstate_Traj_Full_i = Dimension_Recovery(Robotstate_Traj_i)
+
+            # Now it is the plot of the contact force at the contact extremities
+            robot.setConfig(Robotstate_Traj_Full_i)
+            Contact_Force_Traj_i = Contact_Force_Traj[:,i]
+            left_ft, rght_ft, left_hd, rght_hd, left_ft_end, rght_ft_end, left_hd_end, rght_hd_end = Contact_Force_vec(robot, Contact_Force_Traj_i, norm)
+
+            Left_Hand_Traj.milestones.append(left_hd)
+            Right_Hand_Traj.milestones.append(rght_hd)
+            vis.add(" ", Left_Hand_Traj)
+            vis.add("  ", Right_Hand_Traj)
+            # ipdb.set_trace()
+
+            # vis.add("Left Foot force", Trajectory([0, 1], [left_ft, left_ft_end]))
+            # vis.add("Right Foot force", Trajectory([0, 1], [rght_ft, rght_ft_end]))
+            # vis.add("Left Hand force", Trajectory([0, 1], [left_hd, left_hd_end]))
+            # vis.add("Right Hand force", Trajectory([0, 1], [rght_hd, rght_hd_end]))
+            robot_COM_start = robot.getCom()
+            COM_Traj.milestones.append(robot_COM_start)
+            vis.add("Center of Mass Trajectory", COM_Traj)
+
+            robot_COM_end =[]
+            robot_COM_end.append(robot_COM_start[0])
+            robot_COM_end.append(robot_COM_start[1])
+            robot_COM_end.append(robot_COM_start[2]-1)
+            vis.add("Center of Mass Projection", Trajectory([0, 1], [robot_COM_start, robot_COM_end]))
+            # ipdb.set_trace()
+            vis.unlock()
+            time.sleep(h * playspeed)
+        raw_input("Press Enter to continue...")
+        count = count + 1;
+
+
+
+def Contact_Force_vec(robot, Contact_Force_Traj_i, norm):
+    length = 0.5
+    End_Effector_Pos = get_End_Effector_Pos(robot)          # 18 by 1
+    left_ft_x = 0.5 * End_Effector_Pos[0] + 0.5 * End_Effector_Pos[3]
+    left_ft_y = 0.5 * End_Effector_Pos[1] + 0.5 * End_Effector_Pos[4]
+    left_ft_z = 0.5 * End_Effector_Pos[2] + 0.5 * End_Effector_Pos[5]
+    rght_ft_x = 0.5 * End_Effector_Pos[6] + 0.5 * End_Effector_Pos[9]
+    rght_ft_y = 0.5 * End_Effector_Pos[7] + 0.5 * End_Effector_Pos[10]
+    rght_ft_z = 0.5 * End_Effector_Pos[8] + 0.5 * End_Effector_Pos[11]
+    left_hd_x = End_Effector_Pos[12]
+    left_hd_y = End_Effector_Pos[13]
+    left_hd_z = End_Effector_Pos[14]
+    rght_hd_x = End_Effector_Pos[15]
+    rght_hd_y = End_Effector_Pos[16]
+    rght_hd_z = End_Effector_Pos[17]
+
+    left_ft = [left_ft_x, left_ft_y, left_ft_z]
+    rght_ft = [rght_ft_x, rght_ft_y, rght_ft_z]
+    left_hd = [left_hd_x, left_hd_y, left_hd_z]
+    rght_hd = [rght_hd_x, rght_hd_y, rght_hd_z]
+
+    left_ft_x_off = Contact_Force_Traj_i[0]/norm * length
+    left_ft_z_off = Contact_Force_Traj_i[1]/norm * length
+    rght_ft_x_off = Contact_Force_Traj_i[2]/norm * length
+    rght_ft_z_off = Contact_Force_Traj_i[3]/norm * length
+    left_hd_x_off = Contact_Force_Traj_i[4]/norm * length
+    left_hd_z_off = Contact_Force_Traj_i[5]/norm * length
+    rght_hd_x_off = Contact_Force_Traj_i[6]/norm * length
+    rght_hd_z_off = Contact_Force_Traj_i[7]/norm * length
+
+    left_ft_end = [left_ft_x + left_ft_x_off, left_ft_y, left_ft_z + left_ft_z_off]
+    rght_ft_end = [rght_ft_x + rght_ft_x_off, rght_ft_y, rght_ft_z + rght_ft_z_off]
+    left_hd_end = [left_hd_x + left_hd_x_off, left_hd_y, left_hd_z + left_hd_z_off]
+    rght_hd_end = [rght_hd_x + rght_hd_x_off, rght_hd_y, rght_hd_z + rght_hd_z_off]
+
+    return left_ft, rght_ft, left_hd, rght_hd, left_ft_end, rght_ft_end, left_hd_end, rght_hd_end
+
+
+def get_End_Effector_Pos(hrp2_robot):
+    End_Effector_Pos_Array = np.array([0, 0, 0])
+    End_Link_No_Index = -1
+    for End_Effector_Link_Index in End_Effector_Ind:
+        End_Link_No_Index = End_Link_No_Index + 1
+        End_Link_i = hrp2_robot.link(End_Effector_Link_Index)
+        End_Link_i_Extre_Loc = Local_Extremeties[End_Link_No_Index*3:End_Link_No_Index*3+3]
+        End_Link_i_Extre_Pos = End_Link_i.getWorldPosition(End_Link_i_Extre_Loc)
+        End_Effector_Pos_Array = np.append(End_Effector_Pos_Array, End_Link_i_Extre_Pos)
+    return End_Effector_Pos_Array[3:]
+
+def Robot_ConfigNVel_Update(robot, x):
+    OptConfig_Low = x[0:len(x)/2]
+    OptVelocity_Low = x[len(x)/2:]
+    OptConfig_High = Dimension_Recovery(OptConfig_Low)
+    OptVelocity_High = Dimension_Recovery(OptVelocity_Low)
+    robot.setConfig(OptConfig_High)
+    robot.setVelocity(OptVelocity_High)
+
+def KE_fn(robot, dataArray):
+    #First we have to set the robot to be the corresponding configuration and angular velocities
+    Robot_ConfigNVel_Update(robot, dataArray)
+    D_q = np.asarray(robot.getMassMatrix())    # Here D_q is the effective inertia matrix
+    qdot_i = dataArray[13:None]
+    qdot_i = np.reshape(qdot_i,[13,1])
+    qdot_i = Dimension_Recovery(qdot_i)
+    qdot_i_trans = np.transpose(qdot_i)
+    T = 0.5 * qdot_i_trans.dot(D_q.dot(qdot_i))
+    return T
+
+def Traj_Loader_Local(path_name, file_name):
+    # This function will load the robotstate and contact force trajectories in the local folder
+    # Here we would like to directly make use of the optimized trajectories from the MATLAB
+
+    # Here the path_name is a global path instead of a relative path
+    Robotstate_Traj = np.array([])
+    state_prefix = 'State_'
+    state_txt_name = path_name + "/" + state_prefix + file_name
+
+    # with open("./Exp Data/Exp 4/State_Exp3_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Vert_Wall/State_Vert_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Flat_Gnd/State_flat_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Final/State_KE_35_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Final/State_KE_35__.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Final/State_KE_80_.txt",'r') as robot_soln_file:
+    with open(state_txt_name,'r') as robot_soln_file:
+        for line in robot_soln_file:
+            currentline = line.split(",")
+            currentline = [x.replace("\r\n","") for x in currentline]
+            currentline = map(float, currentline)
+            currentline = np.array([currentline])
+            Robotstate_Traj = np.append(Robotstate_Traj, currentline)
+    Robotstate_Traj = np.reshape(Robotstate_Traj, (13, Robotstate_Traj.shape[0]/13))
+
+    Contact_Force_Traj = np.array([])
+    contact_force_prefix = 'Contact_Force_'
+    contact_force_txt_name = path_name + "/" + contact_force_prefix + file_name
+    # with open("./Exp Data/Exp 4/Contact_Force_Exp3_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Highlights/Flat_Gnd/Contact_Force_flat_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Final/Contact_Force_KE_35_.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Final/Contact_Force_KE_35__.txt",'r') as robot_soln_file:
+    # with open("./Exp Data/Final/Contact_Force_KE_80_.txt",'r') as robot_soln_file:
+    with open(contact_force_txt_name,'r') as robot_soln_file:
+        for line in robot_soln_file:
+            currentline = line.split(",")
+            currentline = [x.replace("\r\n","") for x in currentline]
+            currentline = map(float, currentline)
+            currentline = np.array([currentline])
+            Contact_Force_Traj = np.append(Contact_Force_Traj, currentline)
+    Contact_Force_Traj = np.reshape(Contact_Force_Traj, (8, Contact_Force_Traj.shape[0]/8))
+    return Robotstate_Traj, Contact_Force_Traj
+
+def Path_Loader():
+    # This function is used to read the Opt_Soln txt file
+    global Grids
+    with open("Opt_Soln3.txt",'r') as robot_soln_file:
+        robot_soln_i = robot_soln_file.readlines()
+        robot_soln = [x.strip() for x in robot_soln_i]
+        robot_soln = np.array(robot_soln, dtype = float)
+    Grids = (robot_soln.shape[0]-1)/48
+    T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj = Seed_Guess_Unzip(robot_soln)
+    return T_tot, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj
+
+def Seed_Guess_Unzip(Opt_Seed):
+
+    # This function is used to unzip the Opt_Seed back into the coefficients
+    T = Opt_Seed[0]
+    # First is to retrieve the stateNdot coefficients from the Opt_Seed: 1 to 1 + (Grids - 1) * 26 * 4
+    Var_Init = 1
+    Var_Length = (Grids) * 26
+    Var_End = Var_Init + Var_Length
+    StateNDot_Traj = Opt_Seed[Var_Init:Var_End]
+    StateNDot_Traj = np.reshape(StateNDot_Traj, (Grids, 26)).transpose()
+
+    Var_Init = Var_End
+    Var_Length = (Grids) * 10
+    Var_End = Var_Init + Var_Length
+    Ctrl_Traj = Opt_Seed[Var_Init:Var_End]
+    Ctrl_Traj = np.reshape(Ctrl_Traj, (Grids, 10)).transpose()
+
+    Var_Init = Var_End
+    Var_Length = (Grids) * 12
+    Var_End = Var_Init + Var_Length
+    Contact_Force_Traj = Opt_Seed[Var_Init:Var_End]
+    Contact_Force_Traj = np.reshape(Contact_Force_Traj, (Grids, 12)).transpose()
+    # ipdb.set_trace()
+    return T, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj
+
+def showTwoStep(plugin, world, robot, ground1, ground2, ground3, ground4, link_foot, link_foot_other):
+    """Read the data file and select trajectories to show, they are composed of two steps"""
+    data = np.load('data/twoStepBunch.npz')['output']
+    ndata = len(data)
+    N = 20
+    force_len = 0.5
+    vis.show()
+    for j in range(ndata):
+        i = j
+        print('Entering traj %d' % i)
+        l0, l1, h0, h1, vel, phase0, phase1 = data[i]
+        # set those grounds
+        ground1.setConfig([0, 0, 0, 0, 0, 0])
+        ground2.setConfig([l0, 0, h0, 0, 0, 0])
+        ground3.setConfig([l0 + l1, 0, h0 + h1, 0, 0, 0])
+        ground4.setConfig([2 * l0 + l1, 0, 2 * h0 + h1, 0, 0, 0])
+        while vis.shown() and not plugin.quit:
+            if plugin.nextone:  # check if we want next one
+                plugin.nextone = False
+                break
+            # show phase0
+            t, q, force = getTraj(phase0)
+            h_ = t[1] - t[0]
+            if h_ < 0:
+                break
+            nPoint = len(t)
+            for k in range(nPoint):
+                vis.lock()
+                useq = copy_copy(q[k], False)
+                robot.setConfig(useq)
+                footpos = link_foot.getWorldPosition([0, 0, 0.5])
+                support = np.array([force[k, 0], 0, force[k, 1]])
+                use_support = support / np.linalg.norm(support) * force_len
+                force_end = vectorops.add(footpos, use_support.tolist())
+                vis.add("force", Trajectory([0, 1], [footpos, force_end]))
+                vis.unlock()
+                time.sleep(h_ * 5.0)
+                vis.remove('force')
+            # phase 1
+            t, q, force = getTraj(phase1)
+            h_ = t[1] - t[0]
+            if h_ < 0:
+                break
+            print('h_ = %f' % h_)
+            for k in range(nPoint):
+                vis.lock()
+                useq = copy_copy(q[k], True)
+                robot.setConfig(useq)
+                footpos = link_foot_other.getWorldPosition([0, 0, 0.5])
+                support = np.array([force[k, 0], 0, force[k, 1]])
+                use_support = support / np.linalg.norm(support) * force_len
+                force_end = vectorops.add(footpos, use_support.tolist())
+                vis.add("force", Trajectory([0, 1], [footpos, force_end]))
+                vis.unlock()
+                time.sleep(h_ * 5.0)
+                vis.remove('force')
+    while vis.shown() and not plugin.quit:
+        vis.lock()
+        vis.unlock()
+        time.sleep(0.05)
+    print("Ending visualization.")
+    vis.kill()
+
+def showOneStep(plugin, world, robot, ground1, ground2, ground3, link_foot, link_foot_other):
+    """Read the data file and select a few trajectories to show"""
+    # calculate the trajectory to show
+    oneStepDBName = 'data/oneStepDatabase.npz'
+    data = np.load(oneStepDBName)['arr_0']
+    ndata = len(data)
+    force_len = 0.5
+    repeatN = 3
+    vis.show()
+    for i in range(ndata):
+        print('Entering traj %d' % i)
+        nowN = 0
+        datai = data[i]
+        h, l, sol = datai['h'], datai['l'], datai['sol']
+        t, q, force = getTraj(sol)  # parse into useable format
+        nPoint = len(t)
+        h_ = t[1] - t[0]  # actual time step for trajectory
+        # vis.animate(("world","marlo"), traj, speed=10)
+        while vis.shown() and not plugin.quit:
+            if nowN == 0:
+                switched = False
+                if plugin.nextone:  # try to exit once animation of one mode is finished
+                    plugin.nextone = False
+                    break
+            for k in range(nPoint):
+                vis.lock()
+                if k == 0:  # manipulate the two steps if necessary
+                    offset = nowN * np.array([l, 0, h])
+                    ground1.setConfig([-(0 + offset[0]), 0 + offset[1], 0 + offset[2], 0, 0, 0])
+                    ground2.setConfig([-(l + offset[0]), 0 + offset[1], h + offset[2], 0, 0, 0])
+                    ground3.setConfig([-(2*l + offset[0]), 0 + offset[1], 2*h + offset[2], 0, 0, 0])
+                    nowN += 1
+                    if nowN == repeatN:
+                        nowN = 0
+                useq = copy_copy(q[k], switched)
+                useq[0] -= offset[0]
+                useq[2] += offset[2]
+                robot.setConfig(useq)
+                footpos = link_foot.getWorldPosition([0, 0, 0.4])
+                otherfootpos = link_foot_other.getWorldPosition([0, 0, 0.4])
+                if not switched:
+                    footpos, otherfootpos = otherfootpos, footpos
+                if k == 0:
+                    print('offset {}'.format(offset))
+                    print('useq {}'.format(useq))
+                    print('foot1 {} foot2 {}'.format(footpos, otherfootpos))
+                support = np.array([force[k, 0], 0, force[k, 1]])
+                use_support = support / np.linalg.norm(support) * force_len
+                force_end = vectorops.add(footpos, use_support.tolist())
+                vis.add("force", Trajectory([0, 1], [footpos, force_end]))
+                vis.unlock()
+                #changes to the visualization must be done outside the lock
+                time.sleep(h_ * 2.0)  # wait for actual time
+                vis.remove('force')
+            switched = not switched
+        print('show next one')
+    while vis.shown() and not plugin.quit:
+        vis.lock()
+        vis.unlock()
+        time.sleep(0.05)
+    print("Ending visualization.")
+    vis.kill()
+
+if __name__ == '__main__':
+    main()

@@ -31,10 +31,15 @@ double q6dotlow = AngRateLow;          	double q6dotupp = AngRateHgh;			double q
 double q8dotlow = AngRateLow;          	double q8dotupp = AngRateHgh;			double q9dotlow = AngRateLow;          	double q9dotupp = AngRateHgh;
 double q10dotlow = AngRateLow;         	double q10dotupp = AngRateHgh;
 
+// double tau1_max = 200;             			double tau2_max = 200;						double tau3_max = 200;								double tau4_max = 200;
+// double tau5_max = 200;             			double tau6_max = 200;						double tau7_max = 100;              		double tau8_max = 100;
+// double tau9_max = 100;             			double tau10_max = 100;
+
 double tau1_max = 100;             			double tau2_max = 100;						double tau3_max = 100;								double tau4_max = 100;
 double tau5_max = 100;             			double tau6_max = 100;						double tau7_max = 60;              		double tau8_max = 50;
 double tau9_max = 60;             			double tau10_max = 50;
-double Acc_max = 25;										// This value is for the depth 3 left hand contact
+
+double Acc_max = 10;										// This value is for the depth 3 left hand contact
 // double Acc_max = 20;									// May not be so important up to now
 
 dlib::matrix<double> xlow_vec;						dlib::matrix<double> xupp_vec;
@@ -460,7 +465,7 @@ void Default_Init_Pr_ObjNConstraint(std::vector<double> &Opt_Seed, std::vector<d
 	// ObjNConstraint_Val.push_back(KE_init - 150);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back(49.18  - KE_init);			ObjNConstraint_Type.push_back(1);
 	// ObjNConstraint_Val.push_back((68.57  - KE_init) * (68.57  - KE_init));			ObjNConstraint_Type.push_back(0);
-	ObjNConstraint_Val.push_back(11.72 - KE_init);			ObjNConstraint_Type.push_back(0);
+	ObjNConstraint_Val.push_back(40.39 - KE_init);			ObjNConstraint_Type.push_back(0);
 
 	//
 	std::vector<double> vCOM_init = Ang_Vel_fn(StateNDot_Init_i, "vCOM");
@@ -1547,6 +1552,7 @@ void Nodes_Optimization_ObjNConstraint(std::vector<double> &Opt_Seed, std::vecto
 		// ObjNConstraint_Val[0] = Objective_Function_Cal(StateNDot_Traj, Opt_Type_Flag, sigma_i_child);
 		// ObjNConstraint_Val[0] = Robot_StateNDot_j.theta * Robot_StateNDot_j.theta;
 		// ObjNConstraint_Val[0] = Traj_Variation(StateNDot_Traj);
+		// ObjNConstraint_Val[0] = T;
 		// ObjNConstraint_Val[0] = KE_Variation_fn(StateNDot_Traj);
 		// ObjNConstraint_Val[0] = 10 * Traj_Variation(StateNDot_Traj) + Variation_Cal(Contact_Force_Traj);
 		// ObjNConstraint_Val[0] = Variation_Cal(Contact_Force_Traj);
@@ -1985,7 +1991,6 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 			// ObjNConstraint_Type.push_back(1);
 			// ObjNConstraint_Val.push_back(xddot_init);
 			// ObjNConstraint_Type.push_back(2);
-
 		}
 		Robotstate_Vec_Mid[i+13] = CubicSpline_Evaluation_fn(CubicSpline_Coeff, 0.5);
 		Robotstate_Mid_Acc(i) = CubicSpline_1stOrder_Evaluation_fn(CubicSpline_Coeff, 0.5, T);
@@ -1993,16 +1998,16 @@ void Robot_StateNDot_MidNAcc(double T, const Robot_StateNDot &Robot_StateNDot_Fr
 	// cout<<Acc_Front<<endl;			cout<<Acc_Back<<endl;			cout<<Robotstate_Mid_Acc<<endl;
 
 	// // The acceleration constraint is not of first priority
-	// Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
-	// for (int i = -1; i < 10; i++)
-	// {
-	// 	ObjNConstraint_Val.push_back(Acc_Front(i+3));
-	// 	ObjNConstraint_Type.push_back(2);
-	// 	ObjNConstraint_Val.push_back(Robotstate_Mid_Acc(i+3));
-	// 	ObjNConstraint_Type.push_back(2);
-	// 	ObjNConstraint_Val.push_back(Acc_Back(i+3));
-	// 	ObjNConstraint_Type.push_back(2);
-	// }
+	Robot_StateNDot_Mid = StateVec2StateNDot(Robotstate_Vec_Mid);
+	for (int i = -1; i < 10; i++)
+	{
+		ObjNConstraint_Val.push_back(Acc_Front(i+3));
+		ObjNConstraint_Type.push_back(2);
+		ObjNConstraint_Val.push_back(Robotstate_Mid_Acc(i+3));
+		ObjNConstraint_Type.push_back(2);
+		ObjNConstraint_Val.push_back(Acc_Back(i+3));
+		ObjNConstraint_Type.push_back(2);
+	}
 }
 void Quadratic_Angular_Sum_Cal(std::vector<double> &Robot_Vel,double &Quadratic_Angular_Sum)
 {
@@ -2463,7 +2468,7 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	// coordinate arrays (iAfun,jAvar,A) and (iGfun, jGvar).
 	Nodes_Optimization_Pr.computeJac    ();
 	Nodes_Optimization_Pr.setIntParameter( "Derivative option", 0 );
-	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 250);
+	Nodes_Optimization_Pr.setIntParameter("Major iterations limit", 146);
 	Nodes_Optimization_Pr.setIntParameter("Minor iterations limit", 50000);
 	Nodes_Optimization_Pr.setIntParameter("Iterations limit", 2000000);
 	Nodes_Optimization_Pr.setIntParameter("Minor print level", 1);
@@ -2492,6 +2497,8 @@ std::vector<double> Nodes_Optimization_Inner_Opt(Tree_Node &Node_i, Tree_Node &N
 	delete []Fmul;   delete []Fstate;
 
 	delete []xnames; delete []Fnames;
+
+	Opt_Soln_Write2Txt(Node_i, Node_i_child, Opt_Soln);
 
 	return Opt_Soln;
 }
@@ -2533,7 +2540,9 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 {	// This function will generate the spline coefficients needed for the further optimization
 	// Here Time_Seed is a global variable whose value is changed in the outer loop
 
-	double h_k = Time_Seed;
+	// double h_k = Time_Seed;
+	// Only for the workshop presentation plot
+	double h_k = 0.38;
 
 	// The first step is to generate a feasible configuration that can satisfy the contact mode in the node i child
 	std::vector<double> Init_Config = StateNDot2StateVec(Node_i.Node_StateNDot);
@@ -2555,24 +2564,24 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// The only step that needs to be changed with the new idea is the following code
 	// Now we have the Init_Config and the Seed_Config so how to interpolate the intermediate trajectories
 	//
-	double T_tot = h_k * (Grids - 1);
-	std::vector<double> State_Traj_Coeff_i;
-	double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
-	for (int i = 0; i < 13; i++)
-	{
-		Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
-		Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
-		State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
-		// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
-		double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
-		for (int j = 0; j < Grids; j++)
-		{
-			s_j = ds * (j);
-			// cout<<s_j<<endl;
-			StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
-			StateNDot_Traj(i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
-		}
-	}
+	// double T_tot = h_k * (Grids - 1);
+	// std::vector<double> State_Traj_Coeff_i;
+	// double Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal;
+	// for (int i = 0; i < 13; i++)
+	// {
+	// 	Pos_i_Init = Init_Config[i];			Pos_i_Goal = Seed_Config[i];
+	// 	Vel_i_Init = Init_Config[i+13];			Vel_i_Goal = Seed_Config[i+13];
+	// 	State_Traj_Coeff_i = CubicSpline_Coeff_fn(T_tot, Pos_i_Init, Pos_i_Goal, Vel_i_Init, Vel_i_Goal); // 4 by 1 vector: a, b, c, d
+	// 	// After this step, we hacve the cubic spline for the whole trajectories. Then it is time to discretize them
+	// 	double ds = 1.0/(Grids * 1.0 - 1.0), s_j;
+	// 	for (int j = 0; j < Grids; j++)
+	// 	{
+	// 		s_j = ds * (j);
+	// 		// cout<<s_j<<endl;
+	// 		StateNDot_Traj(i,j) = CubicSpline_Evaluation_fn(State_Traj_Coeff_i, s_j);
+	// 		StateNDot_Traj(i+ 13,j) = CubicSpline_1stOrder_Evaluation_fn(State_Traj_Coeff_i, s_j, T_tot);
+	// 	}
+	// }
 	// cout<<StateNDot_Traj<<endl;
 
 	// Method 2: Linear spline interpolation
@@ -2618,28 +2627,28 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// // cout<<StateNDot_Coeff<<endl;
 	//
 	// Second is to initialize: Control and Contact Force
-	std::vector<double> Robot_Pos(13), Robot_Vel(13), Robot_VelfromPos(13), Robotstate_Vec_i;		dlib::matrix<double> Robot_Acc; Robot_Acc = dlib::zeros_matrix<double>(13,1);
-	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
-	for (int i = 0; i < Grids-1; i++){
-		Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(h_k, StateNDot_Coeff, i, 0, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
-		Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
-		Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
-		Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
-		Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
-		Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
-		Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
-		for (int j = 0; j < Dynamics_RHS.nr(); j++)
-		{
-			if(j<Contact_Force_Traj.nr())
-			{
-				Contact_Force_Traj(j,i) = Dynamics_RHS(j);
-			}
-			else
-			{
-				Ctrl_Traj(j - Contact_Force_Traj.nr(),i) = Dynamics_RHS(j);
-			}
-		}
-	}
+	// std::vector<double> Robot_Pos(13), Robot_Vel(13), Robot_VelfromPos(13), Robotstate_Vec_i;		dlib::matrix<double> Robot_Acc; Robot_Acc = dlib::zeros_matrix<double>(13,1);
+	// dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
+	// for (int i = 0; i < Grids-1; i++){
+	// 	Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(h_k, StateNDot_Coeff, i, 0, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
+	// 	Robotstate_Vec_i = PosNVel2StateVec(Robot_Pos, Robot_Vel);
+	// 	Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
+	// 	Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
+	// 	Dynamics_LHS = D_q * Robot_Acc + C_q_qdot;
+	// 	Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
+	// 	Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
+	// 	for (int j = 0; j < Dynamics_RHS.nr(); j++)
+	// 	{
+	// 		if(j<Contact_Force_Traj.nr())
+	// 		{
+	// 			Contact_Force_Traj(j,i) = Dynamics_RHS(j);
+	// 		}
+	// 		else
+	// 		{
+	// 			Ctrl_Traj(j - Contact_Force_Traj.nr(),i) = Dynamics_RHS(j);
+	// 		}
+	// 	}
+	// }
 	// // cout<<StateNDot_Traj<<endl;			cout<<Contact_Force_Traj<<endl;			cout<<Ctrl_Traj<<endl;			cout<<StateNDot_Coeff<<endl;
 	// // THen the last column
 	// Pos_Vel_Acc_VelfromPos_fromStateNdot_Coeff(h_k, StateNDot_Coeff, Grids-2, 1, Robot_Pos, Robot_Vel, Robot_Acc, Robot_VelfromPos);
@@ -2664,76 +2673,94 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	// The calculation of the coefficients of the control and contact force is easier compared to the robot state due to the assumption of the linear equation
 	// Ctrl_Contact_Force_Coeff_fn(Ctrl_Traj, Contact_Force_Traj, Ctrl_Coeff, Contact_Force_Coeff);
 
-	// // Method 3!
-	// // The last method is the quadratic spline fitting method which is to formulate a parabola based on the initial state and the final state
-	// // it is assumed that the state will decrease to a certain configuration
-	// std::vector<double> Seed_Config_Parabola(26);
-	// for (int abc = 0; abc < 13; abc++)
+	// cout<<"Initial configuration is as follows:"<<endl;
+	// for (int ijkm = 0; ijkm < Init_Config.size(); ijkm++)
 	// {
-	// 	double acc_i = Init_Config[abc + 13]/h_k;			// The determined acceleration
-	// 	double vel_i = Init_Config[abc + 13];			//
-	// 	double pos_i = Init_Config[abc] + vel_i * h_k + 1/2 * acc_i * h_k * h_k;
-	// 	Seed_Config_Parabola[abc] = pos_i;
-	// 	Seed_Config_Parabola[abc + 13] = 0;
+	// 	cout<<Init_Config[ijkm]<<endl;
 	// }
-	// // To make sure taht Seed_Config_Parabola can be compared, the Node_i.Robot_StateNDot will be changed accordingly.
-	// Robot_StateNDot Node_i_StateNDot_Temp;
-	// Node_i_StateNDot_Temp = StateVec2StateNDot(Seed_Config_Parabola);;
-	// Node_i.Node_StateNDot = Node_i_StateNDot_Temp;
-	// Seed_Config_Parabola = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
-	// // Change it back
-	// Node_i_StateNDot_Temp = StateVec2StateNDot(Init_Config);;
-	// Node_i.Node_StateNDot = Node_i_StateNDot_Temp;
-	//
-	// // Then the job is to construct the state trajectories from this two points on the manifold.  y(s) = a * s ^ 2 + b * s + c
-	// // The output from this manifold interpolation is the states at grids and acceleration at grids
-	//
-	// dlib::matrix<double> Acc_Traj = dlib::ones_matrix<double>(13, 1);
-	//
-	// double ds = 1.0/(Grids * 1.0 - 1.0), s_j, para_a, para_b, para_c;
-	// for (int jjj = 0; jjj < 13; jjj++)
-	// {
-	// 	para_c = Init_Config[jjj];
-	// 	para_b = Init_Config[jjj + 13] * h_k;
-	// 	para_a = (Seed_Config_Parabola[jjj] - para_c - para_b);
-	// 	Acc_Traj(jjj) = 2 * para_a/(h_k * h_k);
-	//
-	// 	// Then the output should be the grid state and acceleration
-	//
-	// 	for (int jjjj = 0; jjjj < Grids; jjjj++)
-	// 	{
-	// 		s_j = ds * (jjjj);
-	// 		StateNDot_Traj(jjj,jjjj) = para_a * s_j * s_j + para_b * s_j + para_c;
-	// 		StateNDot_Traj(jjj+ 13,jjjj) = (2 * para_a * s_j + para_b)/(h_k);
-	// 	}
-	// }
-	//
-	// // Then the job is to compute the contact force and the control torque
-	// std::vector<double> Robotstate_Vec_i(26);
-	// dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
-	//
-	// for (int i = 0; i < Grids; i++)
-	// {
-	// 	for (int m = 0; m < 26; m++)
-	// 	{
-	// 		Robotstate_Vec_i[m] = StateNDot_Traj(m,i);
-	// 	}
-	// 	Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
-	// 	Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
-	// 	Dynamics_LHS = D_q * Acc_Traj + C_q_qdot;
-	// 	Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
-	// 	Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
-	// 	for (int j = 0; j < Dynamics_RHS.nr(); j++) {
-	// 		if(j<Contact_Force_Traj.nr())
-	// 		{
-	// 			Contact_Force_Traj(j,i) = Dynamics_RHS(j);
-	// 		}
-	// 		else
-	// 		{
-	// 			Ctrl_Traj(j - Contact_Force_Traj.nr(),i) = Dynamics_RHS(j);
-	// 		}
-	// 	}
-	// }
+
+	// Method 3!
+	// The last method is the quadratic spline fitting method which is to formulate a parabola based on the initial state and the final state
+	// it is assumed that the state will decrease to a certain configuration
+	cout<<"Reference configuration is as follows:"<<endl;
+	std::vector<double> Seed_Config_Parabola(26);
+	for (int abc = 0; abc < 13; abc++)
+	{
+		double acc_i = Init_Config[abc + 13]/h_k;			// The determined acceleration
+		double vel_i = Init_Config[abc + 13];			//
+		double pos_i = Init_Config[abc] + vel_i * h_k + 1/2 * acc_i * h_k * h_k;
+		Seed_Config_Parabola[abc] = pos_i;
+		Seed_Config_Parabola[abc + 13] = 0;
+		cout<<pos_i<<endl;
+	}
+
+	cout<<"Goal configuration is as follows:"<<endl;
+
+	// To make sure that Seed_Config_Parabola can be compared, the Node_i.Robot_StateNDot will be changed accordingly.
+	Robot_StateNDot Node_i_StateNDot_Temp;
+	Node_i_StateNDot_Temp = StateVec2StateNDot(Seed_Config_Parabola);;
+	Node_i.Node_StateNDot = Node_i_StateNDot_Temp;
+	Seed_Config_Parabola = Seed_Guess_Gene_Robotstate(Node_i, Node_i_child);
+
+	for (int ijk = 0; ijk < Seed_Config_Parabola.size(); ijk++)
+	{
+		cout<<Seed_Config_Parabola[ijk]<<endl;
+	}
+
+	// Change it back
+	Node_i_StateNDot_Temp = StateVec2StateNDot(Init_Config);;
+	Node_i.Node_StateNDot = Node_i_StateNDot_Temp;
+
+	// Then the job is to construct the state trajectories from this two points on the manifold.  y(s) = a * s ^ 2 + b * s + c
+	// The output from this manifold interpolation is the states at grids and acceleration at grids
+
+	dlib::matrix<double> Acc_Traj = dlib::ones_matrix<double>(13, 1);
+
+	double ds = 1.0/(Grids * 1.0 - 1.0), s_j, para_a, para_b, para_c;
+	for (int jjj = 0; jjj < 13; jjj++)
+	{
+		para_c = Init_Config[jjj];
+		para_b = Init_Config[jjj + 13] * h_k;
+		para_a = (Seed_Config_Parabola[jjj] - para_c - para_b);
+		Acc_Traj(jjj) = 2 * para_a/(h_k * h_k);
+
+		// Then the output should be the grid state and acceleration
+
+		for (int jjjj = 0; jjjj < Grids; jjjj++)
+		{
+			s_j = ds * (jjjj);
+			StateNDot_Traj(jjj,jjjj) = para_a * s_j * s_j + para_b * s_j + para_c;
+			StateNDot_Traj(jjj+ 13,jjjj) = (2 * para_a * s_j + para_b)/(h_k);
+		}
+	}
+
+	// Then the job is to compute the contact force and the control torque
+	std::vector<double> Robotstate_Vec_i(26);
+	dlib::matrix<double> D_q, B_q, C_q_qdot, Jac_Full, Jac_Full_Trans, Dynamics_LHS, Dynamics_RHS, Dynamics_RHS_Matrix;		Robot_StateNDot Robot_StateNDot_i;
+
+	for (int i = 0; i < Grids; i++)
+	{
+		for (int m = 0; m < 26; m++)
+		{
+			Robotstate_Vec_i[m] = StateNDot_Traj(m,i);
+		}
+		Robot_StateNDot_i = StateVec2StateNDot(Robotstate_Vec_i);
+		Dynamics_Matrices(Robot_StateNDot_i, D_q, B_q, C_q_qdot, Jac_Full);
+		Dynamics_LHS = D_q * Acc_Traj + C_q_qdot;
+		Dynamics_RHS_Matrix = Dynamics_RHS_Matrix_fn(Jac_Full, B_q);
+		Dynamics_RHS = dlib::pinv(Dynamics_RHS_Matrix) * Dynamics_LHS;
+		for (int j = 0; j < Dynamics_RHS.nr(); j++) {
+			if(j<Contact_Force_Traj.nr())
+			{
+				Contact_Force_Traj(j,i) = Dynamics_RHS(j);
+			}
+			else
+			{
+				Ctrl_Traj(j - Contact_Force_Traj.nr(),i) = Dynamics_RHS(j);
+			}
+		}
+	}
+
 
 	// cout<<Acc_Traj<<endl;
 	// cout<<StateNDot_Traj<<endl;
@@ -2744,6 +2771,8 @@ std::vector<double> Seed_Guess_Gene(Tree_Node &Node_i, Tree_Node &Node_i_child)
 	std::vector<double> Opt_Seed;
 	Opt_Seed.push_back(h_k * (Grids - 1));
 	Opt_Seed_Zip(Opt_Seed, StateNDot_Traj, Ctrl_Traj, Contact_Force_Traj);
+
+	// Opt_Soln_Write2Txt(Node_i, Node_i_child, Opt_Seed);
 
 	return Opt_Seed;
 }
